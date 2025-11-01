@@ -57,30 +57,37 @@ def scrape_url_task(self, application_id: int) -> Dict[str, any]:
 
         logger.info(f"Scraping URL: {application.url}")
 
-        # TODO: Implement actual web scraping logic
-        # The Web Scraping agent will implement this
-        # from services.scraper_service import scrape_application_url
-        # scraped_data = scrape_application_url(application.url)
+        # Use scraper service to fetch content
+        from services.scraper_service import get_scraper_service
+        scraper = get_scraper_service()
 
-        # Placeholder for scraped content
+        scrape_result = scraper.scrape_url(application.url)
+
+        if not scrape_result['success']:
+            raise ValueError(f"Failed to scrape URL: {scrape_result['error']}")
+
+        # Build scraped content dict
         scraped_content = {
             'url': application.url,
-            'title': None,
-            'description': None,
-            'requirements': [],
-            'questions': [],
-            'raw_html': None,
-            'raw_text': None,
+            'title': scrape_result['title'],
+            'raw_text': scrape_result['content'],
         }
 
-        # TODO: Update application description if not set
-        # if scraped_content.get('description') and not application.description:
-        #     application.description = scraped_content['description']
-        #     application.save(update_fields=['description'])
+        # Update application with scraped title and description if not set
+        if scrape_result['title'] and not application.title:
+            application.title = scrape_result['title'][:200]  # Limit to field length
+
+        if scrape_result['content'] and not application.description:
+            # Use first 1000 chars as description
+            application.description = scrape_result['content'][:1000]
+
+        application.save(update_fields=['title', 'description'])
 
         # Trigger question extraction task
-        if scraped_content.get('raw_text'):
-            extract_questions_task.delay(application_id, scraped_content)
+        extract_questions_task.apply_async(
+            args=[application_id, scraped_content],
+            countdown=2
+        )
 
         result = {
             'status': 'success',
@@ -148,37 +155,31 @@ def extract_questions_task(self, application_id: int, scraped_content: Optional[
                 'message': 'No content available for extraction'
             }
 
-        # TODO: Use Gemini API to extract questions
-        # The AI Integration agent will implement this
-        # from services.gemini_service import extract_application_questions
-        # extracted_questions = extract_application_questions(
-        #     content=content,
-        #     application_type=application.application_type
-        # )
+        # Use Gemini API to extract questions
+        from services.gemini_service import get_gemini_service
+        gemini = get_gemini_service()
 
-        # Placeholder for extracted questions
-        extracted_questions = []
-        # Format: [
-        #     {
-        #         'text': 'Tell us about yourself',
-        #         'type': 'essay',
-        #         'is_required': True
-        #     },
-        #     ...
-        # ]
+        logger.info(f"Extracting questions using Gemini AI for {application.application_type} application")
+        extracted_questions = gemini.extract_questions_from_content(
+            content=content,
+            application_type=application.application_type
+        )
+
+        logger.info(f"Gemini extracted {len(extracted_questions)} questions")
 
         # Save extracted questions to database
         created_questions = []
         for i, q_data in enumerate(extracted_questions, start=1):
             question = Question.objects.create(
                 application=application,
-                question_text=q_data.get('text', ''),
-                question_type=q_data.get('type', 'custom'),
+                question_text=q_data.get('question_text', ''),
+                question_type=q_data.get('question_type', 'custom'),
                 is_required=q_data.get('is_required', False),
                 is_extracted=True,
                 order=i
             )
             created_questions.append(question.id)
+            logger.info(f"Created question {i}: {question.question_text[:50]}...")
 
         result = {
             'status': 'success',
@@ -235,29 +236,44 @@ def generate_response_task(self, question_id: int, context: Optional[Dict] = Non
         user = question.application.user
         application = question.application
 
-        # TODO: Gather context from user's documents and profile
-        # from documents.models import Document, ExtractedInformation
-        # user_documents = Document.objects.filter(user=user, is_processed=True)
-        # extracted_info = ExtractedInformation.objects.filter(document__user=user)
+        # Gather context from user's documents and profile
+        from documents.models import Document, ExtractedInformation
 
-        # TODO: Build prompt for Gemini
-        # prompt_context = {
-        #     'question': question.question_text,
-        #     'question_type': question.question_type,
-        #     'application_type': application.application_type,
-        #     'job_title': application.title,
-        #     'company': application.company_or_institution,
-        #     'user_info': extracted_info,
-        #     'custom_context': context or {}
-        # }
+        logger.info(f"Gathering user context for response generation")
 
-        # TODO: Use Gemini API to generate response
-        # The AI Integration agent will implement this
-        # from services.gemini_service import generate_question_response
-        # generated_text = generate_question_response(prompt_context)
+        # Get all extracted information for user
+        user_info = {}
+        extracted_info = ExtractedInformation.objects.filter(document__user=user).select_related('document')
 
-        # Placeholder for generated response
-        generated_text = ""  # Will be implemented by AI Integration agent
+        for info in extracted_info:
+            data_type = info.data_type
+            if data_type not in user_info:
+                user_info[data_type] = info.content
+            elif isinstance(info.content, list):
+                # Merge lists
+                existing = user_info[data_type]
+                if isinstance(existing, list):
+                    user_info[data_type] = existing + info.content
+                else:
+                    user_info[data_type] = info.content
+
+        logger.info(f"Collected information types: {list(user_info.keys())}")
+
+        # Use Gemini API to generate response
+        from services.gemini_service import get_gemini_service
+        gemini = get_gemini_service()
+
+        logger.info(f"Generating response using Gemini AI")
+        generation_result = gemini.generate_response(
+            question_text=question.question_text,
+            question_type=question.question_type,
+            user_info=user_info
+        )
+
+        generated_text = generation_result['response']
+        generation_prompt = generation_result['prompt']
+
+        logger.info(f"Generated response: {len(generated_text)} characters")
 
         # Create or update response
         response, created = Response.objects.update_or_create(
@@ -266,7 +282,7 @@ def generate_response_task(self, question_id: int, context: Optional[Dict] = Non
                 'generated_response': generated_text,
                 'is_ai_generated': True,
                 'generated_at': timezone.now(),
-                'generation_prompt': ''  # TODO: Store actual prompt used
+                'generation_prompt': generation_prompt
             }
         )
 

@@ -56,28 +56,29 @@ def process_document_task(self, document_id: int) -> Dict[str, any]:
         document = Document.objects.get(id=document_id)
         logger.info(f"Processing document: {document.original_filename}")
 
-        # TODO: Validate file exists and is readable
+        # Validate file exists and is readable
         if not document.file:
             raise ValueError(f"Document {document_id} has no file attached")
 
-        # TODO: Determine file type and select appropriate parser
-        file_extension = document.original_filename.split('.')[-1].lower()
-        logger.info(f"Document type: {file_extension}")
+        # Parse document using document parser service
+        from services.document_parser import get_document_parser
+        parser = get_document_parser()
 
-        # TODO: Parse document based on file type
-        # if file_extension == 'pdf':
-        #     text_content = parse_pdf(document.file.path)
-        # elif file_extension in ['doc', 'docx']:
-        #     text_content = parse_docx(document.file.path)
-        # else:
-        #     raise ValueError(f"Unsupported file type: {file_extension}")
+        logger.info(f"Parsing document: {document.file.path}")
+        parse_result = parser.parse_document(document.file.path, document.document_type)
 
-        # Placeholder for extracted text
-        text_content = None  # Will be implemented by other agents
+        if not parse_result['success']:
+            raise ValueError(f"Failed to parse document: {parse_result['error']}")
 
-        # TODO: Extract structured information using AI
+        text_content = parse_result['text']
+        logger.info(f"Extracted {len(text_content)} characters from document")
+
+        # Extract structured information using AI
         # Call extract_information_task as a subtask
-        extraction_result = extract_information_task.delay(document_id)
+        extraction_result = extract_information_task.apply_async(
+            args=[document_id, text_content],
+            countdown=2  # Small delay to ensure document is saved
+        )
         logger.info(f"Started information extraction task: {extraction_result.id}")
 
         # Update document status
@@ -113,7 +114,7 @@ def process_document_task(self, document_id: int) -> Dict[str, any]:
 
 @shared_task(base=BaseTask, bind=True, max_retries=3)
 @exponential_backoff_retry(max_retries=3, base_delay=60)
-def extract_information_task(self, document_id: int) -> Dict[str, any]:
+def extract_information_task(self, document_id: int, text_content: str = None) -> Dict[str, any]:
     """
     Extract structured information from a processed document using AI.
 
@@ -126,6 +127,7 @@ def extract_information_task(self, document_id: int) -> Dict[str, any]:
 
     Args:
         document_id: ID of the Document to extract information from
+        text_content: Optional pre-extracted text content (if None, will re-parse)
 
     Returns:
         Dict containing extracted information and metadata
@@ -141,28 +143,23 @@ def extract_information_task(self, document_id: int) -> Dict[str, any]:
         document = Document.objects.get(id=document_id)
         logger.info(f"Extracting information from: {document.original_filename}")
 
-        # TODO: Read document text content
-        # text_content = read_document_text(document.file.path)
+        # If text content not provided, parse the document
+        if not text_content:
+            from services.document_parser import get_document_parser
+            parser = get_document_parser()
+            parse_result = parser.parse_document(document.file.path, document.document_type)
+            if not parse_result['success']:
+                raise ValueError(f"Failed to parse document: {parse_result['error']}")
+            text_content = parse_result['text']
 
-        # TODO: Use Gemini API to extract structured information
-        # The actual implementation will be done by the AI Integration agent
-        # from services.gemini_service import extract_document_information
-        # extracted_data = extract_document_information(
-        #     text_content=text_content,
-        #     document_type=document.document_type
-        # )
+        # Use Gemini API to extract structured information
+        from services.gemini_service import get_gemini_service
+        gemini = get_gemini_service()
 
-        # Placeholder for extracted information
-        extracted_data = {
-            'name': None,
-            'email': None,
-            'education': [],
-            'experience': [],
-            'skills': [],
-            'certifications': []
-        }
+        logger.info(f"Extracting structured information using Gemini AI")
+        extracted_data = gemini.extract_document_information(text_content, document.document_type)
 
-        # TODO: Save extracted information to database
+        # Save extracted information to database
         # Store each type of extracted information as separate records
         extraction_types = [
             ('name', extracted_data.get('name')),
