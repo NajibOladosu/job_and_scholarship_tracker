@@ -1,0 +1,318 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ title }} - AppTracker{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Notification page specific styles */
+    .notification-page {
+        padding: var(--spacing-2xl) 0;
+        background: var(--color-gray-50);
+        min-height: calc(100vh - 73px);
+    }
+
+    .notification-header {
+        background: white;
+        border-radius: var(--radius-lg);
+        padding: var(--spacing-xl);
+        margin-bottom: var(--spacing-xl);
+        box-shadow: var(--shadow-sm);
+    }
+
+    .notification-stats {
+        display: flex;
+        gap: var(--spacing-lg);
+        margin-top: var(--spacing-md);
+    }
+
+    .stat-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--spacing-xs);
+        padding: var(--spacing-xs) var(--spacing-md);
+        background: var(--color-gray-100);
+        border-radius: var(--radius-full);
+        font-size: var(--font-size-sm);
+        color: var(--color-gray-700);
+    }
+
+    .stat-badge.unread {
+        background: var(--color-primary-light);
+        color: var(--color-primary-dark);
+    }
+
+    .notification-card {
+        background: white;
+        border-radius: var(--radius-lg);
+        padding: var(--spacing-lg);
+        margin-bottom: var(--spacing-md);
+        box-shadow: var(--shadow-sm);
+        border-left: 4px solid transparent;
+        transition: all var(--transition-fast);
+        position: relative;
+    }
+
+    .notification-card.unread {
+        border-left-color: var(--color-primary);
+        background: var(--color-primary-lightest, #f0f7ff);
+    }
+
+    .notification-card:hover {
+        box-shadow: var(--shadow-md);
+        transform: translateY(-2px);
+    }
+
+    .notification-type-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--spacing-xs);
+        padding: var(--spacing-xs) var(--spacing-sm);
+        border-radius: var(--radius-md);
+        font-size: var(--font-size-xs);
+        font-weight: var(--font-weight-medium);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .notification-type-badge.reminder {
+        background: #fef3c7;
+        color: #92400e;
+    }
+
+    .notification-type-badge.status_change {
+        background: #dbeafe;
+        color: #1e40af;
+    }
+
+    .notification-type-badge.system {
+        background: #e5e7eb;
+        color: #374151;
+    }
+
+    .notification-content {
+        margin-top: var(--spacing-md);
+    }
+
+    .notification-title {
+        font-size: var(--font-size-lg);
+        font-weight: var(--font-weight-semibold);
+        color: var(--color-gray-900);
+        margin-bottom: var(--spacing-sm);
+    }
+
+    .notification-message {
+        color: var(--color-gray-600);
+        line-height: 1.6;
+    }
+
+    .notification-meta {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-top: var(--spacing-md);
+        padding-top: var(--spacing-md);
+        border-top: 1px solid var(--color-gray-200);
+    }
+
+    .notification-time {
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-xs);
+        color: var(--color-gray-500);
+        font-size: var(--font-size-sm);
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: var(--spacing-4xl) var(--spacing-xl);
+        background: white;
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-sm);
+    }
+
+    .empty-state-icon {
+        font-size: 4rem;
+        color: var(--color-gray-300);
+        margin-bottom: var(--spacing-lg);
+    }
+
+    .empty-state-title {
+        font-size: var(--font-size-xl);
+        font-weight: var(--font-weight-semibold);
+        color: var(--color-gray-900);
+        margin-bottom: var(--spacing-sm);
+    }
+
+    .empty-state-text {
+        color: var(--color-gray-600);
+        margin-bottom: var(--spacing-xl);
+    }
+
+    .filter-section {
+        background: white;
+        border-radius: var(--radius-lg);
+        padding: var(--spacing-lg);
+        margin-bottom: var(--spacing-xl);
+        box-shadow: var(--shadow-sm);
+    }
+
+    .unread-indicator {
+        width: 10px;
+        height: 10px;
+        background: var(--color-primary);
+        border-radius: var(--radius-full);
+        display: inline-block;
+        margin-right: var(--spacing-xs);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="notification-page">
+    <div class="container">
+        <!-- Header -->
+        <div class="notification-header">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <h1 class="h2 mb-1">
+                        <i class="bi bi-bell me-2"></i>
+                        Notifications
+                    </h1>
+                    <div class="notification-stats">
+                        <span class="stat-badge unread">
+                            <i class="bi bi-dot"></i>
+                            {{ unread_count }} Unread
+                        </span>
+                        <span class="stat-badge">
+                            <i class="bi bi-list-ul"></i>
+                            {{ total_count }} Total
+                        </span>
+                    </div>
+                </div>
+                {% if unread_count > 0 %}
+                <form method="post" action="{% url 'notifications:mark_all_read' %}" class="d-inline">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-outline-primary">
+                        <i class="bi bi-check-all me-2"></i>
+                        Mark All Read
+                    </button>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="filter-section">
+            <form method="get" action="{% url 'notifications:list' %}" class="row g-3">
+                <div class="col-md-6">
+                    <label for="{{ filter_form.notification_type.id_for_label }}" class="form-label">Type</label>
+                    {{ filter_form.notification_type }}
+                </div>
+                <div class="col-md-6 d-flex align-items-end">
+                    <div class="form-check">
+                        {{ filter_form.unread_only }}
+                        <label class="form-check-label" for="{{ filter_form.unread_only.id_for_label }}">
+                            {{ filter_form.unread_only.label }}
+                        </label>
+                    </div>
+                </div>
+                <div class="col-12">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-funnel me-2"></i>
+                        Apply Filters
+                    </button>
+                    <a href="{% url 'notifications:list' %}" class="btn btn-outline-secondary ms-2">
+                        <i class="bi bi-x-circle me-2"></i>
+                        Clear
+                    </a>
+                </div>
+            </form>
+        </div>
+
+        <!-- Notifications List -->
+        {% if notifications %}
+            {% for notification in notifications %}
+            <div class="notification-card {% if not notification.is_read %}unread{% endif %}">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div class="flex-grow-1">
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                            {% if not notification.is_read %}
+                            <span class="unread-indicator"></span>
+                            {% endif %}
+                            <span class="notification-type-badge {{ notification.notification_type }}">
+                                {% if notification.notification_type == 'reminder' %}
+                                <i class="bi bi-alarm"></i>
+                                {% elif notification.notification_type == 'status_change' %}
+                                <i class="bi bi-arrow-repeat"></i>
+                                {% else %}
+                                <i class="bi bi-info-circle"></i>
+                                {% endif %}
+                                {{ notification.get_notification_type_display }}
+                            </span>
+                        </div>
+
+                        <div class="notification-content">
+                            <h3 class="notification-title">{{ notification.title }}</h3>
+                            <p class="notification-message mb-0">{{ notification.message }}</p>
+                        </div>
+
+                        <div class="notification-meta">
+                            <span class="notification-time">
+                                <i class="bi bi-clock"></i>
+                                {{ notification.time_since_created }}
+                            </span>
+                            <div class="d-flex gap-2">
+                                {% if notification.link %}
+                                <a href="{{ notification.link }}" class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-box-arrow-up-right me-1"></i>
+                                    View
+                                </a>
+                                {% endif %}
+                                {% if not notification.is_read %}
+                                <form method="post" action="{% url 'notifications:mark_read' notification.pk %}" class="d-inline">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-sm btn-outline-secondary">
+                                        <i class="bi bi-check me-1"></i>
+                                        Mark Read
+                                    </button>
+                                </form>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <!-- Empty State -->
+            <div class="empty-state">
+                <div class="empty-state-icon">
+                    <i class="bi bi-bell-slash"></i>
+                </div>
+                <h2 class="empty-state-title">No Notifications</h2>
+                <p class="empty-state-text">
+                    You don't have any notifications yet. We'll notify you when there's something important!
+                </p>
+                <a href="{% url 'dashboard' %}" class="btn btn-primary">
+                    <i class="bi bi-house-door me-2"></i>
+                    Go to Dashboard
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Auto-dismiss toasts after 5 seconds
+    document.addEventListener('DOMContentLoaded', function() {
+        const toasts = document.querySelectorAll('.toast');
+        toasts.forEach(toast => {
+            const bsToast = new bootstrap.Toast(toast);
+            bsToast.show();
+        });
+    });
+</script>
+{% endblock %}

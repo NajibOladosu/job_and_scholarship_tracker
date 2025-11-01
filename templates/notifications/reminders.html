@@ -1,0 +1,467 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ title }} - AppTracker{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Reminder page specific styles */
+    .reminder-page {
+        padding: var(--spacing-2xl) 0;
+        background: var(--color-gray-50);
+        min-height: calc(100vh - 73px);
+    }
+
+    .reminder-header {
+        background: white;
+        border-radius: var(--radius-lg);
+        padding: var(--spacing-xl);
+        margin-bottom: var(--spacing-xl);
+        box-shadow: var(--shadow-sm);
+    }
+
+    .reminder-stats {
+        display: flex;
+        gap: var(--spacing-lg);
+        margin-top: var(--spacing-md);
+        flex-wrap: wrap;
+    }
+
+    .stat-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--spacing-xs);
+        padding: var(--spacing-xs) var(--spacing-md);
+        background: var(--color-gray-100);
+        border-radius: var(--radius-full);
+        font-size: var(--font-size-sm);
+        color: var(--color-gray-700);
+    }
+
+    .stat-badge.upcoming {
+        background: #dbeafe;
+        color: #1e40af;
+    }
+
+    .stat-badge.overdue {
+        background: #fee2e2;
+        color: #991b1b;
+    }
+
+    .stat-badge.sent {
+        background: #dcfce7;
+        color: #166534;
+    }
+
+    .reminder-section {
+        margin-bottom: var(--spacing-2xl);
+    }
+
+    .reminder-section-title {
+        font-size: var(--font-size-xl);
+        font-weight: var(--font-weight-semibold);
+        color: var(--color-gray-900);
+        margin-bottom: var(--spacing-lg);
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-sm);
+    }
+
+    .reminder-section-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: var(--radius-lg);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: var(--font-size-lg);
+    }
+
+    .reminder-section-icon.upcoming {
+        background: #dbeafe;
+        color: #1e40af;
+    }
+
+    .reminder-section-icon.overdue {
+        background: #fee2e2;
+        color: #991b1b;
+    }
+
+    .reminder-section-icon.sent {
+        background: #dcfce7;
+        color: #166534;
+    }
+
+    .reminder-card {
+        background: white;
+        border-radius: var(--radius-lg);
+        padding: var(--spacing-lg);
+        margin-bottom: var(--spacing-md);
+        box-shadow: var(--shadow-sm);
+        border-left: 4px solid transparent;
+        transition: all var(--transition-fast);
+    }
+
+    .reminder-card.upcoming {
+        border-left-color: #3b82f6;
+    }
+
+    .reminder-card.overdue {
+        border-left-color: #dc2626;
+        background: #fef2f2;
+    }
+
+    .reminder-card.sent {
+        border-left-color: #10b981;
+        opacity: 0.8;
+    }
+
+    .reminder-card:hover {
+        box-shadow: var(--shadow-md);
+        transform: translateY(-2px);
+    }
+
+    .reminder-type-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--spacing-xs);
+        padding: var(--spacing-xs) var(--spacing-sm);
+        border-radius: var(--radius-md);
+        font-size: var(--font-size-xs);
+        font-weight: var(--font-weight-medium);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .reminder-type-badge.deadline {
+        background: #fee2e2;
+        color: #991b1b;
+    }
+
+    .reminder-type-badge.follow_up {
+        background: #dbeafe;
+        color: #1e40af;
+    }
+
+    .reminder-type-badge.interview {
+        background: #f3e8ff;
+        color: #6b21a8;
+    }
+
+    .reminder-type-badge.custom {
+        background: #e5e7eb;
+        color: #374151;
+    }
+
+    .reminder-content {
+        margin-top: var(--spacing-md);
+    }
+
+    .reminder-application {
+        font-size: var(--font-size-lg);
+        font-weight: var(--font-weight-semibold);
+        color: var(--color-gray-900);
+        margin-bottom: var(--spacing-sm);
+    }
+
+    .reminder-message {
+        color: var(--color-gray-600);
+        line-height: 1.6;
+        margin-bottom: var(--spacing-md);
+    }
+
+    .reminder-time {
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-xs);
+        color: var(--color-gray-700);
+        font-size: var(--font-size-sm);
+        font-weight: var(--font-weight-medium);
+    }
+
+    .reminder-time.overdue {
+        color: #dc2626;
+    }
+
+    .reminder-actions {
+        display: flex;
+        gap: var(--spacing-sm);
+        margin-top: var(--spacing-md);
+        padding-top: var(--spacing-md);
+        border-top: 1px solid var(--color-gray-200);
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: var(--spacing-4xl) var(--spacing-xl);
+        background: white;
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-sm);
+    }
+
+    .empty-state-icon {
+        font-size: 4rem;
+        color: var(--color-gray-300);
+        margin-bottom: var(--spacing-lg);
+    }
+
+    .empty-state-title {
+        font-size: var(--font-size-xl);
+        font-weight: var(--font-weight-semibold);
+        color: var(--color-gray-900);
+        margin-bottom: var(--spacing-sm);
+    }
+
+    .empty-state-text {
+        color: var(--color-gray-600);
+        margin-bottom: var(--spacing-xl);
+    }
+
+    .filter-section {
+        background: white;
+        border-radius: var(--radius-lg);
+        padding: var(--spacing-lg);
+        margin-bottom: var(--spacing-xl);
+        box-shadow: var(--shadow-sm);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="reminder-page">
+    <div class="container">
+        <!-- Header -->
+        <div class="reminder-header">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <h1 class="h2 mb-1">
+                        <i class="bi bi-alarm me-2"></i>
+                        Reminders
+                    </h1>
+                    <div class="reminder-stats">
+                        <span class="stat-badge upcoming">
+                            <i class="bi bi-clock"></i>
+                            {{ upcoming_count }} Upcoming
+                        </span>
+                        <span class="stat-badge overdue">
+                            <i class="bi bi-exclamation-triangle"></i>
+                            {{ overdue_count }} Overdue
+                        </span>
+                        <span class="stat-badge sent">
+                            <i class="bi bi-check-circle"></i>
+                            {{ sent_count }} Sent
+                        </span>
+                    </div>
+                </div>
+                <a href="{% url 'notifications:reminder_create' %}" class="btn btn-primary">
+                    <i class="bi bi-plus-circle me-2"></i>
+                    Create Reminder
+                </a>
+            </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="filter-section">
+            <form method="get" action="{% url 'notifications:reminders' %}" class="row g-3">
+                <div class="col-md-6">
+                    <label for="{{ filter_form.reminder_type.id_for_label }}" class="form-label">Type</label>
+                    {{ filter_form.reminder_type }}
+                </div>
+                <div class="col-md-6">
+                    <label for="{{ filter_form.status.id_for_label }}" class="form-label">Status</label>
+                    {{ filter_form.status }}
+                </div>
+                <div class="col-12">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-funnel me-2"></i>
+                        Apply Filters
+                    </button>
+                    <a href="{% url 'notifications:reminders' %}" class="btn btn-outline-secondary ms-2">
+                        <i class="bi bi-x-circle me-2"></i>
+                        Clear
+                    </a>
+                </div>
+            </form>
+        </div>
+
+        <!-- Overdue Reminders -->
+        {% if overdue_reminders %}
+        <div class="reminder-section">
+            <h2 class="reminder-section-title">
+                <span class="reminder-section-icon overdue">
+                    <i class="bi bi-exclamation-triangle-fill"></i>
+                </span>
+                Overdue Reminders
+            </h2>
+            {% for reminder in overdue_reminders %}
+            <div class="reminder-card overdue">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div class="flex-grow-1">
+                        <div class="mb-2">
+                            <span class="reminder-type-badge {{ reminder.reminder_type }}">
+                                {{ reminder.get_reminder_type_display }}
+                            </span>
+                        </div>
+
+                        <div class="reminder-content">
+                            <h3 class="reminder-application">
+                                <i class="bi bi-briefcase me-2"></i>
+                                {{ reminder.application.title }}
+                            </h3>
+                            <p class="reminder-message">{{ reminder.message }}</p>
+                            <div class="reminder-time overdue">
+                                <i class="bi bi-calendar-x"></i>
+                                <strong>Overdue:</strong> {{ reminder.scheduled_for|date:"M d, Y g:i A" }}
+                            </div>
+                        </div>
+
+                        <div class="reminder-actions">
+                            <a href="{% url 'notifications:reminder_edit' reminder.pk %}" class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-pencil me-1"></i>
+                                Edit
+                            </a>
+                            <form method="post" action="{% url 'notifications:reminder_delete' reminder.pk %}" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this reminder?');">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-sm btn-outline-danger">
+                                    <i class="bi bi-trash me-1"></i>
+                                    Delete
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- Upcoming Reminders -->
+        {% if upcoming_reminders %}
+        <div class="reminder-section">
+            <h2 class="reminder-section-title">
+                <span class="reminder-section-icon upcoming">
+                    <i class="bi bi-clock-fill"></i>
+                </span>
+                Upcoming Reminders
+            </h2>
+            {% for reminder in upcoming_reminders %}
+            <div class="reminder-card upcoming">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div class="flex-grow-1">
+                        <div class="mb-2">
+                            <span class="reminder-type-badge {{ reminder.reminder_type }}">
+                                {{ reminder.get_reminder_type_display }}
+                            </span>
+                        </div>
+
+                        <div class="reminder-content">
+                            <h3 class="reminder-application">
+                                <i class="bi bi-briefcase me-2"></i>
+                                {{ reminder.application.title }}
+                            </h3>
+                            <p class="reminder-message">{{ reminder.message }}</p>
+                            <div class="reminder-time">
+                                <i class="bi bi-calendar-event"></i>
+                                <strong>Scheduled:</strong> {{ reminder.scheduled_for|date:"M d, Y g:i A" }}
+                            </div>
+                        </div>
+
+                        <div class="reminder-actions">
+                            <a href="{% url 'notifications:reminder_edit' reminder.pk %}" class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-pencil me-1"></i>
+                                Edit
+                            </a>
+                            <form method="post" action="{% url 'notifications:reminder_delete' reminder.pk %}" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this reminder?');">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-sm btn-outline-danger">
+                                    <i class="bi bi-trash me-1"></i>
+                                    Delete
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- Sent Reminders -->
+        {% if sent_reminders %}
+        <div class="reminder-section">
+            <h2 class="reminder-section-title">
+                <span class="reminder-section-icon sent">
+                    <i class="bi bi-check-circle-fill"></i>
+                </span>
+                Sent Reminders
+            </h2>
+            {% for reminder in sent_reminders %}
+            <div class="reminder-card sent">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div class="flex-grow-1">
+                        <div class="mb-2">
+                            <span class="reminder-type-badge {{ reminder.reminder_type }}">
+                                {{ reminder.get_reminder_type_display }}
+                            </span>
+                        </div>
+
+                        <div class="reminder-content">
+                            <h3 class="reminder-application">
+                                <i class="bi bi-briefcase me-2"></i>
+                                {{ reminder.application.title }}
+                            </h3>
+                            <p class="reminder-message">{{ reminder.message }}</p>
+                            <div class="reminder-time">
+                                <i class="bi bi-check-circle"></i>
+                                <strong>Sent:</strong> {{ reminder.sent_at|date:"M d, Y g:i A" }}
+                            </div>
+                        </div>
+
+                        <div class="reminder-actions">
+                            <form method="post" action="{% url 'notifications:reminder_delete' reminder.pk %}" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this reminder?');">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-sm btn-outline-danger">
+                                    <i class="bi bi-trash me-1"></i>
+                                    Delete
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- Empty State -->
+        {% if not upcoming_reminders and not overdue_reminders and not sent_reminders %}
+        <div class="empty-state">
+            <div class="empty-state-icon">
+                <i class="bi bi-alarm"></i>
+            </div>
+            <h2 class="empty-state-title">No Reminders</h2>
+            <p class="empty-state-text">
+                You haven't created any reminders yet. Stay on top of your applications by setting up reminders for deadlines, interviews, and follow-ups!
+            </p>
+            <a href="{% url 'notifications:reminder_create' %}" class="btn btn-primary">
+                <i class="bi bi-plus-circle me-2"></i>
+                Create Your First Reminder
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Auto-dismiss toasts after 5 seconds
+    document.addEventListener('DOMContentLoaded', function() {
+        const toasts = document.querySelectorAll('.toast');
+        toasts.forEach(toast => {
+            const bsToast = new bootstrap.Toast(toast);
+            bsToast.show();
+        });
+    });
+</script>
+{% endblock %}

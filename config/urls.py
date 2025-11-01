@@ -18,7 +18,7 @@ urlpatterns = [
     path('accounts/', include('accounts.urls')),
     path('tracker/', include('tracker.urls')),
     path('documents/', include('documents.urls')),
-    # path('notifications/', include('notifications.urls')),  # TODO: Create notifications URLs
+    path('notifications/', include('notifications.urls'))
 ]
 
 # Error handlers

@@ -1,0 +1,306 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Server Error - {{ block.super }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .error-page {
+        min-height: calc(100vh - 73px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(180deg, var(--color-gray-50) 0%, white 100%);
+        padding: var(--spacing-2xl) var(--spacing-md);
+    }
+
+    .error-container {
+        text-align: center;
+        max-width: 600px;
+        animation: fadeInUp 0.6s ease-out;
+    }
+
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .error-illustration {
+        margin-bottom: var(--spacing-2xl);
+        position: relative;
+    }
+
+    .error-code {
+        font-size: 10rem;
+        font-weight: var(--font-weight-bold);
+        background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        line-height: 1;
+        margin-bottom: var(--spacing-md);
+        animation: glitch 3s ease-in-out infinite;
+    }
+
+    @keyframes glitch {
+        0%, 100% {
+            transform: translate(0);
+        }
+        20% {
+            transform: translate(-2px, 2px);
+        }
+        40% {
+            transform: translate(-2px, -2px);
+        }
+        60% {
+            transform: translate(2px, 2px);
+        }
+        80% {
+            transform: translate(2px, -2px);
+        }
+    }
+
+    .error-icon {
+        font-size: 8rem;
+        color: #ef4444;
+        margin-bottom: var(--spacing-lg);
+        animation: pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+        0%, 100% {
+            opacity: 1;
+            transform: scale(1);
+        }
+        50% {
+            opacity: 0.7;
+            transform: scale(1.05);
+        }
+    }
+
+    .error-title {
+        font-size: var(--font-size-3xl);
+        font-weight: var(--font-weight-bold);
+        color: var(--color-gray-900);
+        margin-bottom: var(--spacing-md);
+    }
+
+    .error-message {
+        font-size: var(--font-size-lg);
+        color: var(--color-gray-600);
+        line-height: 1.6;
+        margin-bottom: var(--spacing-xl);
+    }
+
+    .error-info {
+        background: var(--color-gray-100);
+        border-radius: var(--radius-lg);
+        padding: var(--spacing-lg);
+        margin-bottom: var(--spacing-2xl);
+        border-left: 4px solid #ef4444;
+    }
+
+    .error-info-title {
+        font-size: var(--font-size-sm);
+        font-weight: var(--font-weight-semibold);
+        color: var(--color-gray-700);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: var(--spacing-sm);
+    }
+
+    .error-info-text {
+        font-size: var(--font-size-sm);
+        color: var(--color-gray-600);
+        margin: 0;
+        line-height: 1.6;
+    }
+
+    .error-actions {
+        display: flex;
+        gap: var(--spacing-md);
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    .btn-home {
+        background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+        color: white;
+        padding: var(--spacing-md) var(--spacing-2xl);
+        border-radius: var(--radius-lg);
+        font-weight: var(--font-weight-semibold);
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: var(--spacing-sm);
+        transition: all var(--transition-fast);
+        border: none;
+    }
+
+    .btn-home:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-lg);
+        color: white;
+    }
+
+    .btn-retry {
+        background: white;
+        color: var(--color-gray-700);
+        padding: var(--spacing-md) var(--spacing-2xl);
+        border-radius: var(--radius-lg);
+        font-weight: var(--font-weight-semibold);
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: var(--spacing-sm);
+        transition: all var(--transition-fast);
+        border: 2px solid var(--color-gray-200);
+    }
+
+    .btn-retry:hover {
+        background: var(--color-gray-50);
+        border-color: var(--color-gray-300);
+        color: var(--color-gray-900);
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-sm);
+    }
+
+    .support-section {
+        margin-top: var(--spacing-2xl);
+        padding-top: var(--spacing-2xl);
+        border-top: 1px solid var(--color-gray-200);
+    }
+
+    .support-title {
+        font-size: var(--font-size-sm);
+        font-weight: var(--font-weight-semibold);
+        color: var(--color-gray-600);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: var(--spacing-md);
+    }
+
+    .support-text {
+        font-size: var(--font-size-sm);
+        color: var(--color-gray-600);
+        margin-bottom: var(--spacing-md);
+    }
+
+    .support-email {
+        color: var(--color-primary);
+        text-decoration: none;
+        font-weight: var(--font-weight-medium);
+        display: inline-flex;
+        align-items: center;
+        gap: var(--spacing-xs);
+        transition: all var(--transition-fast);
+    }
+
+    .support-email:hover {
+        color: var(--color-primary-dark);
+        gap: var(--spacing-sm);
+    }
+
+    .decorative-element {
+        position: absolute;
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, rgba(239, 68, 68, 0.2) 0%, transparent 100%);
+        opacity: 0.3;
+        z-index: -1;
+    }
+
+    .decorative-element.top-left {
+        top: -50px;
+        left: -50px;
+        animation: pulse-bg 4s ease-in-out infinite;
+    }
+
+    .decorative-element.bottom-right {
+        bottom: -50px;
+        right: -50px;
+        animation: pulse-bg 4s ease-in-out infinite 2s;
+    }
+
+    @keyframes pulse-bg {
+        0%, 100% {
+            transform: scale(1);
+            opacity: 0.3;
+        }
+        50% {
+            transform: scale(1.5);
+            opacity: 0.5;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="error-page">
+    <div class="error-container">
+        <div class="decorative-element top-left"></div>
+        <div class="decorative-element bottom-right"></div>
+
+        <div class="error-illustration">
+            <div class="error-icon">
+                <i class="bi bi-exclamation-triangle"></i>
+            </div>
+        </div>
+
+        <h1 class="error-code">500</h1>
+
+        <h2 class="error-title">Internal Server Error</h2>
+
+        <p class="error-message">
+            Oops! Something went wrong on our end.
+            Our team has been notified and we're working to fix it.
+        </p>
+
+        <div class="error-info">
+            <div class="error-info-title">What happened?</div>
+            <p class="error-info-text">
+                An unexpected error occurred while processing your request.
+                This is likely a temporary issue. You can try refreshing the page
+                or returning to the homepage.
+            </p>
+        </div>
+
+        <div class="error-actions">
+            {% if user.is_authenticated %}
+                <a href="{% url 'tracker:dashboard' %}" class="btn-home">
+                    <i class="bi bi-house"></i>
+                    Go to Dashboard
+                </a>
+            {% else %}
+                <a href="{% url 'home' %}" class="btn-home">
+                    <i class="bi bi-house"></i>
+                    Go to Home
+                </a>
+            {% endif %}
+            <button onclick="location.reload()" class="btn-retry">
+                <i class="bi bi-arrow-clockwise"></i>
+                Try Again
+            </button>
+        </div>
+
+        <div class="support-section">
+            <div class="support-title">Need Help?</div>
+            <p class="support-text">
+                If this problem persists, please contact our support team.
+                We're here to help!
+            </p>
+            <a href="mailto:support@apptracker.com" class="support-email">
+                <i class="bi bi-envelope"></i>
+                support@apptracker.com
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,204 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ title }} - AppTracker{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Form page specific styles */
+    .form-page {
+        padding: var(--spacing-2xl) 0;
+        background: var(--color-gray-50);
+        min-height: calc(100vh - 73px);
+    }
+
+    .form-container {
+        max-width: 800px;
+        margin: 0 auto;
+    }
+
+    .form-card {
+        background: white;
+        border-radius: var(--radius-lg);
+        padding: var(--spacing-2xl);
+        box-shadow: var(--shadow-md);
+    }
+
+    .form-header {
+        margin-bottom: var(--spacing-2xl);
+        padding-bottom: var(--spacing-lg);
+        border-bottom: 1px solid var(--color-gray-200);
+    }
+
+    .form-header h1 {
+        font-size: var(--font-size-2xl);
+        font-weight: var(--font-weight-bold);
+        color: var(--color-gray-900);
+        margin-bottom: var(--spacing-xs);
+    }
+
+    .form-header p {
+        color: var(--color-gray-600);
+        margin: 0;
+    }
+
+    .form-actions {
+        display: flex;
+        gap: var(--spacing-md);
+        margin-top: var(--spacing-2xl);
+        padding-top: var(--spacing-xl);
+        border-top: 1px solid var(--color-gray-200);
+    }
+
+    .form-label {
+        font-weight: var(--font-weight-medium);
+        color: var(--color-gray-700);
+        margin-bottom: var(--spacing-xs);
+    }
+
+    .form-control, .form-select {
+        border-radius: var(--radius-md);
+        border: 1px solid var(--color-gray-300);
+        padding: var(--spacing-sm) var(--spacing-md);
+    }
+
+    .form-control:focus, .form-select:focus {
+        border-color: var(--color-primary);
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+
+    .invalid-feedback {
+        color: var(--color-danger);
+        font-size: var(--font-size-sm);
+        margin-top: var(--spacing-xs);
+    }
+
+    .form-text {
+        color: var(--color-gray-500);
+        font-size: var(--font-size-sm);
+        margin-top: var(--spacing-xs);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="form-page">
+    <div class="container">
+        <div class="form-container">
+            <div class="form-card">
+                <!-- Header -->
+                <div class="form-header">
+                    <h1>
+                        <i class="bi bi-alarm me-2"></i>
+                        {{ title }}
+                    </h1>
+                    <p>Set up a reminder for your application</p>
+                </div>
+
+                <!-- Error Messages -->
+                {% if form.non_field_errors %}
+                <div class="alert alert-danger" role="alert">
+                    <i class="bi bi-exclamation-circle me-2"></i>
+                    {{ form.non_field_errors|first }}
+                </div>
+                {% endif %}
+
+                <!-- Form -->
+                <form method="post" class="needs-validation" novalidate>
+                    {% csrf_token %}
+
+                    <!-- Application -->
+                    <div class="mb-3">
+                        <label for="{{ form.application.id_for_label }}" class="form-label">
+                            Application <span class="text-danger">*</span>
+                        </label>
+                        {{ form.application }}
+                        {% if form.application.errors %}
+                        <div class="invalid-feedback d-block">
+                            {{ form.application.errors|first }}
+                        </div>
+                        {% endif %}
+                        <div class="form-text">Select the application this reminder is for</div>
+                    </div>
+
+                    <!-- Reminder Type -->
+                    <div class="mb-3">
+                        <label for="{{ form.reminder_type.id_for_label }}" class="form-label">
+                            Reminder Type <span class="text-danger">*</span>
+                        </label>
+                        {{ form.reminder_type }}
+                        {% if form.reminder_type.errors %}
+                        <div class="invalid-feedback d-block">
+                            {{ form.reminder_type.errors|first }}
+                        </div>
+                        {% endif %}
+                        <div class="form-text">What type of reminder is this?</div>
+                    </div>
+
+                    <!-- Message -->
+                    <div class="mb-3">
+                        <label for="{{ form.message.id_for_label }}" class="form-label">
+                            Message <span class="text-danger">*</span>
+                        </label>
+                        {{ form.message }}
+                        {% if form.message.errors %}
+                        <div class="invalid-feedback d-block">
+                            {{ form.message.errors|first }}
+                        </div>
+                        {% endif %}
+                        {% if form.message.help_text %}
+                        <div class="form-text">{{ form.message.help_text }}</div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Scheduled For -->
+                    <div class="mb-3">
+                        <label for="{{ form.scheduled_for.id_for_label }}" class="form-label">
+                            Scheduled For <span class="text-danger">*</span>
+                        </label>
+                        {{ form.scheduled_for }}
+                        {% if form.scheduled_for.errors %}
+                        <div class="invalid-feedback d-block">
+                            {{ form.scheduled_for.errors|first }}
+                        </div>
+                        {% endif %}
+                        {% if form.scheduled_for.help_text %}
+                        <div class="form-text">{{ form.scheduled_for.help_text }}</div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-circle me-2"></i>
+                            Save Reminder
+                        </button>
+                        <a href="{% url 'notifications:reminders' %}" class="btn btn-outline-secondary">
+                            <i class="bi bi-x-circle me-2"></i>
+                            Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Form validation
+    document.addEventListener('DOMContentLoaded', function() {
+        const forms = document.querySelectorAll('.needs-validation');
+        forms.forEach(form => {
+            form.addEventListener('submit', function(event) {
+                if (!form.checkValidity()) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+                form.classList.add('was-validated');
+            });
+        });
+    });
+</script>
+{% endblock %}

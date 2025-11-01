@@ -1,0 +1,311 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Delete Document - {{ block.super }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .delete-page {
+        min-height: calc(100vh - 73px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(180deg, var(--color-gray-50) 0%, white 100%);
+        padding: var(--spacing-2xl) var(--spacing-md);
+    }
+
+    .delete-card {
+        width: 100%;
+        max-width: 550px;
+        background: white;
+        border-radius: var(--radius-xl);
+        box-shadow: var(--shadow-xl);
+        padding: var(--spacing-2xl);
+        animation: scaleIn var(--transition-base) ease-out;
+    }
+
+    @keyframes scaleIn {
+        from {
+            opacity: 0;
+            transform: scale(0.95);
+        }
+        to {
+            opacity: 1;
+            transform: scale(1);
+        }
+    }
+
+    .delete-header {
+        text-align: center;
+        margin-bottom: var(--spacing-2xl);
+    }
+
+    .delete-icon {
+        width: 80px;
+        height: 80px;
+        background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        border-radius: var(--radius-xl);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto var(--spacing-lg);
+        color: white;
+        font-size: 2.5rem;
+        animation: shake 0.5s ease-in-out;
+    }
+
+    @keyframes shake {
+        0%, 100% { transform: translateX(0); }
+        25% { transform: translateX(-10px); }
+        75% { transform: translateX(10px); }
+    }
+
+    .delete-title {
+        font-size: var(--font-size-3xl);
+        font-weight: var(--font-weight-bold);
+        color: var(--color-gray-900);
+        margin-bottom: var(--spacing-sm);
+    }
+
+    .delete-subtitle {
+        color: var(--color-gray-600);
+        font-size: var(--font-size-base);
+    }
+
+    .document-preview {
+        background: var(--color-gray-50);
+        border-radius: var(--radius-lg);
+        padding: var(--spacing-xl);
+        margin-bottom: var(--spacing-2xl);
+        border-left: 4px solid var(--color-danger);
+    }
+
+    .document-preview-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: var(--spacing-md);
+    }
+
+    .document-preview-icon {
+        width: 50px;
+        height: 50px;
+        background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%);
+        border-radius: var(--radius-lg);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.5rem;
+        margin-right: var(--spacing-md);
+    }
+
+    .document-preview-title {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .document-preview-name {
+        font-weight: var(--font-weight-semibold);
+        color: var(--color-gray-900);
+        margin-bottom: var(--spacing-xs);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .document-preview-meta {
+        display: flex;
+        gap: var(--spacing-md);
+        font-size: var(--font-size-sm);
+        color: var(--color-gray-600);
+    }
+
+    .warning-box {
+        background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%);
+        border: 2px solid #fed7aa;
+        border-radius: var(--radius-lg);
+        padding: var(--spacing-lg);
+        margin-bottom: var(--spacing-2xl);
+    }
+
+    .warning-header {
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-md);
+        margin-bottom: var(--spacing-md);
+    }
+
+    .warning-icon {
+        width: 40px;
+        height: 40px;
+        background: var(--color-warning);
+        border-radius: var(--radius-lg);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.25rem;
+        flex-shrink: 0;
+    }
+
+    .warning-title {
+        font-weight: var(--font-weight-semibold);
+        color: var(--color-warning-dark);
+        margin: 0;
+    }
+
+    .warning-text {
+        color: var(--color-gray-700);
+        font-size: var(--font-size-sm);
+        margin: 0;
+        line-height: 1.6;
+    }
+
+    .warning-text ul {
+        margin: var(--spacing-sm) 0 0 0;
+        padding-left: var(--spacing-xl);
+    }
+
+    .warning-text li {
+        margin-bottom: var(--spacing-xs);
+    }
+
+    .action-buttons {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: var(--spacing-md);
+    }
+
+    .btn-cancel {
+        background: var(--color-gray-100);
+        color: var(--color-gray-700);
+        border: 2px solid var(--color-gray-200);
+    }
+
+    .btn-cancel:hover {
+        background: var(--color-gray-200);
+        color: var(--color-gray-900);
+        border-color: var(--color-gray-300);
+    }
+
+    .btn-delete {
+        background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        color: white;
+        border: 2px solid transparent;
+    }
+
+    .btn-delete:hover {
+        background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-lg);
+    }
+
+    @media (max-width: 576px) {
+        .action-buttons {
+            grid-template-columns: 1fr;
+        }
+
+        .action-buttons .btn-cancel {
+            order: 2;
+        }
+
+        .action-buttons .btn-delete {
+            order: 1;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="delete-page">
+    <div class="delete-card">
+        <!-- Header -->
+        <div class="delete-header">
+            <div class="delete-icon">
+                <i class="bi bi-trash"></i>
+            </div>
+            <h1 class="delete-title">Delete Document?</h1>
+            <p class="delete-subtitle">This action cannot be undone</p>
+        </div>
+
+        <!-- Document Preview -->
+        <div class="document-preview">
+            <div class="document-preview-header">
+                <div class="document-preview-icon">
+                    {% if document.document_type == 'resume' %}
+                        <i class="bi bi-person-badge"></i>
+                    {% elif document.document_type == 'transcript' %}
+                        <i class="bi bi-mortarboard"></i>
+                    {% elif document.document_type == 'certificate' %}
+                        <i class="bi bi-award"></i>
+                    {% else %}
+                        <i class="bi bi-file-earmark-text"></i>
+                    {% endif %}
+                </div>
+                <div class="document-preview-title">
+                    <div class="document-preview-name" title="{{ document.original_filename }}">
+                        {{ document.original_filename }}
+                    </div>
+                    <div class="document-preview-meta">
+                        <span class="badge bg-primary">{{ document.get_document_type_display }}</span>
+                        <span>
+                            <i class="bi bi-hdd me-1"></i>
+                            {{ document.file_size_mb }} MB
+                        </span>
+                        <span>
+                            <i class="bi bi-calendar me-1"></i>
+                            {{ document.uploaded_at|date:"M d, Y" }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Warning -->
+        <div class="warning-box">
+            <div class="warning-header">
+                <div class="warning-icon">
+                    <i class="bi bi-exclamation-triangle"></i>
+                </div>
+                <h5 class="warning-title">Warning: Permanent Deletion</h5>
+            </div>
+            <p class="warning-text">
+                Deleting this document will permanently remove:
+            </p>
+            <ul class="warning-text">
+                <li>The document file from storage</li>
+                <li>All extracted information and metadata</li>
+                <li>Any processing history</li>
+            </ul>
+            <p class="warning-text mt-3 mb-0">
+                <strong>This action cannot be reversed.</strong> If you need this information later, you will have to re-upload and reprocess the document.
+            </p>
+        </div>
+
+        <!-- Confirmation Form -->
+        <form method="post" action="{% url 'documents:document_delete' document.pk %}">
+            {% csrf_token %}
+
+            <div class="action-buttons">
+                <a href="{% url 'documents:document_detail' document.pk %}" class="btn btn-lg btn-cancel">
+                    <i class="bi bi-x-circle me-2"></i>
+                    Cancel
+                </a>
+                <button type="submit" class="btn btn-lg btn-delete">
+                    <i class="bi bi-trash me-2"></i>
+                    Delete Document
+                </button>
+            </div>
+        </form>
+
+        <!-- Back Link -->
+        <div class="text-center mt-4">
+            <a href="{% url 'documents:document_list' %}" class="text-muted text-decoration-none">
+                <i class="bi bi-arrow-left me-1"></i>
+                Back to Documents
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

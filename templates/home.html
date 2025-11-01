@@ -1,0 +1,185 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Track Applications, Land Opportunities - AppTracker{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section py-5" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 80vh;">
+    <div class="container">
+        <div class="row align-items-center min-vh-75">
+            <div class="col-lg-6 text-white">
+                <h1 class="display-3 fw-bold mb-4" style="line-height: 1.2;">
+                    Never Miss an Opportunity Again
+                </h1>
+                <p class="lead mb-5 opacity-90" style="font-size: 1.25rem;">
+                    Track job and scholarship applications with AI-powered assistance. Stay organized, meet deadlines, and land your dream opportunity.
+                </p>
+                <div class="d-flex gap-3 flex-wrap">
+                    <a href="{% url 'accounts:signup' %}" class="btn btn-light btn-lg px-5 py-3 shadow-sm">
+                        <i class="bi bi-rocket-takeoff me-2"></i>
+                        Get Started Free
+                    </a>
+                    <a href="{% url 'accounts:login' %}" class="btn btn-outline-light btn-lg px-5 py-3">
+                        Sign In
+                    </a>
+                </div>
+            </div>
+            <div class="col-lg-6 d-none d-lg-block">
+                <div class="hero-illustration text-center">
+                    <i class="bi bi-clipboard-check-fill text-white opacity-75" style="font-size: 20rem;"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Features Section -->
+<section id="features" class="py-5 bg-light">
+    <div class="container py-5">
+        <div class="text-center mb-5">
+            <h2 class="display-5 fw-bold mb-3">Everything You Need in One Place</h2>
+            <p class="lead text-muted">Streamline your application process with powerful features</p>
+        </div>
+
+        <div class="row g-4">
+            <!-- Feature 1: Track Applications -->
+            <div class="col-md-6 col-lg-3">
+                <div class="card border-0 shadow-sm h-100 hover-card" style="transition: transform 0.3s ease;">
+                    <div class="card-body text-center p-4">
+                        <div class="feature-icon mb-3">
+                            <i class="bi bi-list-check text-primary" style="font-size: 3rem;"></i>
+                        </div>
+                        <h5 class="card-title fw-semibold mb-3">Track Applications</h5>
+                        <p class="card-text text-muted">
+                            Organize all your job and scholarship applications in one centralized dashboard.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Feature 2: AI-Powered Responses -->
+            <div class="col-md-6 col-lg-3">
+                <div class="card border-0 shadow-sm h-100 hover-card" style="transition: transform 0.3s ease;">
+                    <div class="card-body text-center p-4">
+                        <div class="feature-icon mb-3">
+                            <i class="bi bi-stars text-primary" style="font-size: 3rem;"></i>
+                        </div>
+                        <h5 class="card-title fw-semibold mb-3">AI-Powered Responses</h5>
+                        <p class="card-text text-muted">
+                            Generate tailored responses to application questions using advanced AI technology.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Feature 3: Deadline Management -->
+            <div class="col-md-6 col-lg-3">
+                <div class="card border-0 shadow-sm h-100 hover-card" style="transition: transform 0.3s ease;">
+                    <div class="card-body text-center p-4">
+                        <div class="feature-icon mb-3">
+                            <i class="bi bi-calendar-check text-primary" style="font-size: 3rem;"></i>
+                        </div>
+                        <h5 class="card-title fw-semibold mb-3">Deadline Management</h5>
+                        <p class="card-text text-muted">
+                            Never miss a deadline with smart reminders and visual deadline tracking.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Feature 4: Document Organization -->
+            <div class="col-md-6 col-lg-3">
+                <div class="card border-0 shadow-sm h-100 hover-card" style="transition: transform 0.3s ease;">
+                    <div class="card-body text-center p-4">
+                        <div class="feature-icon mb-3">
+                            <i class="bi bi-file-earmark-text text-primary" style="font-size: 3rem;"></i>
+                        </div>
+                        <h5 class="card-title fw-semibold mb-3">Document Organization</h5>
+                        <p class="card-text text-muted">
+                            Keep resumes, cover letters, and supporting documents organized and accessible.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- How It Works Section -->
+<section id="about" class="py-5">
+    <div class="container py-5">
+        <div class="text-center mb-5">
+            <h2 class="display-5 fw-bold mb-3">How It Works</h2>
+            <p class="lead text-muted">Get started in three simple steps</p>
+        </div>
+
+        <div class="row g-5 align-items-center">
+            <div class="col-lg-4">
+                <div class="text-center">
+                    <div class="step-number mb-3 mx-auto d-flex align-items-center justify-content-center bg-primary text-white rounded-circle" style="width: 80px; height: 80px; font-size: 2rem; font-weight: bold;">
+                        1
+                    </div>
+                    <h4 class="fw-semibold mb-3">Add Your Application</h4>
+                    <p class="text-muted">
+                        Simply paste the URL or manually enter details about the job or scholarship you're applying to.
+                    </p>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="text-center">
+                    <div class="step-number mb-3 mx-auto d-flex align-items-center justify-content-center bg-primary text-white rounded-circle" style="width: 80px; height: 80px; font-size: 2rem; font-weight: bold;">
+                        2
+                    </div>
+                    <h4 class="fw-semibold mb-3">Generate Responses</h4>
+                    <p class="text-muted">
+                        Let our AI analyze questions and generate tailored responses based on your profile and experience.
+                    </p>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="text-center">
+                    <div class="step-number mb-3 mx-auto d-flex align-items-center justify-content-center bg-primary text-white rounded-circle" style="width: 80px; height: 80px; font-size: 2rem; font-weight: bold;">
+                        3
+                    </div>
+                    <h4 class="fw-semibold mb-3">Track & Submit</h4>
+                    <p class="text-muted">
+                        Monitor your progress, update statuses, and never miss a deadline with automated reminders.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CTA Section -->
+<section class="py-5 bg-dark text-white">
+    <div class="container py-5">
+        <div class="row justify-content-center text-center">
+            <div class="col-lg-8">
+                <h2 class="display-5 fw-bold mb-4">Ready to Get Started?</h2>
+                <p class="lead mb-5 opacity-90">
+                    Join hundreds of applicants who are landing their dream jobs and scholarships with AppTracker.
+                </p>
+                <a href="{% url 'accounts:signup' %}" class="btn btn-primary btn-lg px-5 py-3">
+                    <i class="bi bi-rocket-takeoff me-2"></i>
+                    Create Your Free Account
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Custom Styles -->
+<style>
+    .hover-card:hover {
+        transform: translateY(-5px);
+    }
+
+    .min-vh-75 {
+        min-height: 75vh;
+    }
+</style>
+{% endblock %}

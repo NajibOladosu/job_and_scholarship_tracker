@@ -1,0 +1,543 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ document.original_filename }} - {{ block.super }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .detail-page {
+        padding: var(--spacing-2xl) 0;
+        background: var(--color-gray-50);
+        min-height: calc(100vh - 73px);
+    }
+
+    .breadcrumb-nav {
+        background: white;
+        padding: var(--spacing-md) var(--spacing-xl);
+        border-radius: var(--radius-lg);
+        margin-bottom: var(--spacing-xl);
+        box-shadow: var(--shadow-sm);
+    }
+
+    .document-header-card {
+        background: white;
+        border-radius: var(--radius-xl);
+        padding: var(--spacing-2xl);
+        box-shadow: var(--shadow-sm);
+        margin-bottom: var(--spacing-xl);
+    }
+
+    .document-title-section {
+        display: flex;
+        align-items: start;
+        margin-bottom: var(--spacing-xl);
+    }
+
+    .document-icon-large {
+        width: 80px;
+        height: 80px;
+        background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%);
+        border-radius: var(--radius-xl);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 2.5rem;
+        flex-shrink: 0;
+        margin-right: var(--spacing-xl);
+    }
+
+    .document-title-content {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .document-title {
+        font-size: var(--font-size-3xl);
+        font-weight: var(--font-weight-bold);
+        color: var(--color-gray-900);
+        margin-bottom: var(--spacing-sm);
+        word-break: break-word;
+    }
+
+    .document-type-badge {
+        font-size: var(--font-size-base);
+        padding: var(--spacing-xs) var(--spacing-md);
+    }
+
+    .metadata-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: var(--spacing-lg);
+        padding: var(--spacing-xl);
+        background: var(--color-gray-50);
+        border-radius: var(--radius-lg);
+        margin-bottom: var(--spacing-xl);
+    }
+
+    .metadata-item {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .metadata-label {
+        font-size: var(--font-size-sm);
+        color: var(--color-gray-600);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: var(--spacing-xs);
+    }
+
+    .metadata-value {
+        font-size: var(--font-size-lg);
+        font-weight: var(--font-weight-semibold);
+        color: var(--color-gray-900);
+    }
+
+    .status-indicator {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: var(--spacing-xs) var(--spacing-md);
+        border-radius: var(--radius-full);
+        font-size: var(--font-size-sm);
+        font-weight: var(--font-weight-medium);
+    }
+
+    .status-indicator.processed {
+        background: var(--color-success-light);
+        color: var(--color-success-dark);
+    }
+
+    .status-indicator.processing {
+        background: var(--color-warning-light);
+        color: var(--color-warning-dark);
+    }
+
+    .status-indicator .spinner {
+        width: 14px;
+        height: 14px;
+        border: 2px solid currentColor;
+        border-right-color: transparent;
+        border-radius: 50%;
+        animation: spin 0.75s linear infinite;
+    }
+
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: var(--spacing-md);
+        flex-wrap: wrap;
+    }
+
+    .info-section {
+        background: white;
+        border-radius: var(--radius-xl);
+        padding: var(--spacing-2xl);
+        box-shadow: var(--shadow-sm);
+        margin-bottom: var(--spacing-xl);
+    }
+
+    .section-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: var(--spacing-xl);
+        padding-bottom: var(--spacing-md);
+        border-bottom: 2px solid var(--color-gray-200);
+    }
+
+    .section-title {
+        font-size: var(--font-size-2xl);
+        font-weight: var(--font-weight-bold);
+        color: var(--color-gray-900);
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-md);
+    }
+
+    .section-icon {
+        width: 40px;
+        height: 40px;
+        background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%);
+        border-radius: var(--radius-lg);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.25rem;
+    }
+
+    .info-card {
+        background: var(--color-gray-50);
+        border-radius: var(--radius-lg);
+        padding: var(--spacing-xl);
+        margin-bottom: var(--spacing-lg);
+        border-left: 4px solid var(--color-primary);
+    }
+
+    .info-card:last-child {
+        margin-bottom: 0;
+    }
+
+    .info-header {
+        display: flex;
+        justify-content: between;
+        align-items: center;
+        margin-bottom: var(--spacing-md);
+    }
+
+    .info-type {
+        font-size: var(--font-size-lg);
+        font-weight: var(--font-weight-semibold);
+        color: var(--color-gray-900);
+        text-transform: capitalize;
+    }
+
+    .confidence-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: var(--spacing-xs) var(--spacing-sm);
+        border-radius: var(--radius-full);
+        font-size: var(--font-size-sm);
+        font-weight: var(--font-weight-medium);
+    }
+
+    .confidence-badge.high {
+        background: var(--color-success-light);
+        color: var(--color-success-dark);
+    }
+
+    .confidence-badge.medium {
+        background: var(--color-warning-light);
+        color: var(--color-warning-dark);
+    }
+
+    .confidence-badge.low {
+        background: var(--color-danger-light);
+        color: var(--color-danger-dark);
+    }
+
+    .info-content {
+        color: var(--color-gray-700);
+        line-height: 1.6;
+    }
+
+    .info-content pre {
+        background: white;
+        padding: var(--spacing-md);
+        border-radius: var(--radius-md);
+        overflow-x: auto;
+        white-space: pre-wrap;
+        word-wrap: break-word;
+        margin: 0;
+    }
+
+    .info-content ul {
+        margin: 0;
+        padding-left: var(--spacing-xl);
+    }
+
+    .info-content li {
+        margin-bottom: var(--spacing-xs);
+    }
+
+    .empty-info {
+        text-align: center;
+        padding: var(--spacing-2xl);
+        color: var(--color-gray-500);
+    }
+
+    .empty-info-icon {
+        font-size: 3rem;
+        margin-bottom: var(--spacing-md);
+    }
+
+    .alert-processing {
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-md);
+        padding: var(--spacing-lg);
+        background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%);
+        border: 2px solid #fed7aa;
+        border-radius: var(--radius-lg);
+        margin-bottom: var(--spacing-xl);
+    }
+
+    .alert-processing-icon {
+        width: 50px;
+        height: 50px;
+        background: var(--color-warning);
+        border-radius: var(--radius-lg);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.5rem;
+        flex-shrink: 0;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="detail-page">
+    <div class="container">
+        <!-- Breadcrumb -->
+        <nav class="breadcrumb-nav" aria-label="breadcrumb">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item">
+                    <a href="{% url 'documents:document_list' %}">
+                        <i class="bi bi-file-earmark-text me-1"></i>Documents
+                    </a>
+                </li>
+                <li class="breadcrumb-item active" aria-current="page">{{ document.original_filename }}</li>
+            </ol>
+        </nav>
+
+        <!-- Document Header -->
+        <div class="document-header-card">
+            <div class="document-title-section">
+                <div class="document-icon-large">
+                    {% if document.document_type == 'resume' %}
+                        <i class="bi bi-person-badge"></i>
+                    {% elif document.document_type == 'transcript' %}
+                        <i class="bi bi-mortarboard"></i>
+                    {% elif document.document_type == 'certificate' %}
+                        <i class="bi bi-award"></i>
+                    {% else %}
+                        <i class="bi bi-file-earmark-text"></i>
+                    {% endif %}
+                </div>
+                <div class="document-title-content">
+                    <h1 class="document-title">{{ document.original_filename }}</h1>
+                    <span class="badge bg-primary document-type-badge">{{ document.get_document_type_display }}</span>
+                </div>
+            </div>
+
+            <!-- Metadata -->
+            <div class="metadata-grid">
+                <div class="metadata-item">
+                    <span class="metadata-label">File Size</span>
+                    <span class="metadata-value">
+                        <i class="bi bi-hdd me-2"></i>{{ document.file_size_mb }} MB
+                    </span>
+                </div>
+                <div class="metadata-item">
+                    <span class="metadata-label">Uploaded</span>
+                    <span class="metadata-value">
+                        <i class="bi bi-calendar me-2"></i>{{ document.uploaded_at|date:"M d, Y" }}
+                    </span>
+                </div>
+                <div class="metadata-item">
+                    <span class="metadata-label">Status</span>
+                    <span class="metadata-value">
+                        {% if document.is_processed %}
+                            <span class="status-indicator processed">
+                                <i class="bi bi-check-circle"></i>
+                                Processed
+                            </span>
+                        {% else %}
+                            <span class="status-indicator processing">
+                                <div class="spinner"></div>
+                                Processing...
+                            </span>
+                        {% endif %}
+                    </span>
+                </div>
+                {% if document.processed_at %}
+                    <div class="metadata-item">
+                        <span class="metadata-label">Processed</span>
+                        <span class="metadata-value">
+                            <i class="bi bi-clock me-2"></i>{{ document.processed_at|date:"M d, Y" }}
+                        </span>
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Actions -->
+            <div class="action-buttons">
+                <a href="{% url 'documents:document_list' %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left me-2"></i>
+                    Back to List
+                </a>
+                {% if document.is_processed %}
+                    <form method="post" action="{% url 'documents:reprocess_document' document.pk %}" class="d-inline">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-outline-primary">
+                            <i class="bi bi-arrow-clockwise me-2"></i>
+                            Reprocess
+                        </button>
+                    </form>
+                {% endif %}
+                <a href="{% url 'documents:document_delete' document.pk %}" class="btn btn-outline-danger">
+                    <i class="bi bi-trash me-2"></i>
+                    Delete
+                </a>
+            </div>
+        </div>
+
+        <!-- Processing Alert -->
+        {% if not document.is_processed %}
+            <div class="alert-processing">
+                <div class="alert-processing-icon">
+                    <i class="bi bi-hourglass-split"></i>
+                </div>
+                <div>
+                    <h5 class="mb-1">Document Processing in Progress</h5>
+                    <p class="mb-0 text-muted">
+                        We're extracting information from your document. This usually takes a few minutes.
+                        Refresh this page to see the results.
+                    </p>
+                </div>
+            </div>
+        {% endif %}
+
+        <!-- Extracted Information -->
+        {% if document.is_processed %}
+            <div class="info-section">
+                <div class="section-header">
+                    <h2 class="section-title">
+                        <div class="section-icon">
+                            <i class="bi bi-lightbulb"></i>
+                        </div>
+                        Extracted Information
+                    </h2>
+                </div>
+
+                {% if extracted_info %}
+                    <!-- Name -->
+                    {% if extracted_info.name %}
+                        <div class="info-card">
+                            <div class="info-header">
+                                <div class="info-type">
+                                    <i class="bi bi-person me-2"></i>Name
+                                </div>
+                                {% with confidence=extracted_info.name.confidence %}
+                                    <span class="confidence-badge {% if confidence >= 80 %}high{% elif confidence >= 50 %}medium{% else %}low{% endif %}">
+                                        <i class="bi bi-speedometer2"></i>
+                                        {{ confidence }}% confident
+                                    </span>
+                                {% endwith %}
+                            </div>
+                            <div class="info-content">
+                                <pre>{{ extracted_info.name.content|safe }}</pre>
+                            </div>
+                        </div>
+                    {% endif %}
+
+                    <!-- Email -->
+                    {% if extracted_info.email %}
+                        <div class="info-card">
+                            <div class="info-header">
+                                <div class="info-type">
+                                    <i class="bi bi-envelope me-2"></i>Email
+                                </div>
+                                {% with confidence=extracted_info.email.confidence %}
+                                    <span class="confidence-badge {% if confidence >= 80 %}high{% elif confidence >= 50 %}medium{% else %}low{% endif %}">
+                                        <i class="bi bi-speedometer2"></i>
+                                        {{ confidence }}% confident
+                                    </span>
+                                {% endwith %}
+                            </div>
+                            <div class="info-content">
+                                <pre>{{ extracted_info.email.content|safe }}</pre>
+                            </div>
+                        </div>
+                    {% endif %}
+
+                    <!-- Education -->
+                    {% if extracted_info.education %}
+                        <div class="info-card">
+                            <div class="info-header">
+                                <div class="info-type">
+                                    <i class="bi bi-mortarboard me-2"></i>Education
+                                </div>
+                                {% with confidence=extracted_info.education.confidence %}
+                                    <span class="confidence-badge {% if confidence >= 80 %}high{% elif confidence >= 50 %}medium{% else %}low{% endif %}">
+                                        <i class="bi bi-speedometer2"></i>
+                                        {{ confidence }}% confident
+                                    </span>
+                                {% endwith %}
+                            </div>
+                            <div class="info-content">
+                                <pre>{{ extracted_info.education.content|safe }}</pre>
+                            </div>
+                        </div>
+                    {% endif %}
+
+                    <!-- Experience -->
+                    {% if extracted_info.experience %}
+                        <div class="info-card">
+                            <div class="info-header">
+                                <div class="info-type">
+                                    <i class="bi bi-briefcase me-2"></i>Work Experience
+                                </div>
+                                {% with confidence=extracted_info.experience.confidence %}
+                                    <span class="confidence-badge {% if confidence >= 80 %}high{% elif confidence >= 50 %}medium{% else %}low{% endif %}">
+                                        <i class="bi bi-speedometer2"></i>
+                                        {{ confidence }}% confident
+                                    </span>
+                                {% endwith %}
+                            </div>
+                            <div class="info-content">
+                                <pre>{{ extracted_info.experience.content|safe }}</pre>
+                            </div>
+                        </div>
+                    {% endif %}
+
+                    <!-- Skills -->
+                    {% if extracted_info.skills %}
+                        <div class="info-card">
+                            <div class="info-header">
+                                <div class="info-type">
+                                    <i class="bi bi-gear me-2"></i>Skills
+                                </div>
+                                {% with confidence=extracted_info.skills.confidence %}
+                                    <span class="confidence-badge {% if confidence >= 80 %}high{% elif confidence >= 50 %}medium{% else %}low{% endif %}">
+                                        <i class="bi bi-speedometer2"></i>
+                                        {{ confidence }}% confident
+                                    </span>
+                                {% endwith %}
+                            </div>
+                            <div class="info-content">
+                                <pre>{{ extracted_info.skills.content|safe }}</pre>
+                            </div>
+                        </div>
+                    {% endif %}
+
+                    <!-- Certifications -->
+                    {% if extracted_info.certifications %}
+                        <div class="info-card">
+                            <div class="info-header">
+                                <div class="info-type">
+                                    <i class="bi bi-award me-2"></i>Certifications
+                                </div>
+                                {% with confidence=extracted_info.certifications.confidence %}
+                                    <span class="confidence-badge {% if confidence >= 80 %}high{% elif confidence >= 50 %}medium{% else %}low{% endif %}">
+                                        <i class="bi bi-speedometer2"></i>
+                                        {{ confidence }}% confident
+                                    </span>
+                                {% endwith %}
+                            </div>
+                            <div class="info-content">
+                                <pre>{{ extracted_info.certifications.content|safe }}</pre>
+                            </div>
+                        </div>
+                    {% endif %}
+                {% else %}
+                    <div class="empty-info">
+                        <div class="empty-info-icon">
+                            <i class="bi bi-inbox"></i>
+                        </div>
+                        <p class="mb-0">No information has been extracted from this document yet.</p>
+                    </div>
+                {% endif %}
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
