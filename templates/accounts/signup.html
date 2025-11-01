@@ -1,0 +1,279 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block title %}Create Account - AppTracker{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Auth page specific styles */
+    .auth-page {
+        min-height: calc(100vh - 73px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(180deg, var(--color-gray-50) 0%, white 100%);
+        padding: var(--spacing-2xl) var(--spacing-md);
+    }
+
+    .auth-card {
+        width: 100%;
+        max-width: 450px;
+        background: white;
+        border-radius: var(--radius-xl);
+        box-shadow: var(--shadow-xl);
+        padding: var(--spacing-2xl);
+        animation: scaleIn var(--transition-base) ease-out;
+    }
+
+    .auth-brand {
+        text-align: center;
+        margin-bottom: var(--spacing-2xl);
+    }
+
+    .auth-brand-icon {
+        width: 60px;
+        height: 60px;
+        background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%);
+        border-radius: var(--radius-xl);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto var(--spacing-md);
+        color: white;
+        font-size: var(--font-size-3xl);
+    }
+
+    .auth-title {
+        font-size: var(--font-size-3xl);
+        font-weight: var(--font-weight-bold);
+        color: var(--color-gray-900);
+        margin-bottom: var(--spacing-sm);
+    }
+
+    .auth-subtitle {
+        color: var(--color-gray-600);
+        font-size: var(--font-size-base);
+        margin-bottom: 0;
+    }
+
+    .divider {
+        display: flex;
+        align-items: center;
+        text-align: center;
+        margin: var(--spacing-lg) 0;
+    }
+
+    .divider::before,
+    .divider::after {
+        content: '';
+        flex: 1;
+        border-bottom: 1px solid var(--color-gray-200);
+    }
+
+    .divider span {
+        padding: 0 var(--spacing-md);
+        color: var(--color-gray-500);
+        font-size: var(--font-size-sm);
+    }
+
+    .password-toggle-wrapper {
+        position: relative;
+    }
+
+    .password-toggle {
+        position: absolute;
+        right: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: none;
+        border: none;
+        color: var(--color-gray-400);
+        cursor: pointer;
+        padding: 0.5rem;
+        transition: color var(--transition-fast);
+    }
+
+    .password-toggle:hover {
+        color: var(--color-gray-600);
+    }
+
+    .password-requirements {
+        font-size: var(--font-size-xs);
+        color: var(--color-gray-600);
+        margin-top: var(--spacing-sm);
+    }
+
+    .password-requirements ul {
+        padding-left: 1.25rem;
+        margin-bottom: 0;
+    }
+
+    .password-requirements li {
+        margin-bottom: 0.25rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="auth-page">
+    <div class="auth-card">
+        <!-- Brand -->
+        <div class="auth-brand">
+            <div class="auth-brand-icon">
+                <i class="bi bi-bookmark-star-fill"></i>
+            </div>
+            <h1 class="auth-title">Create an account</h1>
+            <p class="auth-subtitle">Start tracking your applications today</p>
+        </div>
+
+        <!-- Error Messages -->
+        {% if form.non_field_errors %}
+            <div class="alert alert-danger" role="alert">
+                <i class="bi bi-exclamation-circle me-2"></i>
+                {{ form.non_field_errors|first }}
+            </div>
+        {% endif %}
+
+        <!-- Signup Form -->
+        <form method="post" action="{% url 'accounts:signup' %}" class="needs-validation" novalidate data-loading-form>
+            {% csrf_token %}
+
+            <div class="mb-3">
+                <label for="{{ form.username.id_for_label }}" class="form-label">Username</label>
+                <input type="text"
+                       class="form-control {% if form.username.errors %}is-invalid{% endif %}"
+                       id="{{ form.username.id_for_label }}"
+                       name="{{ form.username.name }}"
+                       value="{{ form.username.value|default:'' }}"
+                       placeholder="Choose a username"
+                       required>
+                {% if form.username.errors %}
+                    <div class="invalid-feedback">
+                        {{ form.username.errors|first }}
+                    </div>
+                {% else %}
+                    <div class="form-text">Letters, numbers, and @/./+/-/_ only.</div>
+                {% endif %}
+            </div>
+
+            <div class="mb-3">
+                <label for="{{ form.email.id_for_label }}" class="form-label">Email</label>
+                <input type="email"
+                       class="form-control {% if form.email.errors %}is-invalid{% endif %}"
+                       id="{{ form.email.id_for_label }}"
+                       name="{{ form.email.name }}"
+                       value="{{ form.email.value|default:'' }}"
+                       placeholder="your.email@example.com"
+                       required>
+                {% if form.email.errors %}
+                    <div class="invalid-feedback">
+                        {{ form.email.errors|first }}
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="{{ form.first_name.id_for_label }}" class="form-label">First Name</label>
+                    <input type="text"
+                           class="form-control {% if form.first_name.errors %}is-invalid{% endif %}"
+                           id="{{ form.first_name.id_for_label }}"
+                           name="{{ form.first_name.name }}"
+                           value="{{ form.first_name.value|default:'' }}"
+                           placeholder="John">
+                    {% if form.first_name.errors %}
+                        <div class="invalid-feedback">
+                            {{ form.first_name.errors|first }}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <label for="{{ form.last_name.id_for_label }}" class="form-label">Last Name</label>
+                    <input type="text"
+                           class="form-control {% if form.last_name.errors %}is-invalid{% endif %}"
+                           id="{{ form.last_name.id_for_label }}"
+                           name="{{ form.last_name.name }}"
+                           value="{{ form.last_name.value|default:'' }}"
+                           placeholder="Doe">
+                    {% if form.last_name.errors %}
+                        <div class="invalid-feedback">
+                            {{ form.last_name.errors|first }}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label for="{{ form.password1.id_for_label }}" class="form-label">Password</label>
+                <div class="password-toggle-wrapper">
+                    <input type="password"
+                           class="form-control {% if form.password1.errors %}is-invalid{% endif %}"
+                           id="{{ form.password1.id_for_label }}"
+                           name="{{ form.password1.name }}"
+                           placeholder="Create a strong password"
+                           required>
+                    <button type="button" class="password-toggle" data-password-toggle="{{ form.password1.id_for_label }}" aria-label="Toggle password visibility">
+                        <i class="bi bi-eye"></i>
+                    </button>
+                </div>
+                {% if form.password1.errors %}
+                    <div class="invalid-feedback d-block">
+                        {{ form.password1.errors|first }}
+                    </div>
+                {% endif %}
+                <div class="password-requirements">
+                    <ul>
+                        <li>At least 8 characters long</li>
+                        <li>Not entirely numeric</li>
+                        <li>Not too common</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="mb-4">
+                <label for="{{ form.password2.id_for_label }}" class="form-label">Confirm Password</label>
+                <div class="password-toggle-wrapper">
+                    <input type="password"
+                           class="form-control {% if form.password2.errors %}is-invalid{% endif %}"
+                           id="{{ form.password2.id_for_label }}"
+                           name="{{ form.password2.name }}"
+                           placeholder="Re-enter your password"
+                           required>
+                    <button type="button" class="password-toggle" data-password-toggle="{{ form.password2.id_for_label }}" aria-label="Toggle password visibility">
+                        <i class="bi bi-eye"></i>
+                    </button>
+                </div>
+                {% if form.password2.errors %}
+                    <div class="invalid-feedback d-block">
+                        {{ form.password2.errors|first }}
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="mb-4 form-check">
+                <input type="checkbox" class="form-check-input" id="terms" required>
+                <label class="form-check-label" for="terms">
+                    I agree to the <a href="#" class="text-primary">Terms of Service</a> and <a href="#" class="text-primary">Privacy Policy</a>
+                </label>
+            </div>
+
+            <button type="submit" class="btn btn-primary w-100 mb-3" data-loading>
+                <i class="bi bi-person-plus me-2"></i>
+                Create Account
+            </button>
+        </form>
+
+        <!-- Divider -->
+        <div class="divider">
+            <span>Already have an account?</span>
+        </div>
+
+        <!-- Sign In Link -->
+        <a href="{% url 'accounts:login' %}" class="btn btn-outline-primary w-100">
+            Sign in instead
+        </a>
+    </div>
+</div>
+{% endblock %}

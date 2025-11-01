@@ -1,0 +1,28 @@
+{% comment %}
+Reusable Button Component
+
+Usage:
+{% include 'components/button.html' with text='Click Me' type='primary' %}
+
+Types: primary, secondary, outline, ghost, danger, success
+Sizes: sm, md (default), lg
+Optional: icon, href, disabled
+{% endcomment %}
+
+{% if href %}
+    <a href="{{ href }}"
+       class="btn btn-{{ type|default:'primary' }} {% if size == 'sm' %}btn-sm{% elif size == 'lg' %}btn-lg{% endif %} {{ class|default:'' }}"
+       {% if disabled %}disabled{% endif %}
+       {{ attrs|safe }}>
+        {% if icon %}<i class="bi bi-{{ icon }} me-2"></i>{% endif %}
+        {{ text }}
+    </a>
+{% else %}
+    <button type="{{ button_type|default:'button' }}"
+            class="btn btn-{{ type|default:'primary' }} {% if size == 'sm' %}btn-sm{% elif size == 'lg' %}btn-lg{% endif %} {{ class|default:'' }}"
+            {% if disabled %}disabled{% endif %}
+            {{ attrs|safe }}>
+        {% if icon %}<i class="bi bi-{{ icon }} me-2"></i>{% endif %}
+        {{ text }}
+    </button>
+{% endif %}

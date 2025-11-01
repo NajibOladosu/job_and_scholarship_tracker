@@ -1,4 +1,43 @@
-asgiref==3.8.1
-Django==4.2.19
-sqlparse==0.5.3
-typing_extensions==4.12.2
+# Core Django
+Django==5.1.3
+djangorestframework==3.15.2
+
+# Database
+psycopg2-binary==2.9.10
+
+# Async Tasks
+celery==5.4.0
+redis==5.2.0
+django-celery-beat==2.7.0
+
+# Web Scraping
+beautifulsoup4==4.12.3
+requests==2.32.3
+playwright==1.48.0
+fake-useragent==1.5.1
+
+# Document Processing
+pdfplumber==0.11.4
+python-docx==1.1.2
+Pillow==11.0.0
+pytesseract==0.3.13
+
+# NLP & AI
+google-generativeai==0.8.3
+spacy==3.8.2
+
+# Forms & UI
+django-crispy-forms==2.3
+crispy-bootstrap5==2024.10
+django-widget-tweaks==1.5.0
+
+# Configuration
+python-decouple==3.8
+
+# Production
+gunicorn==23.0.0
+whitenoise==6.8.2
+
+# Utilities
+python-slugify==8.0.4
+pytz==2024.2

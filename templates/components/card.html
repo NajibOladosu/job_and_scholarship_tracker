@@ -1,0 +1,42 @@
+{% comment %}
+Reusable Card Component
+
+Usage:
+{% include 'components/card.html' with title='Card Title' content='Card content here' %}
+
+Optional params:
+- title: Card title
+- icon: Bootstrap icon name (without 'bi-')
+- content: Card body content
+- footer: Card footer content
+- class: Additional CSS classes
+- hover: Enable hover effect (true/false)
+{% endcomment %}
+
+<div class="card {{ class|default:'' }} {% if hover %}card-hover{% endif %}">
+    {% if title or icon %}
+    <div class="card-header bg-transparent border-0 pt-4 px-4 pb-0">
+        {% if icon %}
+        <div class="card-icon mb-3">
+            <i class="bi bi-{{ icon }} fs-3 text-primary"></i>
+        </div>
+        {% endif %}
+        {% if title %}
+        <h5 class="card-title mb-0">{{ title }}</h5>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    {% if content or slot %}
+    <div class="card-body p-4">
+        {{ content|safe }}
+        {{ slot }}
+    </div>
+    {% endif %}
+
+    {% if footer %}
+    <div class="card-footer bg-transparent border-0 px-4 pb-4">
+        {{ footer|safe }}
+    </div>
+    {% endif %}
+</div>
