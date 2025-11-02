@@ -187,7 +187,7 @@ GOOGLE_API_KEY = config('GOOGLE_API_KEY', default='')
 # Authentication
 AUTH_USER_MODEL = 'accounts.User'  # Custom user model
 LOGIN_URL = '/accounts/login/'
-LOGIN_REDIRECT_URL = '/'
+LOGIN_REDIRECT_URL = '/tracker/'  # Redirect to dashboard after login
 LOGOUT_REDIRECT_URL = '/'
 
 
