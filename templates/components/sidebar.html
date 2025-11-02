@@ -17,28 +17,28 @@
         <nav class="sidebar-nav">
             <ul class="nav-list">
                 <li class="nav-item">
-                    <a href="{% url 'tracker:dashboard' %}" class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+                    <a href="{% url 'tracker:dashboard' %}" class="nav-link {% if '/tracker/' in request.path %}active{% endif %}">
                         <i class="bi bi-grid nav-icon"></i>
                         <span class="nav-text">Dashboard</span>
                     </a>
                 </li>
 
                 <li class="nav-item">
-                    <a href="{% url 'tracker:application_create' %}" class="nav-link {% if request.resolver_match.url_name == 'application_create' %}active{% endif %}">
+                    <a href="{% url 'tracker:application_create' %}" class="nav-link">
                         <i class="bi bi-plus-circle nav-icon"></i>
                         <span class="nav-text">New Application</span>
                     </a>
                 </li>
 
                 <li class="nav-item">
-                    <a href="{% url 'documents:document_list' %}" class="nav-link {% if 'documents' in request.resolver_match.namespace %}active{% endif %}">
+                    <a href="{% url 'documents:document_list' %}" class="nav-link {% if '/documents/' in request.path %}active{% endif %}">
                         <i class="bi bi-file-earmark-text nav-icon"></i>
                         <span class="nav-text">Documents</span>
                     </a>
                 </li>
 
                 <li class="nav-item">
-                    <a href="{% url 'documents:upload' %}" class="nav-link {% if request.resolver_match.url_name == 'upload' %}active{% endif %}">
+                    <a href="{% url 'documents:upload' %}" class="nav-link">
                         <i class="bi bi-cloud-upload nav-icon"></i>
                         <span class="nav-text">Upload Document</span>
                     </a>
@@ -51,7 +51,7 @@
             <!-- User Section -->
             <ul class="nav-list">
                 <li class="nav-item">
-                    <a href="{% url 'accounts:profile' %}" class="nav-link {% if request.resolver_match.url_name == 'profile' %}active{% endif %}">
+                    <a href="{% url 'accounts:profile' %}" class="nav-link {% if '/accounts/profile' in request.path %}active{% endif %}">
                         <i class="bi bi-person nav-icon"></i>
                         <span class="nav-text">Profile</span>
                     </a>
