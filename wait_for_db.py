@@ -53,7 +53,7 @@ for attempt in range(1, MAX_RETRIES + 1):
             database=database,
             user=user,
             password=password,
-            connect_timeout=5
+            connect_timeout=10
         )
 
         # Test the connection

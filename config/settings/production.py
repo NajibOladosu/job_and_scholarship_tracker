@@ -100,6 +100,21 @@ if REDIS_URL:
     CELERY_BROKER_URL = REDIS_URL
     CELERY_RESULT_BACKEND = REDIS_URL
 
+# Celery worker configuration for Railway deployment
+CELERY_WORKER_PREFETCH_MULTIPLIER = 1
+CELERY_WORKER_MAX_TASKS_PER_CHILD = 1000  # Recycle worker after 1000 tasks to prevent memory leaks
+CELERY_TASK_ACKS_LATE = True  # Tasks are acknowledged after completion, not before
+CELERY_TASK_REJECT_ON_WORKER_LOST = True  # Re-queue tasks if worker dies
+CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True  # Retry broker connection on startup
+
+# Task time limits (prevent runaway tasks)
+CELERY_TASK_SOFT_TIME_LIMIT = 300  # 5 minutes soft limit
+CELERY_TASK_TIME_LIMIT = 600  # 10 minutes hard limit
+
+# Result backend settings
+CELERY_RESULT_EXPIRES = 3600  # Results expire after 1 hour
+CELERY_RESULT_BACKEND_MAX_RETRIES = 10
+
 
 # Static files - Ensure WhiteNoise is properly configured
 # Already set in base.py, but verify STATIC_ROOT is correct
