@@ -323,7 +323,8 @@ The project is configured for Railway deployment:
 - **Procfile**: Defines web, worker, and beat processes
 - **build.sh**: Installs system dependencies (Playwright, Tesseract) and Python packages
 - **start.sh**: Runs migrations and starts Gunicorn
-- **wait-for-db.sh**: Database readiness check for worker/beat processes (prevents startup race conditions)
+- **wait-for-db.sh**: Shell wrapper for database readiness check
+- **wait_for_db.py**: Python-based database readiness check with DNS resolution retry logic (handles Railway internal DNS delays)
 - **railway.json**: Railway-specific configuration
 - **railway.env.example**: Required environment variables
 
@@ -332,7 +333,8 @@ Deployment process:
 2. Railway auto-deploys from the branch
 3. Runs migrations automatically via start.sh
 4. Three processes run: web (Django), worker (Celery), beat (scheduler)
-5. Worker and beat use `wait-for-db.sh` to ensure database is ready before starting
+5. Worker and beat use `wait_for_db.py` (via `wait-for-db.sh`) to ensure database is ready before starting
+6. The wait script handles DNS resolution delays (Railway internal services can take 30-60s to resolve on first startup)
 
 See RAILWAY_DEPLOYMENT.md for detailed setup instructions.
 
