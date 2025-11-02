@@ -1,3 +1,3 @@
 web: bash start.sh
-worker: celery -A config worker --loglevel=info
-beat: celery -A config beat --loglevel=info
+worker: bash wait-for-db.sh && celery -A config worker --loglevel=info
+beat: bash wait-for-db.sh && celery -A config beat --loglevel=info
