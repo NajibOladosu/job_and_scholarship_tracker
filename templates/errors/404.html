@@ -1,0 +1,280 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Page Not Found - {{ block.super }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .error-page {
+        min-height: calc(100vh - 73px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(180deg, var(--color-gray-50) 0%, white 100%);
+        padding: var(--spacing-2xl) var(--spacing-md);
+    }
+
+    .error-container {
+        text-align: center;
+        max-width: 600px;
+        animation: fadeInUp 0.6s ease-out;
+    }
+
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .error-illustration {
+        margin-bottom: var(--spacing-2xl);
+        position: relative;
+    }
+
+    .error-code {
+        font-size: 10rem;
+        font-weight: var(--font-weight-bold);
+        background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        line-height: 1;
+        margin-bottom: var(--spacing-md);
+        animation: float 3s ease-in-out infinite;
+    }
+
+    @keyframes float {
+        0%, 100% {
+            transform: translateY(0);
+        }
+        50% {
+            transform: translateY(-20px);
+        }
+    }
+
+    .error-icon {
+        font-size: 8rem;
+        color: var(--color-gray-300);
+        margin-bottom: var(--spacing-lg);
+        animation: swing 2s ease-in-out infinite;
+    }
+
+    @keyframes swing {
+        0%, 100% {
+            transform: rotate(-5deg);
+        }
+        50% {
+            transform: rotate(5deg);
+        }
+    }
+
+    .error-title {
+        font-size: var(--font-size-3xl);
+        font-weight: var(--font-weight-bold);
+        color: var(--color-gray-900);
+        margin-bottom: var(--spacing-md);
+    }
+
+    .error-message {
+        font-size: var(--font-size-lg);
+        color: var(--color-gray-600);
+        line-height: 1.6;
+        margin-bottom: var(--spacing-2xl);
+    }
+
+    .error-actions {
+        display: flex;
+        gap: var(--spacing-md);
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    .btn-home {
+        background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+        color: white;
+        padding: var(--spacing-md) var(--spacing-2xl);
+        border-radius: var(--radius-lg);
+        font-weight: var(--font-weight-semibold);
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: var(--spacing-sm);
+        transition: all var(--transition-fast);
+        border: none;
+    }
+
+    .btn-home:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-lg);
+        color: white;
+    }
+
+    .btn-back {
+        background: white;
+        color: var(--color-gray-700);
+        padding: var(--spacing-md) var(--spacing-2xl);
+        border-radius: var(--radius-lg);
+        font-weight: var(--font-weight-semibold);
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: var(--spacing-sm);
+        transition: all var(--transition-fast);
+        border: 2px solid var(--color-gray-200);
+    }
+
+    .btn-back:hover {
+        background: var(--color-gray-50);
+        border-color: var(--color-gray-300);
+        color: var(--color-gray-900);
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-sm);
+    }
+
+    .helpful-links {
+        margin-top: var(--spacing-2xl);
+        padding-top: var(--spacing-2xl);
+        border-top: 1px solid var(--color-gray-200);
+    }
+
+    .helpful-links-title {
+        font-size: var(--font-size-sm);
+        font-weight: var(--font-weight-semibold);
+        color: var(--color-gray-600);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: var(--spacing-md);
+    }
+
+    .link-list {
+        display: flex;
+        gap: var(--spacing-lg);
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    .link-item {
+        color: var(--color-primary);
+        text-decoration: none;
+        font-weight: var(--font-weight-medium);
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-xs);
+        transition: all var(--transition-fast);
+    }
+
+    .link-item:hover {
+        color: var(--color-primary-dark);
+        gap: var(--spacing-sm);
+    }
+
+    .decorative-element {
+        position: absolute;
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--color-primary-light) 0%, transparent 100%);
+        opacity: 0.1;
+        z-index: -1;
+    }
+
+    .decorative-element.top-left {
+        top: -50px;
+        left: -50px;
+        animation: pulse 4s ease-in-out infinite;
+    }
+
+    .decorative-element.bottom-right {
+        bottom: -50px;
+        right: -50px;
+        animation: pulse 4s ease-in-out infinite 2s;
+    }
+
+    @keyframes pulse {
+        0%, 100% {
+            transform: scale(1);
+            opacity: 0.1;
+        }
+        50% {
+            transform: scale(1.5);
+            opacity: 0.2;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="error-page">
+    <div class="error-container">
+        <div class="decorative-element top-left"></div>
+        <div class="decorative-element bottom-right"></div>
+
+        <div class="error-illustration">
+            <div class="error-icon">
+                <i class="bi bi-compass"></i>
+            </div>
+        </div>
+
+        <h1 class="error-code">404</h1>
+
+        <h2 class="error-title">Page Not Found</h2>
+
+        <p class="error-message">
+            The page you're looking for seems to have wandered off.
+            It might have been moved, deleted, or perhaps it never existed.
+        </p>
+
+        <div class="error-actions">
+            {% if user.is_authenticated %}
+                <a href="{% url 'tracker:dashboard' %}" class="btn-home">
+                    <i class="bi bi-house"></i>
+                    Go to Dashboard
+                </a>
+            {% else %}
+                <a href="{% url 'home' %}" class="btn-home">
+                    <i class="bi bi-house"></i>
+                    Go to Home
+                </a>
+            {% endif %}
+            <button onclick="window.history.back()" class="btn-back">
+                <i class="bi bi-arrow-left"></i>
+                Go Back
+            </button>
+        </div>
+
+        <div class="helpful-links">
+            <div class="helpful-links-title">You might be looking for</div>
+            <div class="link-list">
+                {% if user.is_authenticated %}
+                    <a href="{% url 'tracker:dashboard' %}" class="link-item">
+                        <i class="bi bi-speedometer2"></i>
+                        Dashboard
+                    </a>
+                    <a href="{% url 'documents:document_list' %}" class="link-item">
+                        <i class="bi bi-file-earmark-text"></i>
+                        Documents
+                    </a>
+                    <a href="{% url 'accounts:profile' %}" class="link-item">
+                        <i class="bi bi-person"></i>
+                        Profile
+                    </a>
+                {% else %}
+                    <a href="{% url 'accounts:login' %}" class="link-item">
+                        <i class="bi bi-box-arrow-in-right"></i>
+                        Sign In
+                    </a>
+                    <a href="{% url 'accounts:signup' %}" class="link-item">
+                        <i class="bi bi-person-plus"></i>
+                        Sign Up
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,335 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Upload Document - {{ block.super }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .upload-page {
+        min-height: calc(100vh - 73px);
+        background: linear-gradient(180deg, var(--color-gray-50) 0%, white 100%);
+        padding: var(--spacing-2xl) 0;
+    }
+
+    .upload-card {
+        background: white;
+        border-radius: var(--radius-xl);
+        box-shadow: var(--shadow-lg);
+        padding: var(--spacing-2xl);
+        margin-bottom: var(--spacing-xl);
+    }
+
+    .upload-header {
+        text-align: center;
+        margin-bottom: var(--spacing-2xl);
+    }
+
+    .upload-icon {
+        width: 80px;
+        height: 80px;
+        background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%);
+        border-radius: var(--radius-xl);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto var(--spacing-lg);
+        color: white;
+        font-size: 2.5rem;
+    }
+
+    .upload-title {
+        font-size: var(--font-size-3xl);
+        font-weight: var(--font-weight-bold);
+        color: var(--color-gray-900);
+        margin-bottom: var(--spacing-sm);
+    }
+
+    .upload-subtitle {
+        color: var(--color-gray-600);
+        font-size: var(--font-size-base);
+    }
+
+    .file-input-wrapper {
+        position: relative;
+        border: 2px dashed var(--color-gray-300);
+        border-radius: var(--radius-lg);
+        padding: var(--spacing-2xl);
+        text-align: center;
+        transition: all var(--transition-base);
+        background: var(--color-gray-50);
+        cursor: pointer;
+    }
+
+    .file-input-wrapper:hover {
+        border-color: var(--color-primary);
+        background: var(--color-primary-light);
+    }
+
+    .file-input-wrapper.drag-over {
+        border-color: var(--color-primary);
+        background: var(--color-primary-light);
+        transform: scale(1.01);
+    }
+
+    .file-input-icon {
+        font-size: 3rem;
+        color: var(--color-primary);
+        margin-bottom: var(--spacing-md);
+    }
+
+    .supported-formats {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--spacing-sm);
+        justify-content: center;
+        margin-top: var(--spacing-lg);
+    }
+
+    .format-badge {
+        background: var(--color-gray-100);
+        color: var(--color-gray-700);
+        padding: var(--spacing-xs) var(--spacing-sm);
+        border-radius: var(--radius-md);
+        font-size: var(--font-size-sm);
+        font-weight: var(--font-weight-medium);
+    }
+
+    .recent-documents {
+        margin-top: var(--spacing-2xl);
+    }
+
+    .recent-document-item {
+        display: flex;
+        align-items: center;
+        padding: var(--spacing-md);
+        background: var(--color-gray-50);
+        border-radius: var(--radius-lg);
+        margin-bottom: var(--spacing-sm);
+        transition: all var(--transition-fast);
+    }
+
+    .recent-document-item:hover {
+        background: var(--color-gray-100);
+        transform: translateX(4px);
+    }
+
+    .document-icon {
+        width: 40px;
+        height: 40px;
+        background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%);
+        border-radius: var(--radius-md);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        margin-right: var(--spacing-md);
+    }
+
+    .document-info {
+        flex: 1;
+    }
+
+    .document-name {
+        font-weight: var(--font-weight-medium);
+        color: var(--color-gray-900);
+        margin-bottom: 0.25rem;
+    }
+
+    .document-meta {
+        font-size: var(--font-size-sm);
+        color: var(--color-gray-600);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="upload-page">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <!-- Upload Card -->
+                <div class="upload-card">
+                    <!-- Header -->
+                    <div class="upload-header">
+                        <div class="upload-icon">
+                            <i class="bi bi-cloud-upload"></i>
+                        </div>
+                        <h1 class="upload-title">Upload Document</h1>
+                        <p class="upload-subtitle">Upload your resume, transcript, or certificate for automatic processing</p>
+                    </div>
+
+                    <!-- Upload Form -->
+                    <form method="post" enctype="multipart/form-data" id="uploadForm">
+                        {% csrf_token %}
+
+                        <!-- Document Type -->
+                        <div class="mb-4">
+                            <label for="{{ form.document_type.id_for_label }}" class="form-label fw-semibold">
+                                <i class="bi bi-tag me-2"></i>Document Type
+                            </label>
+                            {{ form.document_type }}
+                            {% if form.document_type.help_text %}
+                                <div class="form-text">{{ form.document_type.help_text }}</div>
+                            {% endif %}
+                            {% if form.document_type.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.document_type.errors|first }}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- File Upload -->
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold">
+                                <i class="bi bi-file-earmark-arrow-up me-2"></i>Select File
+                            </label>
+
+                            <div class="file-input-wrapper" id="fileInputWrapper">
+                                <div class="file-input-icon">
+                                    <i class="bi bi-file-earmark-arrow-up"></i>
+                                </div>
+                                <p class="mb-2">
+                                    <strong>Click to browse</strong> or drag and drop your file here
+                                </p>
+                                <p class="text-muted small mb-0">Maximum file size: 10MB</p>
+
+                                {{ form.file }}
+
+                                <div class="supported-formats">
+                                    <span class="format-badge">PDF</span>
+                                    <span class="format-badge">DOCX</span>
+                                    <span class="format-badge">TXT</span>
+                                    <span class="format-badge">PNG</span>
+                                    <span class="format-badge">JPG</span>
+                                </div>
+                            </div>
+
+                            <div id="selectedFileName" class="mt-3" style="display: none;">
+                                <div class="alert alert-success mb-0">
+                                    <i class="bi bi-check-circle me-2"></i>
+                                    <span id="fileNameText"></span>
+                                </div>
+                            </div>
+
+                            {% if form.file.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.file.errors|first }}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Submit Button -->
+                        <button type="submit" class="btn btn-primary btn-lg w-100">
+                            <i class="bi bi-cloud-upload me-2"></i>
+                            Upload Document
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Recent Documents -->
+                <div class="recent-documents">
+                    <h3 class="h5 fw-semibold mb-3">
+                        <i class="bi bi-clock-history me-2"></i>Recent Uploads
+                    </h3>
+                    <div class="upload-card">
+                        {% if recent_documents %}
+                            {% for doc in recent_documents %}
+                                <a href="{% url 'documents:document_detail' doc.pk %}" class="text-decoration-none">
+                                    <div class="recent-document-item">
+                                        <div class="document-icon">
+                                            <i class="bi bi-file-earmark-text"></i>
+                                        </div>
+                                        <div class="document-info">
+                                            <div class="document-name">{{ doc.original_filename }}</div>
+                                            <div class="document-meta">
+                                                <span class="badge bg-primary">{{ doc.get_document_type_display }}</span>
+                                                <span class="ms-2">{{ doc.uploaded_at|date:"M d, Y" }}</span>
+                                                {% if doc.is_processed %}
+                                                    <span class="ms-2 text-success">
+                                                        <i class="bi bi-check-circle"></i> Processed
+                                                    </span>
+                                                {% else %}
+                                                    <span class="ms-2 text-warning">
+                                                        <i class="bi bi-hourglass-split"></i> Processing...
+                                                    </span>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                        <i class="bi bi-chevron-right text-muted"></i>
+                                    </div>
+                                </a>
+                            {% endfor %}
+                        {% else %}
+                            <div class="text-center py-5 text-muted">
+                                <i class="bi bi-inbox" style="font-size: 3rem;"></i>
+                                <p class="mt-3 mb-0">No documents uploaded yet</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- View All Link -->
+                <div class="text-center mt-4">
+                    <a href="{% url 'documents:document_list' %}" class="btn btn-outline-primary">
+                        <i class="bi bi-list-ul me-2"></i>
+                        View All Documents
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // File input handling
+    const fileInput = document.querySelector('input[type="file"]');
+    const fileInputWrapper = document.getElementById('fileInputWrapper');
+    const selectedFileName = document.getElementById('selectedFileName');
+    const fileNameText = document.getElementById('fileNameText');
+
+    // Click to browse
+    fileInputWrapper.addEventListener('click', function() {
+        fileInput.click();
+    });
+
+    // File selected
+    fileInput.addEventListener('change', function(e) {
+        if (this.files && this.files[0]) {
+            const fileName = this.files[0].name;
+            const fileSize = (this.files[0].size / (1024 * 1024)).toFixed(2);
+            fileNameText.textContent = `${fileName} (${fileSize} MB)`;
+            selectedFileName.style.display = 'block';
+        }
+    });
+
+    // Drag and drop
+    fileInputWrapper.addEventListener('dragover', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        this.classList.add('drag-over');
+    });
+
+    fileInputWrapper.addEventListener('dragleave', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        this.classList.remove('drag-over');
+    });
+
+    fileInputWrapper.addEventListener('drop', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        this.classList.remove('drag-over');
+
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+            fileInput.files = files;
+            const fileName = files[0].name;
+            const fileSize = (files[0].size / (1024 * 1024)).toFixed(2);
+            fileNameText.textContent = `${fileName} (${fileSize} MB)`;
+            selectedFileName.style.display = 'block';
+        }
+    });
+</script>
+{% endblock %}

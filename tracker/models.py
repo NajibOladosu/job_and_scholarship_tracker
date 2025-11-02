@@ -139,6 +139,13 @@ class Application(models.Model):
             return delta.days
         return None
 
+    @property
+    def question_count(self):
+        """
+        Get the number of questions associated with this application.
+        """
+        return self.questions.count()
+
 
 class Question(models.Model):
     """

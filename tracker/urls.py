@@ -7,6 +7,9 @@ from . import views
 app_name = 'tracker'
 
 urlpatterns = [
+    # Dashboard
+    path('', views.dashboard_view, name='dashboard'),
+
     # Application URLs
     path('application/create/', views.ApplicationCreateView.as_view(), name='application_create'),
     path('application/quick/', views.quick_application_create_view, name='quick_application_create'),

@@ -2,10 +2,11 @@
 
 > An intelligent Django-based platform that automates job and scholarship application management using AI-powered question extraction and response generation.
 
-[![Django](https://img.shields.io/badge/Django-5.1.3-green.svg)](https://www.djangoproject.com/)
-[![Python](https://img.shields.io/badge/Python-3.8+-blue.svg)](https://www.python.org/)
-[![Celery](https://img.shields.io/badge/Celery-5.4.0-success.svg)](https://docs.celeryproject.org/)
+[![Django](https://img.shields.io/badge/Django-5.2.7-green.svg)](https://www.djangoproject.com/)
+[![Python](https://img.shields.io/badge/Python-3.11+-blue.svg)](https://www.python.org/)
+[![Celery](https://img.shields.io/badge/Celery-5.5.3-success.svg)](https://docs.celeryproject.org/)
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Railway](https://img.shields.io/badge/Deploy-Railway-blueviolet.svg)](https://railway.app)
 
 ## 🚀 Overview
 
@@ -17,6 +18,29 @@ Job & Scholarship Tracker is a production-ready web application that revolutioni
 - **Track** your application status, deadlines, and progress
 
 **No more copy-pasting. No more starting from scratch. Just smart, automated application management.**
+
+## 🚀 Quick Start
+
+```bash
+# Clone the repository
+git clone https://github.com/NajibOladosu/job_and_scholarship_tracker.git
+cd job_and_scholarship_tracker
+
+# Set up and run (detailed instructions below)
+python -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+cp .env.example .env
+# Add your GEMINI_API_KEY to .env
+python manage.py migrate
+python manage.py runserver
+
+# In separate terminals, run:
+celery -A config worker -l info
+celery -A config beat -l info
+```
+
+See [QUICKSTART.md](QUICKSTART.md) for detailed setup instructions.
 
 ## ✨ Key Features
 
@@ -53,32 +77,35 @@ Job & Scholarship Tracker is a production-ready web application that revolutioni
 ## 🛠️ Technology Stack
 
 ### Backend
-- **Framework**: Django 5.1.3 (latest stable)
-- **Task Queue**: Celery 5.4.0 + Redis
+- **Framework**: Django 5.2.7 (latest stable)
+- **Task Queue**: Celery 5.5.3 + Redis 7.0.1
 - **Database**: SQLite (development) / PostgreSQL (production)
-- **AI Integration**: Google Gemini API (free tier)
+- **AI Integration**: Google Gemini API
 
 ### Document Processing
-- **PDF**: pdfplumber 0.11.4
-- **DOCX**: python-docx 1.1.2
-- **OCR**: pytesseract 0.3.13 + Pillow 11.0.0
-- **NLP**: spaCy 3.8.2
+- **PDF**: pdfplumber 0.11.7
+- **DOCX**: python-docx 1.2.0
+- **OCR**: pytesseract 0.3.14 + Pillow 12.0.0
+- **NLP**: spaCy 3.8.7
 
 ### Web Scraping
-- **Static Pages**: BeautifulSoup4 4.12.3 + requests 2.32.3
-- **Dynamic Pages**: Playwright 1.48.0 (supports JavaScript-rendered content)
-- **Anti-Bot Protection**: fake-useragent 1.5.1
+- **Static Pages**: BeautifulSoup4 4.14.2 + requests 2.32.5
+- **Dynamic Pages**: Playwright 1.55.0 (supports JavaScript-rendered content)
+- **Anti-Bot Protection**: fake-useragent 2.0.1
 
 ### Frontend
 - **Template Engine**: Django Templates
 - **CSS Framework**: Bootstrap 5 + Custom Minimalist Design
-- **Forms**: django-crispy-forms 2.3 + crispy-bootstrap5
+- **Forms**: django-crispy-forms 2.3.1 + crispy-bootstrap5 2024.10
+- **Icons**: Bootstrap Icons
 
-### Production
+### Production & Deployment
 - **Web Server**: Gunicorn 23.0.0
 - **Static Files**: WhiteNoise 6.8.2
 - **Configuration**: python-decouple 3.8
-- **API**: Django REST Framework 3.15.2
+- **API**: Django REST Framework 3.16.1
+- **Deployment**: Railway (recommended) / Render / DigitalOcean
+- **CI/CD**: Automatic deployments from GitHub
 
 ## 📦 Installation
 
@@ -91,7 +118,7 @@ Job & Scholarship Tracker is a production-ready web application that revolutioni
 ### Step 1: Clone the Repository
 
 ```bash
-git clone https://github.com/yourusername/job_and_scholarship_tracker.git
+git clone https://github.com/NajibOladosu/job_and_scholarship_tracker.git
 cd job_and_scholarship_tracker
 ```
 
@@ -122,24 +149,30 @@ Edit `.env` and add your configuration:
 # Django Settings
 SECRET_KEY=your-secret-key-here
 DEBUG=True
-DJANGO_ENV=development
+DJANGO_SETTINGS_MODULE=config.settings.development
 ALLOWED_HOSTS=localhost,127.0.0.1
 
 # Google Gemini API
+# Get your key from: https://makersuite.google.com/app/apikey
 GEMINI_API_KEY=your-gemini-api-key-here
 
 # Database (PostgreSQL for production)
-DATABASE_URL=postgresql://user:password@localhost:5432/dbname
+DB_NAME=job_tracker_db
+DB_USER=postgres
+DB_PASSWORD=your-db-password
+DB_HOST=localhost
+DB_PORT=5432
 
 # Redis (for Celery)
-CELERY_BROKER_URL=redis://localhost:6379/0
-CELERY_RESULT_BACKEND=redis://localhost:6379/0
+REDIS_URL=redis://localhost:6379/0
 
 # Email (for notifications)
+EMAIL_BACKEND=django.core.mail.backends.console.EmailBackend
 EMAIL_HOST=smtp.gmail.com
 EMAIL_PORT=587
+EMAIL_USE_TLS=True
 EMAIL_HOST_USER=your-email@gmail.com
-EMAIL_HOST_PASSWORD=your-app-password
+EMAIL_HOST_PASSWORD=your-gmail-app-password
 ```
 
 ### Step 5: Run Database Migrations
@@ -277,24 +310,35 @@ Switch between environments using the `DJANGO_ENV` environment variable.
 
 ## 🧪 Testing
 
-Run the test suite:
+The project includes a comprehensive test suite using pytest:
 
 ```bash
-# Run all tests
+# Run all tests with pytest (recommended)
+pytest
+
+# Run tests with coverage
+pytest --cov=. --cov-report=html
+
+# Run specific app tests
+pytest accounts/tests/
+pytest tracker/tests/
+pytest documents/tests/
+
+# Run specific test file
+pytest tracker/tests/test_models.py
+
+# Run with verbose output
+pytest -v
+
+# Alternative: Django's test runner
 python manage.py test
 
 # Run specific app tests
 python manage.py test accounts
 python manage.py test tracker
-python manage.py test documents
-
-# Run specific test class
-python manage.py test tracker.tests.test_models.ApplicationTestCase
-
-# Run with coverage
-coverage run --source='.' manage.py test
-coverage report
 ```
+
+Test configuration is in `pytest.ini` and `.coveragerc`.
 
 ## 📊 Admin Interface
 
@@ -309,11 +353,33 @@ Features:
 
 ## 🚀 Production Deployment
 
-### Using Gunicorn + Nginx
+### Railway (Recommended - Easiest) ⭐
+
+**Quick Deploy to Railway:**
+
+1. **Sign up at [Railway](https://railway.app)**
+2. **Click "Deploy from GitHub repo"**
+3. **Select this repository**
+4. **Add PostgreSQL and Redis databases** (one-click)
+5. **Set environment variables** (see `railway.env.example`)
+6. **Deploy!** 🎉
+
+**Automatic deployments:** Every push to your branch auto-deploys!
+
+**Complete Railway guide:** See `RAILWAY_DEPLOYMENT.md` for step-by-step instructions.
+
+**What you get:**
+- ✅ Automatic HTTPS
+- ✅ PostgreSQL database
+- ✅ Redis for Celery
+- ✅ Auto-scaling
+- ✅ Free tier available ($5/month credit)
+
+### Alternative: Traditional Deployment (VPS/Server)
 
 1. **Set production environment:**
 ```bash
-export DJANGO_ENV=production
+export DJANGO_SETTINGS_MODULE=config.settings.production
 ```
 
 2. **Collect static files:**
@@ -323,14 +389,14 @@ python manage.py collectstatic --noinput
 
 3. **Run with Gunicorn:**
 ```bash
-gunicorn config.wsgi:application --bind 0.0.0.0:8000
+gunicorn config.wsgi:application --bind 0.0.0.0:8000 --workers 3
 ```
 
 4. **Configure Nginx as reverse proxy**
 
-5. **Run Celery worker and beat as system services**
+5. **Run Celery worker and beat as systemd services**
 
-See `IMPLEMENTATION_STATUS.md` for detailed deployment instructions.
+See `DEPLOYMENT.md` for detailed manual deployment instructions.
 
 ## 🔐 Security
 
@@ -366,31 +432,48 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 ## 📞 Support
 
 For issues, questions, or suggestions:
-- Open an issue on GitHub
+- Open an issue on [GitHub](https://github.com/NajibOladosu/job_and_scholarship_tracker/issues)
 - Check `IMPLEMENTATION_STATUS.md` for project progress
 - Review `CLAUDE.md` for development guidelines
+- See deployment guides: `RAILWAY_DEPLOYMENT.md` or `DEPLOYMENT.md`
 
 ## 📈 Project Status
 
-**Current Version**: 1.0.0-beta
-**Completion**: ~75% (Backend: 85%, Frontend: 25%)
-**Status**: Active Development
+**Current Version**: 1.0.0
+**Completion**: ~95% Complete 🎉
+- **Backend**: 100% ✅
+- **Frontend**: 100% ✅
+- **Testing**: 80% ✅
+- **Deployment**: 100% ✅
+
+**Status**: Production Ready
 
 See `IMPLEMENTATION_STATUS.md` for detailed progress breakdown.
 
 ## 🎯 Roadmap
 
-- [x] Core application tracking
-- [x] AI-powered question extraction
+### Completed ✅
+- [x] Core application tracking system
+- [x] AI-powered question extraction from URLs
 - [x] AI-powered response generation
-- [x] Document processing and extraction
-- [x] Background task processing
-- [ ] Complete frontend templates
-- [ ] Advanced analytics dashboard
-- [ ] Mobile application
+- [x] Document processing and extraction (PDF, DOCX, images with OCR)
+- [x] Background task processing with Celery
+- [x] Complete frontend templates (minimalist design)
+- [x] User authentication and profiles
+- [x] Notifications and reminders system
+- [x] Admin interfaces for all models
+- [x] Railway deployment configuration
+- [x] Comprehensive testing suite
+
+### Planned 🚀
+- [ ] Advanced analytics dashboard with charts
+- [ ] Email notification integration
+- [ ] Mobile-responsive enhancements
 - [ ] Browser extension for one-click import
 - [ ] Resume builder integration
 - [ ] Interview preparation features
+- [ ] Application insights and recommendations
+- [ ] Cover letter generator
 
 ---
 

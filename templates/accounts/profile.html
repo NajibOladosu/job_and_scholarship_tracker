@@ -1,0 +1,595 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}My Profile - {{ block.super }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .profile-page {
+        padding: var(--spacing-2xl) 0;
+        background: var(--color-gray-50);
+        min-height: calc(100vh - 73px);
+    }
+
+    .profile-header {
+        background: white;
+        border-radius: var(--radius-xl);
+        padding: var(--spacing-2xl);
+        box-shadow: var(--shadow-sm);
+        margin-bottom: var(--spacing-xl);
+    }
+
+    .profile-header-content {
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-xl);
+    }
+
+    .profile-avatar {
+        width: 100px;
+        height: 100px;
+        background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%);
+        border-radius: var(--radius-xl);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 3rem;
+        flex-shrink: 0;
+        font-weight: var(--font-weight-bold);
+    }
+
+    .profile-info {
+        flex: 1;
+    }
+
+    .profile-name {
+        font-size: var(--font-size-3xl);
+        font-weight: var(--font-weight-bold);
+        color: var(--color-gray-900);
+        margin-bottom: var(--spacing-xs);
+    }
+
+    .profile-email {
+        color: var(--color-gray-600);
+        font-size: var(--font-size-lg);
+        margin-bottom: var(--spacing-sm);
+    }
+
+    .profile-meta {
+        display: flex;
+        gap: var(--spacing-lg);
+        color: var(--color-gray-600);
+        font-size: var(--font-size-sm);
+    }
+
+    .profile-meta-item {
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-xs);
+    }
+
+    .profile-grid {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: var(--spacing-xl);
+    }
+
+    @media (max-width: 992px) {
+        .profile-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .profile-header-content {
+            flex-direction: column;
+            text-align: center;
+        }
+    }
+
+    .profile-section {
+        background: white;
+        border-radius: var(--radius-xl);
+        padding: var(--spacing-2xl);
+        box-shadow: var(--shadow-sm);
+        margin-bottom: var(--spacing-xl);
+    }
+
+    .section-header {
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-md);
+        margin-bottom: var(--spacing-xl);
+        padding-bottom: var(--spacing-md);
+        border-bottom: 2px solid var(--color-gray-200);
+    }
+
+    .section-icon {
+        width: 40px;
+        height: 40px;
+        background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%);
+        border-radius: var(--radius-lg);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.25rem;
+    }
+
+    .section-title {
+        font-size: var(--font-size-xl);
+        font-weight: var(--font-weight-bold);
+        color: var(--color-gray-900);
+        margin: 0;
+    }
+
+    .form-section {
+        margin-bottom: var(--spacing-xl);
+    }
+
+    .form-section:last-child {
+        margin-bottom: 0;
+    }
+
+    .form-section-title {
+        font-size: var(--font-size-lg);
+        font-weight: var(--font-weight-semibold);
+        color: var(--color-gray-900);
+        margin-bottom: var(--spacing-md);
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-sm);
+    }
+
+    .summary-card {
+        background: var(--color-gray-50);
+        border-radius: var(--radius-lg);
+        padding: var(--spacing-xl);
+        margin-bottom: var(--spacing-lg);
+        border-left: 4px solid var(--color-primary);
+        transition: all var(--transition-fast);
+    }
+
+    .summary-card:hover {
+        transform: translateX(4px);
+        background: var(--color-gray-100);
+    }
+
+    .summary-card:last-child {
+        margin-bottom: 0;
+    }
+
+    .summary-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: var(--spacing-md);
+    }
+
+    .summary-title {
+        font-size: var(--font-size-lg);
+        font-weight: var(--font-weight-semibold);
+        color: var(--color-gray-900);
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-sm);
+    }
+
+    .summary-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 32px;
+        height: 32px;
+        padding: 0 var(--spacing-sm);
+        background: var(--color-primary);
+        color: white;
+        border-radius: var(--radius-full);
+        font-weight: var(--font-weight-bold);
+        font-size: var(--font-size-sm);
+    }
+
+    .summary-text {
+        color: var(--color-gray-600);
+        font-size: var(--font-size-sm);
+        margin-bottom: var(--spacing-sm);
+    }
+
+    .summary-link {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--spacing-xs);
+        color: var(--color-primary);
+        text-decoration: none;
+        font-weight: var(--font-weight-medium);
+        font-size: var(--font-size-sm);
+        transition: all var(--transition-fast);
+    }
+
+    .summary-link:hover {
+        color: var(--color-primary-dark);
+        gap: var(--spacing-sm);
+    }
+
+    .social-links {
+        display: flex;
+        flex-direction: column;
+        gap: var(--spacing-md);
+    }
+
+    .social-link {
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-md);
+        padding: var(--spacing-md);
+        background: var(--color-gray-50);
+        border-radius: var(--radius-lg);
+        text-decoration: none;
+        transition: all var(--transition-fast);
+    }
+
+    .social-link:hover {
+        background: var(--color-primary-light);
+        transform: translateX(4px);
+    }
+
+    .social-icon {
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: var(--radius-md);
+        font-size: 1.25rem;
+        color: white;
+        flex-shrink: 0;
+    }
+
+    .social-icon.linkedin {
+        background: #0077b5;
+    }
+
+    .social-icon.github {
+        background: #333;
+    }
+
+    .social-icon.portfolio {
+        background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%);
+    }
+
+    .social-text {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .social-label {
+        font-size: var(--font-size-sm);
+        color: var(--color-gray-600);
+        margin-bottom: 0.125rem;
+    }
+
+    .social-value {
+        font-weight: var(--font-weight-medium);
+        color: var(--color-gray-900);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: var(--spacing-xl);
+        color: var(--color-gray-500);
+    }
+
+    .empty-icon {
+        font-size: 2.5rem;
+        margin-bottom: var(--spacing-md);
+    }
+
+    .btn-save {
+        background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+        color: white;
+        padding: var(--spacing-md) var(--spacing-2xl);
+        border-radius: var(--radius-lg);
+        font-weight: var(--font-weight-semibold);
+        border: none;
+        transition: all var(--transition-fast);
+    }
+
+    .btn-save:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-lg);
+        color: white;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="profile-page">
+    <div class="container">
+        <!-- Profile Header -->
+        <div class="profile-header">
+            <div class="profile-header-content">
+                <div class="profile-avatar">
+                    {{ request.user.first_name|first|upper }}{{ request.user.last_name|first|upper }}
+                </div>
+                <div class="profile-info">
+                    <h1 class="profile-name">{{ request.user.get_full_name }}</h1>
+                    <div class="profile-email">
+                        <i class="bi bi-envelope me-2"></i>{{ request.user.email }}
+                    </div>
+                    <div class="profile-meta">
+                        <div class="profile-meta-item">
+                            <i class="bi bi-calendar-check"></i>
+                            <span>Joined {{ request.user.date_joined|date:"M Y" }}</span>
+                        </div>
+                        {% if profile.current_position %}
+                            <div class="profile-meta-item">
+                                <i class="bi bi-briefcase"></i>
+                                <span>{{ profile.current_position }}</span>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Grid -->
+        <div class="profile-grid">
+            <!-- Left Column: Profile Form -->
+            <div>
+                <div class="profile-section">
+                    <div class="section-header">
+                        <div class="section-icon">
+                            <i class="bi bi-person-gear"></i>
+                        </div>
+                        <h2 class="section-title">Profile Information</h2>
+                    </div>
+
+                    <form method="post" action="{% url 'accounts:profile' %}">
+                        {% csrf_token %}
+
+                        <!-- Basic Information -->
+                        <div class="form-section">
+                            <h3 class="form-section-title">
+                                <i class="bi bi-person"></i>
+                                Basic Information
+                            </h3>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label for="{{ form.first_name.id_for_label }}" class="form-label">First Name</label>
+                                    {{ form.first_name }}
+                                    {% if form.first_name.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.first_name.errors|first }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="{{ form.last_name.id_for_label }}" class="form-label">Last Name</label>
+                                    {{ form.last_name }}
+                                    {% if form.last_name.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.last_name.errors|first }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Contact Information -->
+                        <div class="form-section">
+                            <h3 class="form-section-title">
+                                <i class="bi bi-telephone"></i>
+                                Contact Information
+                            </h3>
+                            <div class="mb-3">
+                                <label for="{{ form.phone_number.id_for_label }}" class="form-label">Phone Number</label>
+                                {{ form.phone_number }}
+                                {% if form.phone_number.help_text %}
+                                    <div class="form-text">{{ form.phone_number.help_text }}</div>
+                                {% endif %}
+                                {% if form.phone_number.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.phone_number.errors|first }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Professional Information -->
+                        <div class="form-section">
+                            <h3 class="form-section-title">
+                                <i class="bi bi-briefcase"></i>
+                                Professional Information
+                            </h3>
+                            <div class="mb-3">
+                                <label for="{{ form.current_position.id_for_label }}" class="form-label">Current Position</label>
+                                {{ form.current_position }}
+                                {% if form.current_position.help_text %}
+                                    <div class="form-text">{{ form.current_position.help_text }}</div>
+                                {% endif %}
+                                {% if form.current_position.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.current_position.errors|first }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="mb-3">
+                                <label for="{{ form.bio.id_for_label }}" class="form-label">Biography</label>
+                                {{ form.bio }}
+                                {% if form.bio.help_text %}
+                                    <div class="form-text">{{ form.bio.help_text }}</div>
+                                {% endif %}
+                                {% if form.bio.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.bio.errors|first }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Social Links -->
+                        <div class="form-section">
+                            <h3 class="form-section-title">
+                                <i class="bi bi-link-45deg"></i>
+                                Social & Web Links
+                            </h3>
+                            <div class="mb-3">
+                                <label for="{{ form.linkedin_url.id_for_label }}" class="form-label">
+                                    <i class="bi bi-linkedin me-2"></i>LinkedIn URL
+                                </label>
+                                {{ form.linkedin_url }}
+                                {% if form.linkedin_url.help_text %}
+                                    <div class="form-text">{{ form.linkedin_url.help_text }}</div>
+                                {% endif %}
+                                {% if form.linkedin_url.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.linkedin_url.errors|first }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="mb-3">
+                                <label for="{{ form.github_url.id_for_label }}" class="form-label">
+                                    <i class="bi bi-github me-2"></i>GitHub URL
+                                </label>
+                                {{ form.github_url }}
+                                {% if form.github_url.help_text %}
+                                    <div class="form-text">{{ form.github_url.help_text }}</div>
+                                {% endif %}
+                                {% if form.github_url.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.github_url.errors|first }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="mb-3">
+                                <label for="{{ form.portfolio_url.id_for_label }}" class="form-label">
+                                    <i class="bi bi-globe me-2"></i>Portfolio URL
+                                </label>
+                                {{ form.portfolio_url }}
+                                {% if form.portfolio_url.help_text %}
+                                    <div class="form-text">{{ form.portfolio_url.help_text }}</div>
+                                {% endif %}
+                                {% if form.portfolio_url.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.portfolio_url.errors|first }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Submit Button -->
+                        <button type="submit" class="btn btn-save w-100">
+                            <i class="bi bi-check-circle me-2"></i>
+                            Save Changes
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Right Column: Quick Links & Stats -->
+            <div>
+                <!-- Activity Summary -->
+                <div class="profile-section">
+                    <div class="section-header">
+                        <div class="section-icon">
+                            <i class="bi bi-bar-chart"></i>
+                        </div>
+                        <h2 class="section-title">Activity</h2>
+                    </div>
+
+                    <!-- Documents Summary -->
+                    <div class="summary-card">
+                        <div class="summary-header">
+                            <div class="summary-title">
+                                <i class="bi bi-file-earmark-text"></i>
+                                Documents
+                            </div>
+                            <div class="summary-badge">{{ request.user.documents.count }}</div>
+                        </div>
+                        <p class="summary-text">
+                            Manage your uploaded documents and extracted information.
+                        </p>
+                        <a href="{% url 'documents:document_list' %}" class="summary-link">
+                            View all documents
+                            <i class="bi bi-arrow-right"></i>
+                        </a>
+                    </div>
+
+                    <!-- Applications Summary -->
+                    <div class="summary-card">
+                        <div class="summary-header">
+                            <div class="summary-title">
+                                <i class="bi bi-briefcase"></i>
+                                Applications
+                            </div>
+                            <div class="summary-badge">{{ request.user.applications.count }}</div>
+                        </div>
+                        <p class="summary-text">
+                            Track your job and scholarship applications.
+                        </p>
+                        <a href="{% url 'tracker:dashboard' %}" class="summary-link">
+                            View dashboard
+                            <i class="bi bi-arrow-right"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Social Links Display -->
+                {% if profile.linkedin_url or profile.github_url or profile.portfolio_url %}
+                    <div class="profile-section">
+                        <div class="section-header">
+                            <div class="section-icon">
+                                <i class="bi bi-share"></i>
+                            </div>
+                            <h2 class="section-title">Links</h2>
+                        </div>
+
+                        <div class="social-links">
+                            {% if profile.linkedin_url %}
+                                <a href="{{ profile.linkedin_url }}" target="_blank" rel="noopener noreferrer" class="social-link">
+                                    <div class="social-icon linkedin">
+                                        <i class="bi bi-linkedin"></i>
+                                    </div>
+                                    <div class="social-text">
+                                        <div class="social-label">LinkedIn</div>
+                                        <div class="social-value">{{ profile.linkedin_url }}</div>
+                                    </div>
+                                    <i class="bi bi-box-arrow-up-right text-muted"></i>
+                                </a>
+                            {% endif %}
+
+                            {% if profile.github_url %}
+                                <a href="{{ profile.github_url }}" target="_blank" rel="noopener noreferrer" class="social-link">
+                                    <div class="social-icon github">
+                                        <i class="bi bi-github"></i>
+                                    </div>
+                                    <div class="social-text">
+                                        <div class="social-label">GitHub</div>
+                                        <div class="social-value">{{ profile.github_url }}</div>
+                                    </div>
+                                    <i class="bi bi-box-arrow-up-right text-muted"></i>
+                                </a>
+                            {% endif %}
+
+                            {% if profile.portfolio_url %}
+                                <a href="{{ profile.portfolio_url }}" target="_blank" rel="noopener noreferrer" class="social-link">
+                                    <div class="social-icon portfolio">
+                                        <i class="bi bi-globe"></i>
+                                    </div>
+                                    <div class="social-text">
+                                        <div class="social-label">Portfolio</div>
+                                        <div class="social-value">{{ profile.portfolio_url }}</div>
+                                    </div>
+                                    <i class="bi bi-box-arrow-up-right text-muted"></i>
+                                </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

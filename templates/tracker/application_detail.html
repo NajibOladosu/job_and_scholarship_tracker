@@ -1,0 +1,321 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ application.title }} - AppTracker{% endblock %}
+
+{% block content %}
+<div class="application-detail-page bg-light min-vh-100 py-5">
+    <div class="container">
+        <!-- Breadcrumb -->
+        <nav aria-label="breadcrumb" class="mb-4">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'tracker:dashboard' %}" class="text-decoration-none">Dashboard</a></li>
+                <li class="breadcrumb-item active" aria-current="page">{{ application.title }}</li>
+            </ol>
+        </nav>
+
+        <!-- Application Header -->
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-body p-4">
+                <div class="row align-items-start">
+                    <div class="col-lg-8">
+                        <div class="d-flex align-items-start mb-3">
+                            <div class="flex-grow-1">
+                                <h1 class="display-6 fw-bold mb-2">{{ application.title }}</h1>
+                                <h5 class="text-muted mb-3">
+                                    <i class="bi bi-building me-2"></i>
+                                    {{ application.company_or_institution }}
+                                </h5>
+                            </div>
+                            <div class="ms-3">
+                                {% if application.status == 'draft' %}
+                                    <span class="badge bg-secondary fs-6 px-3 py-2">{{ application.get_status_display }}</span>
+                                {% elif application.status == 'submitted' %}
+                                    <span class="badge bg-info fs-6 px-3 py-2">{{ application.get_status_display }}</span>
+                                {% elif application.status == 'in_review' %}
+                                    <span class="badge bg-warning text-dark fs-6 px-3 py-2">{{ application.get_status_display }}</span>
+                                {% elif application.status == 'interview' %}
+                                    <span class="badge bg-primary fs-6 px-3 py-2">{{ application.get_status_display }}</span>
+                                {% elif application.status == 'offer' %}
+                                    <span class="badge bg-success fs-6 px-3 py-2">{{ application.get_status_display }}</span>
+                                {% elif application.status == 'rejected' %}
+                                    <span class="badge bg-danger fs-6 px-3 py-2">{{ application.get_status_display }}</span>
+                                {% elif application.status == 'withdrawn' %}
+                                    <span class="badge bg-dark fs-6 px-3 py-2">{{ application.get_status_display }}</span>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Metadata -->
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-4">
+                                <div class="d-flex align-items-center">
+                                    <i class="bi bi-tag text-primary me-2 fs-5"></i>
+                                    <div>
+                                        <small class="text-muted d-block">Type</small>
+                                        <span class="fw-semibold">{{ application.get_application_type_display }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="d-flex align-items-center">
+                                    <i class="bi bi-flag text-primary me-2 fs-5"></i>
+                                    <div>
+                                        <small class="text-muted d-block">Priority</small>
+                                        <span class="fw-semibold {% if application.priority == 'high' %}text-danger{% elif application.priority == 'medium' %}text-warning{% else %}text-success{% endif %}">
+                                            {{ application.get_priority_display }}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="d-flex align-items-center">
+                                    <i class="bi bi-calendar-event text-primary me-2 fs-5"></i>
+                                    <div>
+                                        <small class="text-muted d-block">Deadline</small>
+                                        <span class="fw-semibold">
+                                            {% if application.deadline %}
+                                                {{ application.deadline|date:"M d, Y" }}
+                                                {% if application.is_overdue %}
+                                                    <span class="badge bg-danger ms-1">Overdue</span>
+                                                {% elif application.days_until_deadline is not None and application.days_until_deadline <= 7 %}
+                                                    <span class="badge bg-warning text-dark ms-1">{{ application.days_until_deadline }}d left</span>
+                                                {% endif %}
+                                            {% else %}
+                                                N/A
+                                            {% endif %}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {% if application.url %}
+                        <div class="mb-3">
+                            <a href="{{ application.url }}" target="_blank" rel="noopener noreferrer" class="btn btn-outline-primary btn-sm">
+                                <i class="bi bi-box-arrow-up-right me-1"></i>
+                                View Application Posting
+                            </a>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="col-lg-4">
+                        <div class="d-grid gap-2">
+                            <a href="{% url 'tracker:application_update' application.pk %}" class="btn btn-primary">
+                                <i class="bi bi-pencil me-2"></i>
+                                Edit Application
+                            </a>
+                            <a href="{% url 'tracker:question_create' application.pk %}" class="btn btn-outline-primary">
+                                <i class="bi bi-plus-circle me-2"></i>
+                                Add Question
+                            </a>
+                            {% if application.questions.exists %}
+                            <button type="button" class="btn btn-success" onclick="location.href='{% url 'tracker:generate_responses' application.pk %}'">
+                                <i class="bi bi-stars me-2"></i>
+                                Generate AI Responses
+                            </button>
+                            {% endif %}
+                            <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">
+                                <i class="bi bi-trash me-2"></i>
+                                Delete Application
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Description Section -->
+        {% if application.description %}
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-white border-0 py-3">
+                <h5 class="fw-bold mb-0">
+                    <i class="bi bi-file-text me-2"></i>
+                    Description
+                </h5>
+            </div>
+            <div class="card-body">
+                <p class="mb-0" style="white-space: pre-wrap;">{{ application.description }}</p>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Questions & Responses Section -->
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-white border-0 py-3">
+                <h5 class="fw-bold mb-0">
+                    <i class="bi bi-question-circle me-2"></i>
+                    Questions & Responses
+                    <span class="badge bg-primary ms-2">{{ application.questions.count }}</span>
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if application.questions.exists %}
+                    <div class="accordion" id="questionsAccordion">
+                        {% for question in application.questions.all %}
+                        <div class="accordion-item border-0 mb-3 shadow-sm">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button {% if not forloop.first %}collapsed{% endif %} bg-light fw-semibold" type="button" data-bs-toggle="collapse" data-bs-target="#question{{ question.pk }}" aria-expanded="{% if forloop.first %}true{% else %}false{% endif %}" aria-controls="question{{ question.pk }}">
+                                    <span class="badge bg-primary me-2">Q{{ forloop.counter }}</span>
+                                    {{ question.question_text|truncatewords:20 }}
+                                    {% if question.is_required %}
+                                        <span class="badge bg-danger ms-2">Required</span>
+                                    {% endif %}
+                                </button>
+                            </h2>
+                            <div id="question{{ question.pk }}" class="accordion-collapse collapse {% if forloop.first %}show{% endif %}" data-bs-parent="#questionsAccordion">
+                                <div class="accordion-body">
+                                    <!-- Question Details -->
+                                    <div class="mb-3">
+                                        <h6 class="fw-semibold mb-2">Question:</h6>
+                                        <p class="mb-2" style="white-space: pre-wrap;">{{ question.question_text }}</p>
+                                        <div class="d-flex gap-2">
+                                            <span class="badge bg-info">{{ question.get_question_type_display }}</span>
+                                            {% if question.is_extracted %}
+                                                <span class="badge bg-secondary">
+                                                    <i class="bi bi-robot"></i> Auto-extracted
+                                                </span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+
+                                    <!-- Response -->
+                                    {% if question.response %}
+                                        <div class="border-top pt-3">
+                                            <h6 class="fw-semibold mb-2">
+                                                Response:
+                                                {% if question.response.is_ai_generated %}
+                                                    <span class="badge bg-success">
+                                                        <i class="bi bi-stars"></i> AI Generated
+                                                    </span>
+                                                {% endif %}
+                                            </h6>
+                                            <div class="bg-light p-3 rounded mb-3" style="white-space: pre-wrap;">
+                                                {{ question.response.final_response }}
+                                            </div>
+                                            {% if question.response.generated_at %}
+                                                <small class="text-muted">
+                                                    <i class="bi bi-clock me-1"></i>
+                                                    Generated: {{ question.response.generated_at|date:"M d, Y g:i A" }}
+                                                    {% if question.response.last_edited_at %}
+                                                        | Last edited: {{ question.response.last_edited_at|date:"M d, Y g:i A" }}
+                                                    {% endif %}
+                                                </small>
+                                            {% endif %}
+                                            <div class="mt-3">
+                                                <a href="{% url 'tracker:response_edit' question.response.pk %}" class="btn btn-sm btn-outline-primary">
+                                                    <i class="bi bi-pencil me-1"></i>
+                                                    Edit Response
+                                                </a>
+                                            </div>
+                                        </div>
+                                    {% else %}
+                                        <div class="border-top pt-3">
+                                            <div class="alert alert-warning border-0 mb-0" role="alert">
+                                                <i class="bi bi-exclamation-triangle me-2"></i>
+                                                No response yet. Generate AI responses or add manually.
+                                            </div>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-5">
+                        <i class="bi bi-question-circle text-muted" style="font-size: 4rem;"></i>
+                        <h5 class="mt-3 mb-2">No Questions Yet</h5>
+                        <p class="text-muted mb-3">Add questions manually or extract them from the application URL.</p>
+                        <a href="{% url 'tracker:question_create' application.pk %}" class="btn btn-primary">
+                            <i class="bi bi-plus-circle me-2"></i>
+                            Add First Question
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Notes Section -->
+        {% if application.notes %}
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-white border-0 py-3">
+                <h5 class="fw-bold mb-0">
+                    <i class="bi bi-sticky me-2"></i>
+                    Notes
+                </h5>
+            </div>
+            <div class="card-body">
+                <p class="mb-0" style="white-space: pre-wrap;">{{ application.notes }}</p>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Status History Timeline -->
+        {% if application.status_history.exists %}
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-0 py-3">
+                <h5 class="fw-bold mb-0">
+                    <i class="bi bi-clock-history me-2"></i>
+                    Status History
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="timeline">
+                    {% for status in application.status_history.all %}
+                    <div class="timeline-item d-flex mb-4 {% if forloop.last %}pb-0{% endif %}">
+                        <div class="timeline-marker me-3">
+                            <div class="timeline-dot bg-primary rounded-circle" style="width: 12px; height: 12px; margin-top: 6px;"></div>
+                            {% if not forloop.last %}
+                                <div class="timeline-line bg-secondary" style="width: 2px; height: 100%; margin-left: 5px; opacity: 0.3;"></div>
+                            {% endif %}
+                        </div>
+                        <div class="timeline-content flex-grow-1">
+                            <div class="d-flex justify-content-between align-items-start mb-1">
+                                <h6 class="fw-semibold mb-0">{{ status.get_status_display }}</h6>
+                                <small class="text-muted">{{ status.created_at|date:"M d, Y g:i A" }}</small>
+                            </div>
+                            <small class="text-muted">
+                                <i class="bi bi-info-circle me-1"></i>
+                                {{ status.get_changed_by_display }}
+                            </small>
+                            {% if status.notes %}
+                                <p class="mt-2 mb-0 text-muted small">{{ status.notes }}</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header border-0">
+                <h5 class="modal-title fw-bold" id="deleteModalLabel">
+                    <i class="bi bi-exclamation-triangle text-danger me-2"></i>
+                    Confirm Deletion
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="mb-0">Are you sure you want to delete this application? This action cannot be undone and will remove all associated questions and responses.</p>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form method="post" action="{% url 'tracker:application_delete' application.pk %}" class="d-inline">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">Delete Application</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
