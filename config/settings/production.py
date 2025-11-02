@@ -13,24 +13,25 @@ DEBUG = False
 
 
 # Database
-# Use PostgreSQL in production (configured via environment variables)
-# During build phase (collectstatic), database isn't needed, so we provide defaults
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': config('DB_NAME', default=''),
-        'USER': config('DB_USER', default=''),
-        'PASSWORD': config('DB_PASSWORD', default=''),
-        'HOST': config('DB_HOST', default='localhost'),
-        'PORT': config('DB_PORT', default='5432'),
-    }
-}
-
-# Check if DATABASE_URL is provided (Railway provides this)
+# Use PostgreSQL in production (configured via DATABASE_URL from Railway)
 DATABASE_URL = config('DATABASE_URL', default=None)
 if DATABASE_URL:
     import dj_database_url
-    DATABASES['default'] = dj_database_url.parse(DATABASE_URL)
+    DATABASES = {
+        'default': dj_database_url.parse(DATABASE_URL)
+    }
+else:
+    # Fallback for manual configuration (without DATABASE_URL)
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': config('DB_NAME', default='postgres'),
+            'USER': config('DB_USER', default='postgres'),
+            'PASSWORD': config('DB_PASSWORD', default=''),
+            'HOST': config('DB_HOST', default='localhost'),
+            'PORT': config('DB_PORT', default='5432'),
+        }
+    }
 
 
 # Email Configuration - Use SMTP in production
@@ -92,6 +93,12 @@ LOGGING = {
 
 # Celery - Use Redis broker in production
 CELERY_TASK_ALWAYS_EAGER = False
+
+# Railway provides REDIS_URL automatically when you add Redis service
+REDIS_URL = config('REDIS_URL', default=None)
+if REDIS_URL:
+    CELERY_BROKER_URL = REDIS_URL
+    CELERY_RESULT_BACKEND = REDIS_URL
 
 
 # Static files - Ensure WhiteNoise is properly configured
