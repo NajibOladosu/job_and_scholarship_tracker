@@ -3,12 +3,16 @@
 
 {% block title %}My Documents - {{ block.super }}{% endblock %}
 
+{% block topbar_title %}
+<h1 class="page-heading">Documents</h1>
+{% endblock %}
+
 {% block extra_css %}
 <style>
     .documents-page {
-        padding: var(--spacing-2xl) 0;
+        padding: 2rem;
         background: var(--color-gray-50);
-        min-height: calc(100vh - 73px);
+        min-height: 100%;
     }
 
     .page-header {
