@@ -103,6 +103,9 @@ if REDIS_URL:
     CELERY_RESULT_BACKEND = REDIS_URL
 
 # Celery worker configuration for Railway deployment
+# CRITICAL: Limit concurrency to prevent OOM crashes on Railway
+CELERYD_CONCURRENCY = 2  # Maximum 2 worker processes
+CELERY_WORKER_CONCURRENCY = 2  # Alternative setting name
 CELERY_WORKER_PREFETCH_MULTIPLIER = 1
 CELERY_WORKER_MAX_TASKS_PER_CHILD = 1000  # Recycle worker after 1000 tasks to prevent memory leaks
 CELERY_TASK_ACKS_LATE = True  # Tasks are acknowledged after completion, not before
