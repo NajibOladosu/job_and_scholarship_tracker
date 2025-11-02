@@ -172,6 +172,18 @@ pytest tracker/tests/test_models.py
 # Run specific test
 pytest tracker/tests/test_models.py::TestApplication::test_application_creation
 
+# Run tests by marker
+pytest -m unit                  # Only unit tests
+pytest -m integration           # Only integration tests
+pytest -m "not slow"            # Skip slow tests
+pytest -m "not external"        # Skip tests requiring external services
+pytest -m celery                # Only Celery task tests
+pytest -m api                   # Only API endpoint tests
+pytest -m permissions           # Only permission/authorization tests
+
+# Run with verbose output
+pytest -v
+
 # Alternative: Django's test runner
 python manage.py test
 
@@ -180,6 +192,7 @@ python manage.py test tracker
 ```
 
 Test configuration is in `pytest.ini` with markers for categorizing tests (unit, integration, slow, api, celery, external, permissions).
+Coverage reports exclude migrations, tests, and boilerplate files (see `.coveragerc`).
 
 ### Celery Commands
 
@@ -223,10 +236,14 @@ The project uses **modular settings** in `config/settings/`:
 - **`base.py`**: Common settings for all environments (installed apps, middleware, templates)
 - **`development.py`**: Development settings (DEBUG=True, SQLite, console email backend)
 - **`production.py`**: Production settings (DEBUG=False, PostgreSQL, security hardening, WhiteNoise)
+- **`__init__.py`**: Auto-loads appropriate settings based on `DJANGO_ENV` environment variable
 
-Switch environments using `DJANGO_SETTINGS_MODULE`:
-- Development: `config.settings.development` (default in manage.py)
-- Production: `config.settings.production` (set via environment variable)
+Switch environments using `DJANGO_ENV`:
+- Development: `DJANGO_ENV=development` (default)
+- Production: `DJANGO_ENV=production`
+- Alternatively, set `DJANGO_SETTINGS_MODULE` directly: `config.settings.development` or `config.settings.production`
+
+Note: pytest uses `DJANGO_SETTINGS_MODULE=config.settings` which auto-detects via `__init__.py`
 
 ### Django Apps
 
@@ -304,8 +321,9 @@ AI calls are wrapped in Celery tasks to avoid blocking the web interface.
 The project is configured for Railway deployment:
 
 - **Procfile**: Defines web, worker, and beat processes
-- **build.sh**: Installs system dependencies and Python packages
+- **build.sh**: Installs system dependencies (Playwright, Tesseract) and Python packages
 - **start.sh**: Runs migrations and starts Gunicorn
+- **wait-for-db.sh**: Database readiness check for worker/beat processes (prevents startup race conditions)
 - **railway.json**: Railway-specific configuration
 - **railway.env.example**: Required environment variables
 
@@ -314,6 +332,7 @@ Deployment process:
 2. Railway auto-deploys from the branch
 3. Runs migrations automatically via start.sh
 4. Three processes run: web (Django), worker (Celery), beat (scheduler)
+5. Worker and beat use `wait-for-db.sh` to ensure database is ready before starting
 
 See RAILWAY_DEPLOYMENT.md for detailed setup instructions.
 
@@ -354,10 +373,54 @@ Required in production:
 The project uses **pytest** with Django integration:
 
 - Test files: `{app}/tests/test_*.py`
-- Fixtures in `conftest.py` (users, applications, documents)
-- Markers: `@pytest.mark.unit`, `@pytest.mark.integration`, `@pytest.mark.celery`
+- Fixtures in `conftest.py` (comprehensive set - see below)
+- Markers: `@pytest.mark.unit`, `@pytest.mark.integration`, `@pytest.mark.celery`, `@pytest.mark.slow`, `@pytest.mark.api`, `@pytest.mark.external`, `@pytest.mark.permissions`
 - Coverage target: 80%+
+- Coverage config in `.coveragerc` (excludes migrations, tests, etc.)
 - Mock external services (Gemini API, Playwright) in tests
+
+### Available Test Fixtures (conftest.py)
+
+**User Fixtures:**
+- `test_user` - Basic test user
+- `test_user_with_profile` - User with complete profile
+- `another_user` - For permission testing
+- `superuser` - Admin user
+- `authenticated_client` - Django client logged in as test_user
+- `superuser_client` - Django client logged in as superuser
+
+**Application Fixtures:**
+- `test_application` - Draft job application
+- `test_application_submitted` - Submitted scholarship application
+- `test_application_overdue` - Overdue application for deadline testing
+
+**Question/Response Fixtures:**
+- `test_question` - Sample question linked to application
+- `test_response` - AI-generated response
+
+**Document Fixtures:**
+- `test_document` - Unprocessed document
+- `test_document_processed` - Processed document with extraction
+- `test_extracted_info` - Extracted information object
+
+**Notification Fixtures:**
+- `test_reminder` - Scheduled reminder
+- `test_notification` - In-app notification
+
+**Factory Fixtures:**
+- `application_factory(user, **kwargs)` - Create custom applications
+- `document_factory(user, **kwargs)` - Create custom documents
+
+**Mock Fixtures:**
+- `mock_celery_task` - Prevents actual task execution
+- `mock_gemini_service` - Mocks AI service calls
+- `mock_scraper_service` - Mocks web scraping
+- `mock_document_parser` - Mocks document parsing
+- `mock_requests_get` - Mocks HTTP requests
+
+**Sample Data:**
+- `sample_user_info` - Complete user profile data
+- `sample_scraped_content` - HTML content for scraping tests
 
 ## Common Development Tasks
 
@@ -438,22 +501,35 @@ Services are typically called from Celery tasks, not directly from views.
 
 ## Important Files
 
-- **`DATABASE_MODELS.md`**: Complete database schema documentation
+- **`DATABASE_MODELS.md`**: Complete database schema documentation with all model fields and relationships
 - **`IMPLEMENTATION_STATUS.md`**: Project completion status and roadmap
-- **`RAILWAY_DEPLOYMENT.md`**: Detailed Railway deployment guide
-- **`QUICKSTART.md`**: Quick setup instructions
-- **`README.md`**: User-facing documentation
-- **`.env.example`**: Template for environment variables
+- **`RAILWAY_DEPLOYMENT.md`**: Detailed Railway deployment guide with step-by-step instructions
+- **`RAILWAY_CHECKLIST.md`**: Quick checklist for Railway deployment verification
+- **`DEPLOYMENT.md`**: Manual deployment guide for traditional servers (VPS/DigitalOcean)
+- **`QUICKSTART.md`**: Quick setup instructions for local development
+- **`README.md`**: User-facing documentation with feature overview
+- **`PROJECT_PLAN.md`**: Original project plan and architecture decisions
+- **`TODO.md`**: Current tasks and future enhancements
+- **`AGENT_DELEGATION.md`**: Documentation for AI agent workflow
+- **`AGENT_STATUS.md`**: Status tracking for agent-based development
+- **`.env.example`**: Template for environment variables (development)
+- **`railway.env.example`**: Template for Railway production environment variables
+- **`.coveragerc`**: pytest coverage configuration (excludes migrations, tests, etc.)
+- **`pytest.ini`**: pytest configuration with markers and test paths
+- **`conftest.py`**: Comprehensive pytest fixtures (users, apps, documents, mocks)
 
 ## Tips for Claude Code
 
 1. **Always run migrations** after model changes
-2. **Restart Celery worker** after modifying tasks
+2. **Restart Celery worker** after modifying tasks (they don't auto-reload)
 3. **Use pytest** for testing (configured in pytest.ini)
-4. **Mock external APIs** (Gemini, Playwright) in tests
-5. **Check settings environment**: development vs production in config/settings/
-6. **Services vs Apps**: Business logic in services/, Django apps for models/views/templates
-7. **Background tasks**: Long-running operations must use Celery (URL scraping, AI calls)
-8. **Templates**: Use base.html as parent, Bootstrap 5 classes available
-9. **Admin interface**: Register new models in admin.py for easy data management
-10. **Environment variables**: Use python-decouple's `config()` function, never hardcode secrets
+4. **Leverage test fixtures**: Use the comprehensive fixtures in conftest.py instead of creating objects manually (e.g., `test_user`, `mock_gemini_service`, `application_factory`)
+5. **Mock external APIs** (Gemini, Playwright) in tests using provided mock fixtures
+6. **Check settings environment**: Use `DJANGO_ENV` to switch between development/production (defaults to development)
+7. **Services vs Apps**: Business logic in services/, Django apps for models/views/templates
+8. **Background tasks**: Long-running operations must use Celery (URL scraping, AI calls, document processing)
+9. **Templates**: Use base.html as parent, Bootstrap 5 classes available
+10. **Admin interface**: Register new models in admin.py for easy data management
+11. **Environment variables**: Use python-decouple's `config()` function, never hardcode secrets
+12. **Railway deployment**: Three separate processes (web, worker, beat) defined in Procfile; `wait-for-db.sh` prevents race conditions
+13. **Coverage reports**: Run `pytest --cov=. --cov-report=html` and view results in `htmlcov/index.html`
