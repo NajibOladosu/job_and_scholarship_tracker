@@ -31,7 +31,7 @@
                 </li>
 
                 <li class="nav-item">
-                    <a href="{% url 'documents:document_list' %}" class="nav-link {% if 'documents' in request.resolver_match.namespace %}active{% endif %}">
+                    <a href="{% url 'documents:document_list' %}" class="nav-link {% if request.resolver_match.namespace == 'documents' %}active{% endif %}">
                         <i class="bi bi-file-earmark-text nav-icon"></i>
                         <span class="nav-text">Documents</span>
                     </a>
