@@ -4,10 +4,6 @@
 
 {% block title %}{% if form.instance.pk %}Edit{% else %}Create{% endif %} Application - AppTracker{% endblock %}
 
-{% block topbar_title %}
-<h1 class="page-heading">{% if form.instance.pk %}Edit Application{% else %}New Application{% endif %}</h1>
-{% endblock %}
-
 {% block content %}
 <div class="application-form-page bg-light min-vh-100 py-5">
     <div class="container">
