@@ -340,6 +340,40 @@ Deployment process:
 
 See RAILWAY_DEPLOYMENT.md for detailed setup instructions.
 
+### Railway Deployment Troubleshooting
+
+Common issues and solutions when deploying to Railway:
+
+**1. Database DNS Resolution Failures**
+- **Error**: `could not translate host name "postgres.railway.internal" to address`
+- **Cause**: Railway's internal DNS takes 30-60 seconds to propagate on first startup
+- **Solution**: The `wait_for_db.py` script handles this with DNS resolution retry logic
+- **Files**: `wait_for_db.py`, `wait-for-db.sh`
+
+**2. Worker Process Crashes (OOM)**
+- **Error**: Worker showing 48 concurrent processes and crashing immediately
+- **Cause**: Celery defaults to CPU count workers, Railway containers have limited memory
+- **Solution**: Set concurrency in Django settings, not Procfile (Railway ignores CLI flags)
+- **Fix**: `CELERYD_CONCURRENCY = 2` in `config/settings/production.py`
+
+**3. HTTPS Redirect Loop (ERR_TOO_MANY_REDIRECTS)**
+- **Error**: Infinite redirect loop when accessing Railway URL
+- **Cause**: Django sees HTTP requests behind Railway's HTTPS proxy
+- **Solution**: Trust X-Forwarded-Proto header from Railway's proxy
+- **Fix**: `SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')` in production.py
+
+**4. Login/Signup 500 Errors (NoReverseMatch)**
+- **Error**: `NoReverseMatch: Reverse for 'dashboard' not found`
+- **Cause**: Missing URL namespace in reverse() calls
+- **Solution**: Always use namespace prefix (e.g., `tracker:dashboard` not `dashboard`)
+- **Files**: `accounts/views.py`, `config/settings/base.py` (LOGIN_REDIRECT_URL)
+
+**5. Template URL Errors**
+- **Error**: `NoReverseMatch: Reverse for 'application_list' not found`
+- **Cause**: Navbar or templates reference non-existent URLs
+- **Solution**: Verify URL exists in app's urls.py before using in templates
+- **Note**: The tracker app uses `dashboard` not `application_list` for the main view
+
 ### Environment Variables (Production)
 
 Required in production:
@@ -522,6 +556,32 @@ Services are typically called from Celery tasks, not directly from views.
 - **`pytest.ini`**: pytest configuration with markers and test paths
 - **`conftest.py`**: Comprehensive pytest fixtures (users, apps, documents, mocks)
 
+## URL Structure
+
+### Tracker App URLs (tracker/urls.py)
+- `tracker:dashboard` - Main applications list page (not `application_list`)
+- `tracker:application_create` - Create new application
+- `tracker:application_detail` - View single application
+- `tracker:application_update` - Edit application
+- `tracker:application_delete` - Delete application
+- `tracker:question_create` - Add question to application
+- `tracker:response_generate` - Generate AI responses
+
+### Accounts App URLs (accounts/urls.py)
+- `accounts:login` - User login page
+- `accounts:signup` - User registration
+- `accounts:logout` - User logout
+- `accounts:profile` - User profile page
+- Note: `accounts:settings` does not exist (removed from navbar)
+
+### Documents App URLs (documents/urls.py)
+- `documents:document_list` - List all documents
+- `documents:document_upload` - Upload new document
+- `documents:document_detail` - View document
+- `documents:document_delete` - Delete document
+
+**Important**: Always use URL namespaces in templates and reverse() calls (e.g., `{% url 'tracker:dashboard' %}` not `{% url 'dashboard' %}`).
+
 ## Tips for Claude Code
 
 1. **Always run migrations** after model changes
@@ -537,3 +597,5 @@ Services are typically called from Celery tasks, not directly from views.
 11. **Environment variables**: Use python-decouple's `config()` function, never hardcode secrets
 12. **Railway deployment**: Three separate processes (web, worker, beat) defined in Procfile; `wait-for-db.sh` prevents race conditions
 13. **Coverage reports**: Run `pytest --cov=. --cov-report=html` and view results in `htmlcov/index.html`
+14. **URL namespaces**: Always prefix URLs with namespace in templates and reverse() calls (e.g., `tracker:dashboard`)
+15. **Production.py settings**: Railway-specific fixes are in `config/settings/production.py` (proxy headers, concurrency limits)

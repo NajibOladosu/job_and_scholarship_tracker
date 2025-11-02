@@ -1,0 +1,166 @@
+{% load static %}
+
+<!-- Top Bar (for authenticated users with sidebar) -->
+<header class="topbar">
+    <div class="topbar-content">
+        <!-- Mobile Menu Toggle -->
+        <button class="menu-toggle" id="menuToggle" aria-label="Toggle Menu">
+            <i class="bi bi-list"></i>
+        </button>
+
+        <!-- Page Title (passed from view context) -->
+        <div class="topbar-title">
+            <h1 class="page-heading">{{ page_title|default:"Dashboard" }}</h1>
+        </div>
+
+        <!-- Right Side Actions -->
+        <div class="topbar-actions">
+            <!-- Notifications (placeholder for future) -->
+            <button class="topbar-action-btn" title="Notifications">
+                <i class="bi bi-bell"></i>
+                <span class="notification-badge">3</span>
+            </button>
+
+            <!-- Quick Add Button -->
+            <a href="{% url 'tracker:application_create' %}" class="btn btn-primary btn-sm d-none d-md-inline-flex">
+                <i class="bi bi-plus-circle me-1"></i>
+                Quick Add
+            </a>
+        </div>
+    </div>
+</header>
+
+<style>
+/* Top Bar Styles */
+.topbar {
+    position: sticky;
+    top: 0;
+    height: 60px;
+    background: white;
+    border-bottom: 1px solid #e5e7eb;
+    z-index: 900;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.topbar-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 100%;
+    padding: 0 1.5rem;
+    gap: 1rem;
+}
+
+/* Menu Toggle (Mobile) */
+.menu-toggle {
+    display: none;
+    width: 40px;
+    height: 40px;
+    border: none;
+    background: #f3f4f6;
+    border-radius: 8px;
+    color: #374151;
+    font-size: 1.5rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    align-items: center;
+    justify-content: center;
+}
+
+.menu-toggle:hover {
+    background: #e5e7eb;
+    color: #111827;
+}
+
+.menu-toggle:active {
+    transform: scale(0.95);
+}
+
+@media (max-width: 768px) {
+    .menu-toggle {
+        display: flex;
+    }
+}
+
+/* Page Title */
+.topbar-title {
+    flex: 1;
+}
+
+.page-heading {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #111827;
+    margin: 0;
+}
+
+@media (max-width: 768px) {
+    .page-heading {
+        font-size: 1.25rem;
+    }
+}
+
+/* Topbar Actions */
+.topbar-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.topbar-action-btn {
+    position: relative;
+    width: 40px;
+    height: 40px;
+    border: none;
+    background: #f3f4f6;
+    border-radius: 8px;
+    color: #374151;
+    font-size: 1.25rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.topbar-action-btn:hover {
+    background: #e5e7eb;
+    color: #111827;
+}
+
+.notification-badge {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    background: #ef4444;
+    color: white;
+    font-size: 0.65rem;
+    font-weight: 600;
+    padding: 2px 6px;
+    border-radius: 10px;
+    min-width: 18px;
+    text-align: center;
+    border: 2px solid white;
+}
+</style>
+
+<script>
+// Mobile sidebar toggle
+document.addEventListener('DOMContentLoaded', function() {
+    const menuToggle = document.getElementById('menuToggle');
+    const sidebar = document.getElementById('sidebar');
+    const sidebarOverlay = document.getElementById('sidebarOverlay');
+
+    if (menuToggle && sidebar && sidebarOverlay) {
+        menuToggle.addEventListener('click', function() {
+            sidebar.classList.toggle('show');
+            sidebarOverlay.classList.toggle('show');
+        });
+
+        sidebarOverlay.addEventListener('click', function() {
+            sidebar.classList.remove('show');
+            sidebarOverlay.classList.remove('show');
+        });
+    }
+});
+</script>
