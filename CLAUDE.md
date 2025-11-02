@@ -332,9 +332,11 @@ Deployment process:
 1. Push to GitHub branch
 2. Railway auto-deploys from the branch
 3. Runs migrations automatically via start.sh
-4. Three processes run: web (Django), worker (Celery), beat (scheduler)
+4. Three processes run: web (Django), worker (Celery with --concurrency=2), beat (scheduler)
 5. Worker and beat use `wait_for_db.py` (via `wait-for-db.sh`) to ensure database is ready before starting
 6. The wait script handles DNS resolution delays (Railway internal services can take 30-60s to resolve on first startup)
+
+**Important**: The Celery worker uses `--concurrency=2` to limit memory usage on Railway. The default (48 workers) will cause the container to crash due to memory exhaustion.
 
 See RAILWAY_DEPLOYMENT.md for detailed setup instructions.
 
