@@ -42,3 +42,4 @@ whitenoise==6.11.0
 python-slugify==8.0.4
 pytz==2025.2
 
+dj-database-url==2.3.0
