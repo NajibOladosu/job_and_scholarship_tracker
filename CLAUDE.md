@@ -8,13 +8,13 @@ Job & Scholarship Tracker is a production-ready Django web application that auto
 
 ## Technology Stack
 
-- **Framework**: Django 5.2.7 with Django REST Framework 3.16.1
+- **Framework**: Django 4.2.25 with Django REST Framework 3.16.1
 - **Python**: 3.11+ (see runtime.txt)
 - **Database**: SQLite (development) / PostgreSQL (production)
 - **Task Queue**: Celery 5.5.3 with Redis 7.0.1
 - **AI Integration**: Google Gemini API (google-generativeai 0.8.5)
 - **Web Scraping**: Playwright 1.55.0, BeautifulSoup4 4.14.2
-- **Document Processing**: pdfplumber 0.11.7, python-docx 1.2.0, pytesseract 0.3.13
+- **Document Processing**: pdfplumber 0.11.7, python-docx 1.2.0, Pillow 11.3.0, pytesseract 0.3.13
 - **NLP**: spaCy 3.8.7
 - **Testing**: pytest with pytest-django
 - **Deployment**: Railway (Gunicorn 23.0.0, WhiteNoise 6.11.0)
@@ -165,6 +165,8 @@ pytest --cov=. --cov-report=html
 pytest accounts/tests/
 pytest tracker/tests/
 pytest documents/tests/
+pytest notifications/tests/
+pytest services/tests/
 
 # Run specific test file
 pytest tracker/tests/test_models.py
@@ -332,11 +334,15 @@ Deployment process:
 1. Push to GitHub branch
 2. Railway auto-deploys from the branch
 3. Runs migrations automatically via start.sh
-4. Three processes run: web (Django), worker (Celery with --concurrency=2), beat (scheduler)
+4. Three processes run: web (Django), worker (Celery), beat (scheduler)
 5. Worker and beat use `wait_for_db.py` (via `wait-for-db.sh`) to ensure database is ready before starting
 6. The wait script handles DNS resolution delays (Railway internal services can take 30-60s to resolve on first startup)
 
-**Important**: The Celery worker uses `--concurrency=2` to limit memory usage on Railway. The default (48 workers) will cause the container to crash due to memory exhaustion.
+**Important Celery Worker Configuration**:
+- Concurrency must be set in `config/settings/production.py` (`CELERYD_CONCURRENCY = 2`)
+- Railway ignores CLI flags in Procfile, so Django settings are required
+- `--max-tasks-per-child=1000` in Procfile restarts workers after 1000 tasks to prevent memory leaks
+- Limiting concurrency prevents OOM crashes (default of 48 workers exhausts memory)
 
 See RAILWAY_DEPLOYMENT.md for detailed setup instructions.
 
@@ -353,8 +359,9 @@ Common issues and solutions when deploying to Railway:
 **2. Worker Process Crashes (OOM)**
 - **Error**: Worker showing 48 concurrent processes and crashing immediately
 - **Cause**: Celery defaults to CPU count workers, Railway containers have limited memory
-- **Solution**: Set concurrency in Django settings, not Procfile (Railway ignores CLI flags)
-- **Fix**: `CELERYD_CONCURRENCY = 2` in `config/settings/production.py`
+- **Solution**: Railway ignores Procfile CLI flags, so concurrency MUST be set in Django settings
+- **Fix**: Set `CELERYD_CONCURRENCY = 2` in `config/settings/production.py` (required)
+- **Additional**: Procfile includes `--max-tasks-per-child=1000` for task recycling (this flag works)
 
 **3. HTTPS Redirect Loop (ERR_TOO_MANY_REDIRECTS)**
 - **Error**: Infinite redirect loop when accessing Railway URL
