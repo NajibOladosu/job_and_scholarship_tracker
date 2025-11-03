@@ -27,7 +27,7 @@
 
     {% block extra_css %}{% endblock %}
 </head>
-<body class="{% if user.is_authenticated %}has-sidebar{% endif %}">
+<body class="{% if user.is_authenticated %}has-sidebar d-flex{% else %}d-flex flex-column min-vh-100{% endif %}">
 
     {% if user.is_authenticated %}
         <!-- Authenticated Layout: Sidebar + Topbar -->
@@ -35,60 +35,38 @@
 
         <div class="main-content-wrapper">
             {% include 'components/topbar.html' %}
-
-            <!-- Toast Notifications Container -->
-            <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 11000;">
-                {% if messages %}
-                    {% for message in messages %}
-                        <div class="toast show align-items-center text-bg-{{ message.tags|default:'info' }} border-0" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="5000">
-                            <div class="d-flex">
-                                <div class="toast-body">
-                                    <i class="bi bi-{% if message.tags == 'success' %}check-circle{% elif message.tags == 'error' or message.tags == 'danger' %}exclamation-circle{% elif message.tags == 'warning' %}exclamation-triangle{% else %}info-circle{% endif %} me-2"></i>
-                                    {{ message }}
-                                </div>
-                                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
-                            </div>
-                        </div>
-                    {% endfor %}
-                {% endif %}
-            </div>
-
-            <!-- Main Content -->
-            <main class="main-content flex-grow-1">
-                {% block content %}{% endblock %}
-            </main>
-
-            <!-- Footer -->
-            {% include 'components/footer.html' %}
-        </div>
     {% else %}
         <!-- Guest Layout: Traditional Navbar -->
         {% include 'components/navbar.html' %}
+    {% endif %}
 
-        <!-- Toast Notifications Container -->
-        <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 11000;">
-            {% if messages %}
-                {% for message in messages %}
-                    <div class="toast show align-items-center text-bg-{{ message.tags|default:'info' }} border-0" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="5000">
-                        <div class="d-flex">
-                            <div class="toast-body">
-                                <i class="bi bi-{% if message.tags == 'success' %}check-circle{% elif message.tags == 'error' or message.tags == 'danger' %}exclamation-circle{% elif message.tags == 'warning' %}exclamation-triangle{% else %}info-circle{% endif %} me-2"></i>
-                                {{ message }}
-                            </div>
-                            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+    <!-- Toast Notifications Container -->
+    <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 11000;">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="toast show align-items-center text-bg-{{ message.tags|default:'info' }} border-0" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="5000">
+                    <div class="d-flex">
+                        <div class="toast-body">
+                            <i class="bi bi-{% if message.tags == 'success' %}check-circle{% elif message.tags == 'error' or message.tags == 'danger' %}exclamation-circle{% elif message.tags == 'warning' %}exclamation-triangle{% else %}info-circle{% endif %} me-2"></i>
+                            {{ message }}
                         </div>
+                        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
                     </div>
-                {% endfor %}
-            {% endif %}
-        </div>
+                </div>
+            {% endfor %}
+        {% endif %}
+    </div>
 
-        <!-- Main Content -->
-        <main class="flex-grow-1">
-            {% block content %}{% endblock %}
-        </main>
+    <!-- Main Content (single block for both authenticated and guest layouts) -->
+    <main class="{% if user.is_authenticated %}main-content{% endif %} flex-grow-1">
+        {% block content %}{% endblock %}
+    </main>
 
-        <!-- Footer -->
-        {% include 'components/footer.html' %}
+    <!-- Footer -->
+    {% include 'components/footer.html' %}
+
+    {% if user.is_authenticated %}
+        </div><!-- Close main-content-wrapper -->
     {% endif %}
 
     <!-- Bootstrap Bundle with Popper -->
