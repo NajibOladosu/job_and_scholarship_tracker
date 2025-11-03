@@ -203,7 +203,7 @@ class ApplicationDeleteView(LoginRequiredMixin, DeleteView):
     """
     model = Application
     template_name = 'tracker/application_confirm_delete.html'
-    success_url = reverse_lazy('dashboard')
+    success_url = reverse_lazy('tracker:dashboard')
 
     def get_queryset(self):
         return Application.objects.filter(user=self.request.user)
