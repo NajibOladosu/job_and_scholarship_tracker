@@ -1,5 +1,5 @@
 # Core Django
-Django==5.2.7
+Django==4.2.25
 djangorestframework==3.16.1
 
 # Database
@@ -19,7 +19,7 @@ fake-useragent==2.2.0
 # Document Processing
 pdfplumber==0.11.7
 python-docx==1.2.0
-Pillow==12.0.0
+Pillow==11.3.0
 pytesseract==0.3.13
 
 # NLP & AI
@@ -42,4 +42,3 @@ whitenoise==6.11.0
 python-slugify==8.0.4
 pytz==2025.2
 
-dj-database-url==2.3.0
