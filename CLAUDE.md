@@ -621,3 +621,4 @@ Services are typically called from Celery tasks, not directly from views.
 13. **Coverage reports**: Run `pytest --cov=. --cov-report=html` and view results in `htmlcov/index.html`
 14. **URL namespaces**: Always prefix URLs with namespace in templates and reverse() calls (e.g., `tracker:dashboard`)
 15. **Production.py settings**: Railway-specific fixes are in `config/settings/production.py` (proxy headers, concurrency limits)
+16. **Template div balance**: Always ensure opening and closing `<div>` tags are balanced in templates. Use Python to verify: `content.count('<div')` should equal `content.count('</div>')` within `{% block content %}` sections
