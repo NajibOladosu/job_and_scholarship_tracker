@@ -138,6 +138,8 @@ class Notification(models.Model):
     NOTIFICATION_TYPE_CHOICES = [
         ('reminder', _('Reminder')),
         ('status_change', _('Status Change')),
+        ('deadline', _('Deadline Alert')),
+        ('document', _('Document Processed')),
         ('system', _('System Notification')),
     ]
 

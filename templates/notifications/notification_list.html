@@ -1,0 +1,880 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Notifications - AppTracker{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* ============================================
+       NOTIFICATION PAGE STYLES
+       ============================================ */
+    .notification-page {
+        padding: var(--spacing-2xl) 0;
+        background: var(--bg-body);
+        min-height: calc(100vh - var(--topbar-height));
+    }
+
+    /* Header Section */
+    .notification-header {
+        background: white;
+        border-radius: var(--radius-xl);
+        padding: var(--spacing-xl);
+        margin-bottom: var(--spacing-xl);
+        box-shadow: var(--shadow-md);
+        border-left: 4px solid var(--color-primary);
+    }
+
+    .notification-stats {
+        display: flex;
+        gap: var(--spacing-md);
+        margin-top: var(--spacing-md);
+        flex-wrap: wrap;
+    }
+
+    .stat-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--spacing-xs);
+        padding: 0.5rem 1rem;
+        background: var(--color-gray-100);
+        border-radius: var(--radius-full);
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: var(--color-gray-700);
+        transition: all var(--transition-fast);
+    }
+
+    .stat-badge:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-sm);
+    }
+
+    .stat-badge.unread {
+        background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(139, 92, 246, 0.1) 100%);
+        color: var(--color-primary);
+        border: 2px solid var(--color-primary);
+    }
+
+    .stat-badge i {
+        font-size: 1rem;
+    }
+
+    /* Filter Tabs */
+    .filter-tabs {
+        background: white;
+        border-radius: var(--radius-xl);
+        padding: var(--spacing-md);
+        margin-bottom: var(--spacing-xl);
+        box-shadow: var(--shadow-sm);
+        display: flex;
+        gap: var(--spacing-xs);
+        overflow-x: auto;
+    }
+
+    .filter-tab {
+        padding: 0.75rem 1.5rem;
+        border: none;
+        background: transparent;
+        color: var(--text-secondary);
+        font-weight: 600;
+        font-size: 0.9375rem;
+        border-radius: var(--radius-lg);
+        cursor: pointer;
+        transition: all var(--transition-fast);
+        white-space: nowrap;
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-sm);
+        text-decoration: none;
+    }
+
+    .filter-tab:hover {
+        background: var(--color-gray-100);
+        color: var(--text-primary);
+    }
+
+    .filter-tab.active {
+        background: var(--color-primary-gradient);
+        color: white;
+        box-shadow: var(--shadow-md);
+    }
+
+    .filter-tab-count {
+        background: rgba(255, 255, 255, 0.2);
+        padding: 0.125rem 0.5rem;
+        border-radius: var(--radius-full);
+        font-size: 0.75rem;
+        font-weight: 700;
+    }
+
+    .filter-tab.active .filter-tab-count {
+        background: rgba(255, 255, 255, 0.3);
+    }
+
+    /* Date Group Headers */
+    .date-group {
+        margin-bottom: var(--spacing-2xl);
+    }
+
+    .date-group-header {
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-md);
+        margin-bottom: var(--spacing-lg);
+        padding-bottom: var(--spacing-sm);
+        border-bottom: 2px solid var(--color-gray-200);
+    }
+
+    .date-group-header h3 {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin: 0;
+    }
+
+    .date-group-count {
+        font-size: 0.875rem;
+        color: var(--text-muted);
+        background: var(--color-gray-100);
+        padding: 0.25rem 0.75rem;
+        border-radius: var(--radius-full);
+        font-weight: 600;
+    }
+
+    /* Notification Cards */
+    .notification-card {
+        background: white;
+        border-radius: var(--radius-xl);
+        padding: var(--spacing-xl);
+        margin-bottom: var(--spacing-md);
+        box-shadow: var(--shadow-sm);
+        border-left: 4px solid transparent;
+        transition: all var(--transition-base);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .notification-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 4px;
+        height: 100%;
+        background: var(--color-primary);
+        transform: scaleY(0);
+        transition: transform var(--transition-fast);
+    }
+
+    .notification-card:hover {
+        box-shadow: var(--shadow-lg);
+        transform: translateY(-2px);
+    }
+
+    .notification-card:hover::before {
+        transform: scaleY(1);
+    }
+
+    .notification-card.unread {
+        border-left-color: var(--color-primary);
+        background: linear-gradient(to right, rgba(99, 102, 241, 0.03) 0%, white 100%);
+    }
+
+    .notification-card.marking-read {
+        opacity: 0.6;
+        pointer-events: none;
+    }
+
+    /* Notification Icon */
+    .notification-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: var(--radius-lg);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        flex-shrink: 0;
+        transition: all var(--transition-fast);
+    }
+
+    .notification-card:hover .notification-icon {
+        transform: scale(1.1) rotate(5deg);
+    }
+
+    /* Icon variants for notification types */
+    .notification-icon.deadline {
+        background: linear-gradient(135deg, rgba(245, 158, 11, 0.15) 0%, rgba(251, 191, 36, 0.15) 100%);
+        color: var(--color-warning);
+    }
+
+    .notification-icon.status-change {
+        background: linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(96, 165, 250, 0.15) 100%);
+        color: var(--color-info);
+    }
+
+    .notification-icon.reminder {
+        background: linear-gradient(135deg, rgba(99, 102, 241, 0.15) 0%, rgba(139, 92, 246, 0.15) 100%);
+        color: var(--color-primary);
+    }
+
+    .notification-icon.document {
+        background: linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(52, 211, 153, 0.15) 100%);
+        color: var(--color-success);
+    }
+
+    /* Type Badge */
+    .notification-type-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.375rem;
+        padding: 0.375rem 0.75rem;
+        border-radius: var(--radius-md);
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .notification-type-badge.deadline {
+        background: rgba(245, 158, 11, 0.1);
+        color: #b45309;
+    }
+
+    .notification-type-badge.status-change {
+        background: rgba(59, 130, 246, 0.1);
+        color: #1e40af;
+    }
+
+    .notification-type-badge.reminder {
+        background: rgba(99, 102, 241, 0.1);
+        color: #4338ca;
+    }
+
+    .notification-type-badge.document {
+        background: rgba(16, 185, 129, 0.1);
+        color: #047857;
+    }
+
+    /* Content */
+    .notification-content {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .notification-title {
+        font-size: 1.0625rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: var(--spacing-sm);
+        line-height: 1.4;
+    }
+
+    .notification-message {
+        color: var(--text-secondary);
+        line-height: 1.6;
+        font-size: 0.9375rem;
+        margin-bottom: 0;
+    }
+
+    /* Meta Info */
+    .notification-meta {
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-lg);
+        margin-top: var(--spacing-md);
+        padding-top: var(--spacing-md);
+        border-top: 1px solid var(--color-gray-200);
+        flex-wrap: wrap;
+    }
+
+    .notification-time {
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-xs);
+        color: var(--text-muted);
+        font-size: 0.875rem;
+        font-weight: 500;
+    }
+
+    .notification-time i {
+        font-size: 0.875rem;
+    }
+
+    /* Unread Indicator */
+    .unread-indicator {
+        width: 10px;
+        height: 10px;
+        background: var(--color-primary);
+        border-radius: var(--radius-full);
+        display: inline-block;
+        position: absolute;
+        top: var(--spacing-md);
+        right: var(--spacing-md);
+        animation: pulse 2s ease-in-out infinite;
+        box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.2);
+    }
+
+    @keyframes pulse {
+        0%, 100% {
+            transform: scale(1);
+            opacity: 1;
+        }
+        50% {
+            transform: scale(1.2);
+            opacity: 0.8;
+        }
+    }
+
+    /* Action Buttons */
+    .notification-actions {
+        display: flex;
+        gap: var(--spacing-sm);
+        flex-wrap: wrap;
+    }
+
+    .mark-read-btn,
+    .view-link-btn {
+        padding: 0.5rem 1rem;
+        border-radius: var(--radius-lg);
+        font-size: 0.875rem;
+        font-weight: 600;
+        transition: all var(--transition-fast);
+        border: none;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.375rem;
+        text-decoration: none;
+    }
+
+    .mark-read-btn {
+        background: var(--color-gray-100);
+        color: var(--text-primary);
+    }
+
+    .mark-read-btn:hover {
+        background: var(--color-primary);
+        color: white;
+        transform: translateY(-1px);
+        box-shadow: var(--shadow-sm);
+    }
+
+    .view-link-btn {
+        background: var(--color-primary);
+        color: white;
+        box-shadow: var(--shadow-sm);
+    }
+
+    .view-link-btn:hover {
+        background: var(--color-primary-dark);
+        transform: translateY(-1px);
+        box-shadow: var(--shadow-md);
+        color: white;
+    }
+
+    /* Empty State */
+    .empty-state {
+        text-align: center;
+        padding: var(--spacing-3xl) var(--spacing-xl);
+        background: white;
+        border-radius: var(--radius-xl);
+        box-shadow: var(--shadow-md);
+        margin-top: var(--spacing-xl);
+    }
+
+    .empty-state-icon {
+        width: 120px;
+        height: 120px;
+        margin: 0 auto var(--spacing-xl);
+        background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(139, 92, 246, 0.1) 100%);
+        border-radius: var(--radius-2xl);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 4rem;
+        color: var(--color-primary);
+    }
+
+    .empty-state-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: var(--spacing-sm);
+    }
+
+    .empty-state-text {
+        color: var(--text-secondary);
+        font-size: 1rem;
+        margin-bottom: var(--spacing-xl);
+        line-height: 1.6;
+    }
+
+    /* Loading State */
+    .loading-spinner {
+        text-align: center;
+        padding: var(--spacing-2xl);
+    }
+
+    .spinner {
+        width: 40px;
+        height: 40px;
+        margin: 0 auto;
+        border: 4px solid var(--color-gray-200);
+        border-top-color: var(--color-primary);
+        border-radius: var(--radius-full);
+        animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+
+    /* Pagination */
+    .pagination {
+        margin-top: var(--spacing-2xl);
+        display: flex;
+        justify-content: center;
+        gap: var(--spacing-xs);
+    }
+
+    .page-link {
+        padding: 0.625rem 1rem;
+        border: 2px solid var(--color-gray-300);
+        background: white;
+        color: var(--text-primary);
+        border-radius: var(--radius-lg);
+        font-weight: 600;
+        transition: all var(--transition-fast);
+        text-decoration: none;
+    }
+
+    .page-link:hover {
+        background: var(--color-primary);
+        border-color: var(--color-primary);
+        color: white;
+        transform: translateY(-1px);
+        box-shadow: var(--shadow-sm);
+    }
+
+    .page-item.active .page-link {
+        background: var(--color-primary-gradient);
+        border-color: transparent;
+        color: white;
+        box-shadow: var(--shadow-md);
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .notification-page {
+            padding: var(--spacing-lg) 0;
+        }
+
+        .notification-header {
+            padding: var(--spacing-lg);
+        }
+
+        .notification-stats {
+            flex-direction: column;
+            gap: var(--spacing-sm);
+        }
+
+        .filter-tabs {
+            padding: var(--spacing-sm);
+        }
+
+        .filter-tab {
+            padding: 0.625rem 1rem;
+            font-size: 0.875rem;
+        }
+
+        .notification-card {
+            padding: var(--spacing-lg);
+        }
+
+        .notification-icon {
+            width: 40px;
+            height: 40px;
+            font-size: 1.25rem;
+        }
+
+        .notification-meta {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: var(--spacing-sm);
+        }
+
+        .notification-actions {
+            width: 100%;
+        }
+
+        .mark-read-btn,
+        .view-link-btn {
+            flex: 1;
+            justify-content: center;
+        }
+    }
+
+    /* Fade in animation */
+    .fade-in-up {
+        animation: fadeInUp 0.5s ease-out forwards;
+        opacity: 0;
+    }
+
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .date-group:nth-child(1) .notification-card:nth-child(1) { animation-delay: 0.05s; }
+    .date-group:nth-child(1) .notification-card:nth-child(2) { animation-delay: 0.1s; }
+    .date-group:nth-child(1) .notification-card:nth-child(3) { animation-delay: 0.15s; }
+    .date-group:nth-child(2) .notification-card:nth-child(1) { animation-delay: 0.2s; }
+    .date-group:nth-child(2) .notification-card:nth-child(2) { animation-delay: 0.25s; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="notification-page">
+    <div class="container-fluid">
+        <!-- Header -->
+        <div class="notification-header fade-in">
+            <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
+                <div class="flex-grow-1">
+                    <h1 class="h2 fw-bold mb-2 text-gradient">
+                        <i class="bi bi-bell me-2"></i>
+                        Notifications
+                    </h1>
+                    <p class="text-secondary mb-0">
+                        <i class="bi bi-info-circle me-2"></i>
+                        Stay updated with your application progress and deadlines
+                    </p>
+                    <div class="notification-stats">
+                        <span class="stat-badge unread">
+                            <i class="bi bi-bell-fill"></i>
+                            <span>{{ unread_count }} Unread</span>
+                        </span>
+                        <span class="stat-badge">
+                            <i class="bi bi-list-ul"></i>
+                            <span>{{ total_count }} Total</span>
+                        </span>
+                        {% if read_count > 0 %}
+                        <span class="stat-badge">
+                            <i class="bi bi-check-circle"></i>
+                            <span>{{ read_count }} Read</span>
+                        </span>
+                        {% endif %}
+                    </div>
+                </div>
+                {% if unread_count > 0 %}
+                <div>
+                    <form method="post" action="{% url 'notifications:mark_all_read' %}" class="d-inline" id="markAllReadForm">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="bi bi-check-all me-2"></i>
+                            Mark All as Read
+                        </button>
+                    </form>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Filter Tabs -->
+        <div class="filter-tabs fade-in">
+            <a href="?filter=all" class="filter-tab {% if filter_type == 'all' or not filter_type %}active{% endif %}">
+                <i class="bi bi-grid-3x3-gap"></i>
+                <span>All</span>
+                <span class="filter-tab-count">{{ total_count }}</span>
+            </a>
+            <a href="?filter=unread" class="filter-tab {% if filter_type == 'unread' %}active{% endif %}">
+                <i class="bi bi-bell"></i>
+                <span>Unread</span>
+                <span class="filter-tab-count">{{ unread_count }}</span>
+            </a>
+            <a href="?filter=read" class="filter-tab {% if filter_type == 'read' %}active{% endif %}">
+                <i class="bi bi-check-circle"></i>
+                <span>Read</span>
+                <span class="filter-tab-count">{{ read_count }}</span>
+            </a>
+        </div>
+
+        <!-- Notifications List -->
+        {% if notifications %}
+            <!-- Today -->
+            {% if today_notifications %}
+            <div class="date-group">
+                <div class="date-group-header">
+                    <i class="bi bi-calendar-day text-primary" style="font-size: 1.5rem;"></i>
+                    <h3>Today</h3>
+                    <span class="date-group-count">{{ today_notifications|length }}</span>
+                </div>
+                {% for notification in today_notifications %}
+                    {% include 'notifications/partials/notification_card.html' %}
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <!-- Yesterday -->
+            {% if yesterday_notifications %}
+            <div class="date-group">
+                <div class="date-group-header">
+                    <i class="bi bi-calendar-minus text-info" style="font-size: 1.5rem;"></i>
+                    <h3>Yesterday</h3>
+                    <span class="date-group-count">{{ yesterday_notifications|length }}</span>
+                </div>
+                {% for notification in yesterday_notifications %}
+                    {% include 'notifications/partials/notification_card.html' %}
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <!-- This Week -->
+            {% if this_week_notifications %}
+            <div class="date-group">
+                <div class="date-group-header">
+                    <i class="bi bi-calendar-week text-secondary" style="font-size: 1.5rem;"></i>
+                    <h3>This Week</h3>
+                    <span class="date-group-count">{{ this_week_notifications|length }}</span>
+                </div>
+                {% for notification in this_week_notifications %}
+                    {% include 'notifications/partials/notification_card.html' %}
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <!-- Older -->
+            {% if older_notifications %}
+            <div class="date-group">
+                <div class="date-group-header">
+                    <i class="bi bi-calendar-range text-muted" style="font-size: 1.5rem;"></i>
+                    <h3>Older</h3>
+                    <span class="date-group-count">{{ older_notifications|length }}</span>
+                </div>
+                {% for notification in older_notifications %}
+                    {% include 'notifications/partials/notification_card.html' %}
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <!-- Pagination -->
+            {% if is_paginated %}
+            <nav aria-label="Notification pagination">
+                <ul class="pagination">
+                    {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page=1{% if filter_type %}&filter={{ filter_type }}{% endif %}">
+                                <i class="bi bi-chevron-double-left"></i>
+                            </a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if filter_type %}&filter={{ filter_type }}{% endif %}">
+                                <i class="bi bi-chevron-left"></i>
+                            </a>
+                        </li>
+                    {% endif %}
+
+                    {% for num in page_obj.paginator.page_range %}
+                        {% if page_obj.number == num %}
+                            <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                            <li class="page-item"><a class="page-link" href="?page={{ num }}{% if filter_type %}&filter={{ filter_type }}{% endif %}">{{ num }}</a></li>
+                        {% endif %}
+                    {% endfor %}
+
+                    {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if filter_type %}&filter={{ filter_type }}{% endif %}">
+                                <i class="bi bi-chevron-right"></i>
+                            </a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if filter_type %}&filter={{ filter_type }}{% endif %}">
+                                <i class="bi bi-chevron-double-right"></i>
+                            </a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+        {% else %}
+            <!-- Empty State -->
+            <div class="empty-state fade-in">
+                <div class="empty-state-icon">
+                    <i class="bi {% if filter_type == 'unread' %}bi-bell-slash{% elif filter_type == 'read' %}bi-check-circle{% else %}bi-inbox{% endif %}"></i>
+                </div>
+                <h2 class="empty-state-title">
+                    {% if filter_type == 'unread' %}
+                        All Caught Up!
+                    {% elif filter_type == 'read' %}
+                        No Read Notifications
+                    {% else %}
+                        No Notifications Yet
+                    {% endif %}
+                </h2>
+                <p class="empty-state-text">
+                    {% if filter_type == 'unread' %}
+                        You've read all your notifications. Great job staying on top of things!
+                    {% elif filter_type == 'read' %}
+                        You haven't read any notifications yet. Check your unread notifications.
+                    {% else %}
+                        You don't have any notifications yet. We'll notify you about application updates, deadlines, and more.
+                    {% endif %}
+                </p>
+                <a href="{% url 'tracker:dashboard' %}" class="btn btn-primary btn-lg">
+                    <i class="bi bi-house-door me-2"></i>
+                    Go to Dashboard
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-dismiss toasts
+    const toasts = document.querySelectorAll('.toast');
+    toasts.forEach(toast => {
+        const bsToast = new bootstrap.Toast(toast);
+        bsToast.show();
+    });
+
+    // AJAX mark as read functionality
+    const markReadForms = document.querySelectorAll('.mark-read-form');
+    markReadForms.forEach(form => {
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const card = this.closest('.notification-card');
+            const button = this.querySelector('button');
+            const originalText = button.innerHTML;
+
+            // Add loading state
+            card.classList.add('marking-read');
+            button.innerHTML = '<i class="bi bi-hourglass-split"></i> Marking...';
+            button.disabled = true;
+
+            try {
+                const response = await fetch(this.action, {
+                    method: 'POST',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRFToken': this.querySelector('[name=csrfmiddlewaretoken]').value,
+                    },
+                    body: new FormData(this)
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    // Animate card removal
+                    card.style.transition = 'all 0.3s ease-out';
+                    card.style.opacity = '0';
+                    card.style.transform = 'translateX(100%)';
+
+                    setTimeout(() => {
+                        card.remove();
+
+                        // Update unread count
+                        const unreadBadges = document.querySelectorAll('.stat-badge.unread span, .filter-tab-count');
+                        unreadBadges.forEach(badge => {
+                            const currentCount = parseInt(badge.textContent);
+                            if (!isNaN(currentCount) && currentCount > 0) {
+                                badge.textContent = currentCount - 1;
+                            }
+                        });
+
+                        // Check if section is now empty
+                        const dateGroup = card.closest('.date-group');
+                        if (dateGroup && dateGroup.querySelectorAll('.notification-card').length === 0) {
+                            dateGroup.remove();
+                        }
+
+                        // Check if all notifications are gone
+                        if (document.querySelectorAll('.notification-card').length === 0) {
+                            location.reload();
+                        }
+                    }, 300);
+
+                    // Show success toast
+                    showToast('Notification marked as read', 'success');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                card.classList.remove('marking-read');
+                button.innerHTML = originalText;
+                button.disabled = false;
+                showToast('Failed to mark as read', 'danger');
+            }
+        });
+    });
+
+    // AJAX mark all as read
+    const markAllForm = document.getElementById('markAllReadForm');
+    if (markAllForm) {
+        markAllForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const button = this.querySelector('button');
+            const originalText = button.innerHTML;
+
+            button.innerHTML = '<i class="bi bi-hourglass-split"></i> Processing...';
+            button.disabled = true;
+
+            try {
+                const response = await fetch(this.action, {
+                    method: 'POST',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRFToken': this.querySelector('[name=csrfmiddlewaretoken]').value,
+                    },
+                    body: new FormData(this)
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showToast(data.message, 'success');
+                    setTimeout(() => location.reload(), 1000);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                button.innerHTML = originalText;
+                button.disabled = false;
+                showToast('Failed to mark all as read', 'danger');
+            }
+        });
+    }
+
+    // Toast helper function
+    function showToast(message, type = 'info') {
+        const toastHtml = `
+            <div class="toast show align-items-center text-bg-${type} border-0" role="alert">
+                <div class="d-flex">
+                    <div class="toast-body">
+                        <i class="bi bi-check-circle me-2"></i>${message}
+                    </div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                </div>
+            </div>
+        `;
+        const container = document.querySelector('.toast-container');
+        if (container) {
+            container.insertAdjacentHTML('beforeend', toastHtml);
+            const newToast = container.lastElementChild;
+            const bsToast = new bootstrap.Toast(newToast);
+            bsToast.show();
+            setTimeout(() => newToast.remove(), 5000);
+        }
+    }
+});
+</script>
+{% endblock %}

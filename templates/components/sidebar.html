@@ -40,7 +40,14 @@
                 <li class="nav-item">
                     <a href="{% url 'documents:upload' %}" class="nav-link {% if 'upload' in request.path %}active{% endif %}">
                         <i class="bi bi-cloud-upload nav-icon"></i>
-                        <span class="nav-text">Upload Document</span>
+                        <span class="nav-text">Upload</span>
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a href="{% url 'notifications:list' %}" class="nav-link {% if '/notifications/' in request.path %}active{% endif %}">
+                        <i class="bi bi-bell nav-icon"></i>
+                        <span class="nav-text">Notifications</span>
                     </a>
                 </li>
             </ul>

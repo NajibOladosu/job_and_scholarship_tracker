@@ -14,34 +14,58 @@ from .forms import ReminderForm, NotificationFilterForm, ReminderFilterForm
 @login_required
 def notification_list_view(request):
     """
-    List all user's notifications with filtering.
+    List all user's notifications with filtering and date grouping.
     """
+    from datetime import datetime, timedelta
+
     # Get user's notifications
     notifications = Notification.objects.filter(user=request.user).select_related('user')
 
-    # Apply filters
-    filter_form = NotificationFilterForm(request.GET)
-    if filter_form.is_valid():
-        notification_type = filter_form.cleaned_data.get('notification_type')
-        if notification_type:
-            notifications = notifications.filter(notification_type=notification_type)
+    # Get filter type from query params
+    filter_type = request.GET.get('filter', 'all')
 
-        unread_only = filter_form.cleaned_data.get('unread_only')
-        if unread_only:
-            notifications = notifications.filter(is_read=False)
+    # Apply filters
+    if filter_type == 'unread':
+        notifications = notifications.filter(is_read=False)
+    elif filter_type == 'read':
+        notifications = notifications.filter(is_read=True)
 
     # Get counts
     unread_count = Notification.objects.filter(user=request.user, is_read=False).count()
     total_count = Notification.objects.filter(user=request.user).count()
+    read_count = total_count - unread_count
+
+    # Group notifications by date
+    now = timezone.now()
+    today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+    yesterday_start = today_start - timedelta(days=1)
+    week_start = today_start - timedelta(days=7)
+
+    # Get notifications for each group
+    today_notifications = notifications.filter(created_at__gte=today_start).order_by('-created_at')
+    yesterday_notifications = notifications.filter(
+        created_at__gte=yesterday_start,
+        created_at__lt=today_start
+    ).order_by('-created_at')
+    this_week_notifications = notifications.filter(
+        created_at__gte=week_start,
+        created_at__lt=yesterday_start
+    ).order_by('-created_at')
+    older_notifications = notifications.filter(created_at__lt=week_start).order_by('-created_at')[:50]
 
     context = {
         'title': 'Notifications',
-        'notifications': notifications[:100],  # Limit for performance
-        'filter_form': filter_form,
+        'notifications': notifications,
+        'today_notifications': today_notifications,
+        'yesterday_notifications': yesterday_notifications,
+        'this_week_notifications': this_week_notifications,
+        'older_notifications': older_notifications,
+        'filter_type': filter_type,
         'unread_count': unread_count,
         'total_count': total_count,
+        'read_count': read_count,
     }
-    return render(request, 'notifications/list.html', context)
+    return render(request, 'notifications/notification_list.html', context)
 
 
 @login_required

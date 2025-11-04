@@ -1,0 +1,87 @@
+<div class="notification-card {% if not notification.is_read %}unread{% endif %} fade-in-up">
+    {% if not notification.is_read %}
+    <span class="unread-indicator"></span>
+    {% endif %}
+
+    <div class="d-flex gap-3">
+        <!-- Notification Icon -->
+        <div class="notification-icon {% if notification.notification_type == 'deadline' %}deadline{% elif notification.notification_type == 'status_change' %}status-change{% elif notification.notification_type == 'document' %}document{% else %}reminder{% endif %}">
+            {% if notification.notification_type == 'deadline' %}
+                <i class="bi bi-calendar-event"></i>
+            {% elif notification.notification_type == 'status_change' %}
+                <i class="bi bi-arrow-repeat"></i>
+            {% elif notification.notification_type == 'document' %}
+                <i class="bi bi-file-earmark-check"></i>
+            {% elif notification.notification_type == 'reminder' %}
+                <i class="bi bi-bell-fill"></i>
+            {% else %}
+                <i class="bi bi-info-circle"></i>
+            {% endif %}
+        </div>
+
+        <!-- Notification Content -->
+        <div class="notification-content">
+            <!-- Type Badge -->
+            <div class="mb-2">
+                <span class="notification-type-badge {% if notification.notification_type == 'deadline' %}deadline{% elif notification.notification_type == 'status_change' %}status-change{% elif notification.notification_type == 'document' %}document{% else %}reminder{% endif %}">
+                    {% if notification.notification_type == 'deadline' %}
+                        <i class="bi bi-calendar-event"></i>
+                        <span>Deadline</span>
+                    {% elif notification.notification_type == 'status_change' %}
+                        <i class="bi bi-arrow-repeat"></i>
+                        <span>Status Change</span>
+                    {% elif notification.notification_type == 'document' %}
+                        <i class="bi bi-file-earmark-check"></i>
+                        <span>Document</span>
+                    {% elif notification.notification_type == 'reminder' %}
+                        <i class="bi bi-bell"></i>
+                        <span>Reminder</span>
+                    {% else %}
+                        <i class="bi bi-info-circle"></i>
+                        <span>{{ notification.get_notification_type_display }}</span>
+                    {% endif %}
+                </span>
+            </div>
+
+            <!-- Title and Message -->
+            <h4 class="notification-title">{{ notification.title }}</h4>
+            <p class="notification-message">{{ notification.message }}</p>
+
+            <!-- Meta Information -->
+            <div class="notification-meta">
+                <div class="d-flex align-items-center gap-3 flex-grow-1">
+                    <span class="notification-time">
+                        <i class="bi bi-clock"></i>
+                        <span>{{ notification.time_since_created }}</span>
+                    </span>
+                    {% if notification.read_at %}
+                    <span class="notification-time">
+                        <i class="bi bi-check-circle"></i>
+                        <span>Read {{ notification.read_at|timesince }} ago</span>
+                    </span>
+                    {% endif %}
+                </div>
+
+                <!-- Actions -->
+                <div class="notification-actions">
+                    {% if notification.link %}
+                    <a href="{{ notification.link }}" class="view-link-btn">
+                        <i class="bi bi-arrow-right-circle"></i>
+                        <span>View Details</span>
+                    </a>
+                    {% endif %}
+
+                    {% if not notification.is_read %}
+                    <form method="post" action="{% url 'notifications:mark_read' notification.pk %}" class="mark-read-form d-inline">
+                        {% csrf_token %}
+                        <button type="submit" class="mark-read-btn">
+                            <i class="bi bi-check"></i>
+                            <span>Mark as Read</span>
+                        </button>
+                    </form>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

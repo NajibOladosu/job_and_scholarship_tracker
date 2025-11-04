@@ -36,11 +36,15 @@ def document_upload_view(request):
     else:
         form = DocumentUploadForm()
 
+    # Get recent documents for display
+    recent_documents = Document.objects.filter(user=request.user).order_by('-uploaded_at')[:5]
+
     context = {
         'title': 'Upload Document',
         'form': form,
+        'recent_documents': recent_documents,
     }
-    return render(request, 'documents/upload.html', context)
+    return render(request, 'documents/document_upload.html', context)
 
 
 class DocumentListView(LoginRequiredMixin, ListView):
@@ -48,7 +52,7 @@ class DocumentListView(LoginRequiredMixin, ListView):
     List all user's documents with filtering.
     """
     model = Document
-    template_name = 'documents/list.html'
+    template_name = 'documents/document_list.html'
     context_object_name = 'documents'
     paginate_by = 20
 
@@ -98,7 +102,7 @@ class DocumentDetailView(LoginRequiredMixin, DetailView):
     View document details and extracted information.
     """
     model = Document
-    template_name = 'documents/detail.html'
+    template_name = 'documents/document_detail.html'
     context_object_name = 'document'
 
     def get_queryset(self):

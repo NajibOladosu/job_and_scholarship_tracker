@@ -10,22 +10,104 @@
 
         <!-- Page Title (passed from view context) -->
         <div class="topbar-title">
-            <h1 class="page-heading">{{ title|default:"Dashboard" }}</h1>
+            <h1 class="page-heading">{{ page_title|default:"Dashboard" }}</h1>
         </div>
 
         <!-- Right Side Actions -->
         <div class="topbar-actions">
-            <!-- Notifications (placeholder for future) -->
-            <button class="topbar-action-btn" title="Notifications">
-                <i class="bi bi-bell"></i>
-                <span class="notification-badge">3</span>
+            <!-- Search Button (Desktop) -->
+            <button class="topbar-action-btn d-none d-lg-flex" title="Search" data-bs-toggle="modal" data-bs-target="#searchModal">
+                <i class="bi bi-search"></i>
             </button>
 
+            <!-- Notifications Dropdown -->
+            <div class="dropdown">
+                <button class="topbar-action-btn dropdown-toggle" id="notificationsDropdown" data-bs-toggle="dropdown" aria-expanded="false" title="Notifications">
+                    <i class="bi bi-bell"></i>
+                    {% if unread_notifications_count > 0 %}
+                        <span class="notification-badge">{{ unread_notifications_count|default:0 }}</span>
+                    {% endif %}
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 mt-2" aria-labelledby="notificationsDropdown" style="width: 320px; max-height: 400px; overflow-y: auto; border-radius: var(--radius-xl);">
+                    <li class="dropdown-header d-flex justify-content-between align-items-center px-3 py-2">
+                        <span class="fw-bold">Notifications</span>
+                        <a href="{% url 'notifications:list' %}" class="text-primary text-decoration-none small">View All</a>
+                    </li>
+                    <li><hr class="dropdown-divider my-0"></li>
+                    {% if recent_notifications %}
+                        {% for notification in recent_notifications|slice:":5" %}
+                            <li>
+                                <a class="dropdown-item px-3 py-2 {% if not notification.is_read %}bg-light{% endif %}" href="{% url 'notifications:list' %}" style="white-space: normal;">
+                                    <div class="d-flex align-items-start">
+                                        <i class="bi bi-{{ notification.notification_type|default:'info-circle' }} me-2 text-primary mt-1"></i>
+                                        <div class="flex-grow-1">
+                                            <div class="fw-semibold small">{{ notification.title|truncatewords:6 }}</div>
+                                            <div class="text-muted small">{{ notification.message|truncatewords:10 }}</div>
+                                            <div class="text-muted" style="font-size: 0.7rem;">{{ notification.created_at|timesince }} ago</div>
+                                        </div>
+                                    </div>
+                                </a>
+                            </li>
+                        {% endfor %}
+                    {% else %}
+                        <li class="px-3 py-4 text-center text-muted">
+                            <i class="bi bi-bell-slash fs-3 d-block mb-2"></i>
+                            <small>No notifications yet</small>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
+
             <!-- Quick Add Button -->
-            <a href="{% url 'tracker:application_create' %}" class="btn btn-primary btn-sm d-none d-md-inline-flex">
+            <a href="{% url 'tracker:application_create' %}" class="btn btn-primary btn-sm d-none d-md-inline-flex" style="border-radius: var(--radius-lg); font-weight: 600;">
                 <i class="bi bi-plus-circle"></i>
                 <span>Quick Add</span>
             </a>
+
+            <!-- Profile Dropdown (Mobile Only) -->
+            <div class="dropdown d-lg-none">
+                <button class="topbar-action-btn dropdown-toggle" id="profileDropdownMobile" data-bs-toggle="dropdown" aria-expanded="false" title="Profile">
+                    <i class="bi bi-person-circle"></i>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 mt-2" aria-labelledby="profileDropdownMobile" style="border-radius: var(--radius-xl);">
+                    <li class="dropdown-header px-3">
+                        <div class="fw-bold">{{ request.user.get_full_name|default:request.user.email|truncatewords:2 }}</div>
+                        <div class="text-muted small">{{ request.user.email|truncatechars:25 }}</div>
+                    </li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li>
+                        <a class="dropdown-item" href="{% url 'accounts:profile' %}">
+                            <i class="bi bi-person me-2"></i> Profile
+                        </a>
+                    </li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li>
+                        <form method="post" action="{% url 'accounts:logout' %}" class="m-0">
+                            {% csrf_token %}
+                            <button type="submit" class="dropdown-item text-danger">
+                                <i class="bi bi-box-arrow-right me-2"></i> Sign Out
+                            </button>
+                        </form>
+                    </li>
+                </ul>
+            </div>
         </div>
     </div>
 </header>
+
+<!-- Search Modal (Future Enhancement) -->
+<div class="modal fade" id="searchModal" tabindex="-1" aria-labelledby="searchModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="border-radius: var(--radius-xl); border: none; box-shadow: var(--shadow-2xl);">
+            <div class="modal-body p-4">
+                <div class="input-group">
+                    <span class="input-group-text bg-white border-end-0" style="border-radius: var(--radius-lg) 0 0 var(--radius-lg);">
+                        <i class="bi bi-search text-muted"></i>
+                    </span>
+                    <input type="text" class="form-control border-start-0" placeholder="Search applications..." style="border-radius: 0 var(--radius-lg) var(--radius-lg) 0;">
+                </div>
+                <div class="text-muted small mt-2 text-center">Search feature coming soon!</div>
+            </div>
+        </div>
+    </div>
+</div>

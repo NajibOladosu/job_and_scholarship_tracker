@@ -14,24 +14,26 @@ class UserRegistrationForm(UserCreationForm):
     email = forms.EmailField(
         widget=forms.EmailInput(attrs={
             'class': 'form-control',
-            'placeholder': 'Enter your email address',
+            'placeholder': 'your.email@example.com',
             'autofocus': True
         }),
         help_text=_('Required. Enter a valid email address.')
     )
     first_name = forms.CharField(
         max_length=150,
+        required=True,
         widget=forms.TextInput(attrs={
             'class': 'form-control',
-            'placeholder': 'First name'
+            'placeholder': 'John'
         }),
         help_text=_('Required.')
     )
     last_name = forms.CharField(
         max_length=150,
+        required=True,
         widget=forms.TextInput(attrs={
             'class': 'form-control',
-            'placeholder': 'Last name'
+            'placeholder': 'Doe'
         }),
         help_text=_('Required.')
     )
@@ -47,7 +49,7 @@ class UserRegistrationForm(UserCreationForm):
         label=_('Confirm Password'),
         widget=forms.PasswordInput(attrs={
             'class': 'form-control',
-            'placeholder': 'Confirm your password'
+            'placeholder': 'Re-enter your password'
         }),
         help_text=_('Enter the same password again.')
     )

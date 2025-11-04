@@ -1,80 +1,222 @@
 {% extends 'base.html' %}
 {% load static %}
-{% load crispy_forms_tags %}
 
-{% block title %}Sign In - AppTracker{% endblock %}
+{% block title %}Sign In - Job & Scholarship Tracker{% endblock %}
 
 {% block extra_css %}
 <style>
-    /* Auth page specific styles */
-    .auth-page {
-        min-height: calc(100vh - 73px);
+    /* Remove default padding from authenticated layout */
+    .main-content {
+        padding: 0 !important;
+    }
+
+    /* Full-height split screen auth layout */
+    .auth-container {
+        min-height: calc(100vh - var(--topbar-height));
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        background: var(--bg-body);
+    }
+
+    /* Left Side - Feature Highlights */
+    .auth-hero {
+        background: var(--color-primary-gradient);
+        padding: var(--spacing-3xl);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .auth-hero::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -50%;
+        width: 100%;
+        height: 100%;
+        background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+        animation: float 20s infinite;
+    }
+
+    .auth-hero::after {
+        content: '';
+        position: absolute;
+        bottom: -50%;
+        left: -50%;
+        width: 100%;
+        height: 100%;
+        background: radial-gradient(circle, rgba(255,255,255,0.05) 0%, transparent 70%);
+        animation: float 25s infinite reverse;
+    }
+
+    @keyframes float {
+        0%, 100% { transform: translate(0, 0) rotate(0deg); }
+        33% { transform: translate(30px, -30px) rotate(120deg); }
+        66% { transform: translate(-20px, 20px) rotate(240deg); }
+    }
+
+    .auth-hero-content {
+        position: relative;
+        z-index: 1;
+        max-width: 500px;
+    }
+
+    .auth-logo {
+        width: 80px;
+        height: 80px;
+        background: rgba(255, 255, 255, 0.2);
+        backdrop-filter: blur(10px);
+        border-radius: var(--radius-xl);
         display: flex;
         align-items: center;
         justify-content: center;
-        background: linear-gradient(180deg, var(--color-gray-50) 0%, white 100%);
-        padding: var(--spacing-2xl) var(--spacing-md);
+        margin: 0 auto var(--spacing-xl);
+        font-size: 40px;
+        color: white;
+        box-shadow: var(--shadow-2xl);
     }
 
-    .auth-card {
+    .auth-hero h1 {
+        font-size: 2.5rem;
+        font-weight: 800;
+        color: white;
+        margin-bottom: var(--spacing-lg);
+        line-height: 1.2;
+    }
+
+    .auth-hero p {
+        font-size: 1.125rem;
+        color: rgba(255, 255, 255, 0.9);
+        margin-bottom: var(--spacing-2xl);
+        line-height: 1.7;
+    }
+
+    .auth-features {
+        display: flex;
+        flex-direction: column;
+        gap: var(--spacing-lg);
+        text-align: left;
+        width: 100%;
+    }
+
+    .auth-feature {
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-md);
+        padding: var(--spacing-lg);
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        border-radius: var(--radius-lg);
+        color: white;
+        transition: all var(--transition-base);
+    }
+
+    .auth-feature:hover {
+        transform: translateX(8px);
+        background: rgba(255, 255, 255, 0.15);
+    }
+
+    .auth-feature-icon {
+        width: 48px;
+        height: 48px;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: var(--radius-md);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        flex-shrink: 0;
+    }
+
+    .auth-feature-text {
+        flex: 1;
+    }
+
+    .auth-feature-title {
+        font-weight: 700;
+        font-size: 1rem;
+        margin-bottom: 0.25rem;
+    }
+
+    .auth-feature-desc {
+        font-size: 0.875rem;
+        opacity: 0.9;
+    }
+
+    /* Right Side - Login Form */
+    .auth-form-section {
+        padding: var(--spacing-3xl);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        background: white;
+    }
+
+    .auth-form-wrapper {
         width: 100%;
         max-width: 450px;
-        background: white;
-        border-radius: var(--radius-xl);
-        box-shadow: var(--shadow-xl);
-        padding: var(--spacing-2xl);
-        animation: scaleIn var(--transition-base) ease-out;
     }
 
-    .auth-brand {
-        text-align: center;
+    .auth-form-header {
         margin-bottom: var(--spacing-2xl);
     }
 
-    .auth-brand-icon {
-        width: 60px;
-        height: 60px;
-        background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%);
-        border-radius: var(--radius-xl);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin: 0 auto var(--spacing-md);
-        color: white;
-        font-size: var(--font-size-3xl);
-    }
-
-    .auth-title {
-        font-size: var(--font-size-3xl);
-        font-weight: var(--font-weight-bold);
-        color: var(--color-gray-900);
+    .auth-form-title {
+        font-size: 2rem;
+        font-weight: 800;
+        color: var(--text-primary);
         margin-bottom: var(--spacing-sm);
     }
 
-    .auth-subtitle {
-        color: var(--color-gray-600);
-        font-size: var(--font-size-base);
-        margin-bottom: 0;
+    .auth-form-subtitle {
+        font-size: 1rem;
+        color: var(--text-secondary);
     }
 
-    .divider {
-        display: flex;
-        align-items: center;
-        text-align: center;
-        margin: var(--spacing-lg) 0;
+    .form-group {
+        margin-bottom: var(--spacing-lg);
     }
 
-    .divider::before,
-    .divider::after {
-        content: '';
-        flex: 1;
-        border-bottom: 1px solid var(--color-gray-200);
+    .form-group label {
+        display: block;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: var(--spacing-sm);
+        font-size: 0.875rem;
+        letter-spacing: 0.3px;
     }
 
-    .divider span {
-        padding: 0 var(--spacing-md);
-        color: var(--color-gray-500);
-        font-size: var(--font-size-sm);
+    .form-control-wrapper {
+        position: relative;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 0.875rem 1rem;
+        border: 2px solid var(--color-gray-300);
+        border-radius: var(--radius-lg);
+        font-size: 1rem;
+        transition: all var(--transition-fast);
+        background: var(--bg-card);
+    }
+
+    .form-control:focus {
+        border-color: var(--color-primary);
+        box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+        outline: none;
+    }
+
+    .form-control.is-invalid {
+        border-color: var(--color-danger);
+    }
+
+    .form-control.is-invalid:focus {
+        box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.1);
     }
 
     .password-toggle-wrapper {
@@ -92,103 +234,343 @@
         cursor: pointer;
         padding: 0.5rem;
         transition: color var(--transition-fast);
+        font-size: 1.25rem;
     }
 
     .password-toggle:hover {
         color: var(--color-gray-600);
     }
+
+    .invalid-feedback {
+        display: block;
+        color: var(--color-danger);
+        font-size: 0.875rem;
+        margin-top: var(--spacing-sm);
+    }
+
+    .form-options {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: var(--spacing-xl);
+    }
+
+    .form-check {
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-sm);
+    }
+
+    .form-check-input {
+        width: 18px;
+        height: 18px;
+        cursor: pointer;
+    }
+
+    .form-check-label {
+        font-size: 0.875rem;
+        color: var(--text-secondary);
+        cursor: pointer;
+        margin: 0;
+    }
+
+    .forgot-password {
+        font-size: 0.875rem;
+        color: var(--color-primary);
+        text-decoration: none;
+        font-weight: 600;
+        transition: color var(--transition-fast);
+    }
+
+    .forgot-password:hover {
+        color: var(--color-primary-dark);
+    }
+
+    .btn-auth {
+        width: 100%;
+        padding: 1rem;
+        background: var(--color-primary-gradient);
+        color: white;
+        border: none;
+        border-radius: var(--radius-lg);
+        font-size: 1rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all var(--transition-base);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: var(--spacing-sm);
+        box-shadow: var(--shadow-lg);
+    }
+
+    .btn-auth:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-xl), var(--shadow-glow);
+    }
+
+    .btn-auth:active {
+        transform: translateY(0);
+    }
+
+    .auth-divider {
+        display: flex;
+        align-items: center;
+        text-align: center;
+        margin: var(--spacing-xl) 0;
+    }
+
+    .auth-divider::before,
+    .auth-divider::after {
+        content: '';
+        flex: 1;
+        border-bottom: 1px solid var(--color-gray-300);
+    }
+
+    .auth-divider span {
+        padding: 0 var(--spacing-md);
+        color: var(--text-muted);
+        font-size: 0.875rem;
+        font-weight: 500;
+    }
+
+    .auth-footer {
+        text-align: center;
+    }
+
+    .auth-footer-text {
+        font-size: 0.9375rem;
+        color: var(--text-secondary);
+        margin-bottom: 0;
+    }
+
+    .auth-footer-link {
+        color: var(--color-primary);
+        text-decoration: none;
+        font-weight: 700;
+        transition: color var(--transition-fast);
+    }
+
+    .auth-footer-link:hover {
+        color: var(--color-primary-dark);
+    }
+
+    .alert {
+        padding: var(--spacing-md) var(--spacing-lg);
+        border-radius: var(--radius-lg);
+        margin-bottom: var(--spacing-lg);
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-sm);
+        font-size: 0.9375rem;
+    }
+
+    .alert-danger {
+        background: rgba(239, 68, 68, 0.1);
+        color: var(--color-danger);
+        border: 1px solid rgba(239, 68, 68, 0.2);
+    }
+
+    /* Responsive Design */
+    @media (max-width: 992px) {
+        .auth-container {
+            grid-template-columns: 1fr;
+        }
+
+        .auth-hero {
+            display: none;
+        }
+
+        .auth-form-section {
+            min-height: calc(100vh - var(--topbar-height));
+            padding: var(--spacing-xl);
+        }
+    }
+
+    @media (max-width: 576px) {
+        .auth-form-section {
+            padding: var(--spacing-lg);
+        }
+
+        .auth-form-title {
+            font-size: 1.75rem;
+        }
+
+        .auth-hero h1 {
+            font-size: 2rem;
+        }
+    }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="auth-page">
-    <div class="auth-card">
-        <!-- Brand -->
-        <div class="auth-brand">
-            <div class="auth-brand-icon">
+<div class="auth-container">
+    <!-- Left Side - Feature Highlights -->
+    <div class="auth-hero">
+        <div class="auth-hero-content">
+            <div class="auth-logo">
                 <i class="bi bi-bookmark-star-fill"></i>
             </div>
-            <h1 class="auth-title">Welcome back</h1>
-            <p class="auth-subtitle">Sign in to your account to continue</p>
-        </div>
+            <h1>Welcome Back!</h1>
+            <p>Sign in to continue tracking your job and scholarship applications with ease.</p>
 
-        <!-- Error Messages -->
-        {% if form.non_field_errors %}
-            <div class="alert alert-danger" role="alert">
-                <i class="bi bi-exclamation-circle me-2"></i>
-                {{ form.non_field_errors|first }}
-            </div>
-        {% endif %}
-
-        <!-- Login Form -->
-        <form method="post" action="{% url 'accounts:login' %}" class="needs-validation" novalidate data-loading-form>
-            {% csrf_token %}
-
-            <div class="mb-3">
-                <label for="{{ form.username.id_for_label }}" class="form-label">Username or Email</label>
-                <input type="text"
-                       class="form-control {% if form.username.errors %}is-invalid{% endif %}"
-                       id="{{ form.username.id_for_label }}"
-                       name="{{ form.username.name }}"
-                       value="{{ form.username.value|default:'' }}"
-                       placeholder="Enter your username or email"
-                       required>
-                {% if form.username.errors %}
-                    <div class="invalid-feedback">
-                        {{ form.username.errors|first }}
+            <div class="auth-features">
+                <div class="auth-feature">
+                    <div class="auth-feature-icon">
+                        <i class="bi bi-lightning-charge-fill"></i>
                     </div>
-                {% endif %}
+                    <div class="auth-feature-text">
+                        <div class="auth-feature-title">AI-Powered Responses</div>
+                        <div class="auth-feature-desc">Generate tailored responses instantly</div>
+                    </div>
+                </div>
+
+                <div class="auth-feature">
+                    <div class="auth-feature-icon">
+                        <i class="bi bi-calendar-check"></i>
+                    </div>
+                    <div class="auth-feature-text">
+                        <div class="auth-feature-title">Deadline Tracking</div>
+                        <div class="auth-feature-desc">Never miss an application deadline</div>
+                    </div>
+                </div>
+
+                <div class="auth-feature">
+                    <div class="auth-feature-icon">
+                        <i class="bi bi-file-earmark-text"></i>
+                    </div>
+                    <div class="auth-feature-text">
+                        <div class="auth-feature-title">Document Management</div>
+                        <div class="auth-feature-desc">Store and organize all your documents</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Side - Login Form -->
+    <div class="auth-form-section">
+        <div class="auth-form-wrapper">
+            <div class="auth-form-header">
+                <h1 class="auth-form-title">Sign In</h1>
+                <p class="auth-form-subtitle">Enter your credentials to access your account</p>
             </div>
 
-            <div class="mb-3">
-                <div class="d-flex justify-content-between align-items-center mb-2">
-                    <label for="{{ form.password.id_for_label }}" class="form-label mb-0">Password</label>
-                    <a href="{% url 'accounts:password_reset' %}" class="text-primary text-decoration-none" style="font-size: var(--font-size-sm);">
+            <!-- Error Messages -->
+            {% if form.non_field_errors %}
+                <div class="alert alert-danger" role="alert">
+                    <i class="bi bi-exclamation-circle"></i>
+                    <span>{{ form.non_field_errors|first }}</span>
+                </div>
+            {% endif %}
+
+            <!-- Login Form -->
+            <form method="post" action="{% url 'accounts:login' %}" novalidate>
+                {% csrf_token %}
+
+                <!-- Email Field -->
+                <div class="form-group">
+                    <label for="{{ form.username.id_for_label }}">Email Address</label>
+                    <div class="form-control-wrapper">
+                        <input type="email"
+                               class="form-control {% if form.username.errors %}is-invalid{% endif %}"
+                               id="{{ form.username.id_for_label }}"
+                               name="{{ form.username.name }}"
+                               value="{{ form.username.value|default:'' }}"
+                               placeholder="your.email@example.com"
+                               required
+                               autofocus>
+                        {% if form.username.errors %}
+                            <div class="invalid-feedback">
+                                {{ form.username.errors|first }}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Password Field -->
+                <div class="form-group">
+                    <label for="{{ form.password.id_for_label }}">Password</label>
+                    <div class="password-toggle-wrapper">
+                        <input type="password"
+                               class="form-control {% if form.password.errors %}is-invalid{% endif %}"
+                               id="{{ form.password.id_for_label }}"
+                               name="{{ form.password.name }}"
+                               placeholder="Enter your password"
+                               required>
+                        <button type="button"
+                                class="password-toggle"
+                                onclick="togglePassword('{{ form.password.id_for_label }}')"
+                                aria-label="Toggle password visibility">
+                            <i class="bi bi-eye" id="password-icon-{{ form.password.id_for_label }}"></i>
+                        </button>
+                    </div>
+                    {% if form.password.errors %}
+                        <div class="invalid-feedback">
+                            {{ form.password.errors|first }}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Remember Me & Forgot Password -->
+                <div class="form-options">
+                    <div class="form-check">
+                        <input type="checkbox"
+                               class="form-check-input"
+                               id="remember_me"
+                               name="remember_me">
+                        <label class="form-check-label" for="remember_me">
+                            Remember me
+                        </label>
+                    </div>
+                    <a href="{% url 'accounts:password_reset' %}" class="forgot-password">
                         Forgot password?
                     </a>
                 </div>
-                <div class="password-toggle-wrapper">
-                    <input type="password"
-                           class="form-control {% if form.password.errors %}is-invalid{% endif %}"
-                           id="{{ form.password.id_for_label }}"
-                           name="{{ form.password.name }}"
-                           placeholder="Enter your password"
-                           required>
-                    <button type="button" class="password-toggle" data-password-toggle="{{ form.password.id_for_label }}" aria-label="Toggle password visibility">
-                        <i class="bi bi-eye"></i>
-                    </button>
-                </div>
-                {% if form.password.errors %}
-                    <div class="invalid-feedback d-block">
-                        {{ form.password.errors|first }}
-                    </div>
-                {% endif %}
+
+                <!-- Submit Button -->
+                <button type="submit" class="btn-auth">
+                    <i class="bi bi-box-arrow-in-right"></i>
+                    <span>Sign In</span>
+                </button>
+
+                <!-- Hidden Next Field -->
+                <input type="hidden" name="next" value="{{ next }}">
+            </form>
+
+            <!-- Divider -->
+            <div class="auth-divider">
+                <span>Don't have an account?</span>
             </div>
 
-            <div class="mb-4 form-check">
-                <input type="checkbox" class="form-check-input" id="remember_me" name="remember_me">
-                <label class="form-check-label" for="remember_me">
-                    Remember me for 30 days
-                </label>
+            <!-- Sign Up Link -->
+            <div class="auth-footer">
+                <p class="auth-footer-text">
+                    <a href="{% url 'accounts:signup' %}" class="auth-footer-link">
+                        Create a free account
+                    </a>
+                </p>
             </div>
-
-            <button type="submit" class="btn btn-primary w-100 mb-3" data-loading>
-                <i class="bi bi-box-arrow-in-right me-2"></i>
-                Sign In
-            </button>
-
-            <input type="hidden" name="next" value="{{ next }}">
-        </form>
-
-        <!-- Divider -->
-        <div class="divider">
-            <span>Don't have an account?</span>
         </div>
-
-        <!-- Sign Up Link -->
-        <a href="{% url 'accounts:signup' %}" class="btn btn-outline-primary w-100">
-            Create an account
-        </a>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function togglePassword(fieldId) {
+        const passwordField = document.getElementById(fieldId);
+        const icon = document.getElementById('password-icon-' + fieldId);
+
+        if (passwordField.type === 'password') {
+            passwordField.type = 'text';
+            icon.classList.remove('bi-eye');
+            icon.classList.add('bi-eye-slash');
+        } else {
+            passwordField.type = 'password';
+            icon.classList.remove('bi-eye-slash');
+            icon.classList.add('bi-eye');
+        }
+    }
+</script>
 {% endblock %}

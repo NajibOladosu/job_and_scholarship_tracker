@@ -1,98 +1,128 @@
 {% load static %}
-<footer class="footer bg-light border-top mt-auto">
+
+<!-- Elegant Footer with Gradient Design -->
+<footer class="footer mt-auto" style="background: linear-gradient(180deg, var(--bg-body) 0%, var(--color-gray-50) 100%); border-top: 1px solid var(--color-gray-200);">
     <div class="container py-5">
-        <div class="row">
+        <div class="row g-4">
             <!-- Brand Section -->
             <div class="col-lg-4 mb-4 mb-lg-0">
                 <div class="d-flex align-items-center mb-3">
-                    <i class="bi bi-bookmark-star-fill text-primary fs-4 me-2"></i>
-                    <span class="fw-semibold fs-5">AppTracker</span>
+                    <div style="width: 40px; height: 40px; background: var(--color-primary-gradient); border-radius: var(--radius-lg); display: flex; align-items: center; justify-content: center; box-shadow: var(--shadow-md); margin-right: var(--spacing-sm);">
+                        <i class="bi bi-bookmark-star-fill text-white fs-5"></i>
+                    </div>
+                    <span style="font-size: 20px; font-weight: 700; letter-spacing: -0.5px; color: var(--text-primary);">AppTracker</span>
                 </div>
-                <p class="text-muted mb-3">
-                    Track your job and scholarship applications with ease. Stay organized and never miss a deadline.
+                <p class="text-muted mb-3" style="line-height: 1.6; font-size: 0.95rem;">
+                    Track your job and scholarship applications with ease. Stay organized, never miss a deadline, and land your dream opportunity.
                 </p>
-                <div class="social-links">
-                    <a href="#" class="text-muted me-3" aria-label="Twitter">
+                <div class="social-links d-flex gap-2">
+                    <a href="https://twitter.com" target="_blank" class="social-link" aria-label="Twitter" style="width: 40px; height: 40px; border-radius: var(--radius-md); background: var(--color-gray-100); display: flex; align-items: center; justify-content: center; color: var(--text-secondary); transition: all var(--transition-fast); text-decoration: none;">
                         <i class="bi bi-twitter fs-5"></i>
                     </a>
-                    <a href="#" class="text-muted me-3" aria-label="GitHub">
+                    <a href="https://github.com" target="_blank" class="social-link" aria-label="GitHub" style="width: 40px; height: 40px; border-radius: var(--radius-md); background: var(--color-gray-100); display: flex; align-items: center; justify-content: center; color: var(--text-secondary); transition: all var(--transition-fast); text-decoration: none;">
                         <i class="bi bi-github fs-5"></i>
                     </a>
-                    <a href="#" class="text-muted" aria-label="LinkedIn">
+                    <a href="https://linkedin.com" target="_blank" class="social-link" aria-label="LinkedIn" style="width: 40px; height: 40px; border-radius: var(--radius-md); background: var(--color-gray-100); display: flex; align-items: center; justify-content: center; color: var(--text-secondary); transition: all var(--transition-fast); text-decoration: none;">
                         <i class="bi bi-linkedin fs-5"></i>
                     </a>
                 </div>
             </div>
 
             <!-- Quick Links -->
-            <div class="col-lg-2 col-md-4 mb-4 mb-lg-0">
-                <h6 class="fw-semibold mb-3">Product</h6>
+            <div class="col-lg-2 col-md-3 col-6">
+                <h6 class="fw-bold mb-3" style="color: var(--text-primary); font-size: 0.9rem;">Product</h6>
                 <ul class="list-unstyled">
                     <li class="mb-2">
-                        <a href="#features" class="text-muted text-decoration-none">Features</a>
+                        <a href="#features" class="footer-link text-muted text-decoration-none" style="font-size: 0.9rem; transition: color var(--transition-fast);">Features</a>
                     </li>
                     <li class="mb-2">
-                        <a href="#" class="text-muted text-decoration-none">Pricing</a>
+                        <a href="#how-it-works" class="footer-link text-muted text-decoration-none" style="font-size: 0.9rem; transition: color var(--transition-fast);">How It Works</a>
                     </li>
                     <li class="mb-2">
-                        <a href="#" class="text-muted text-decoration-none">Updates</a>
+                        <a href="{% url 'accounts:signup' %}" class="footer-link text-muted text-decoration-none" style="font-size: 0.9rem; transition: color var(--transition-fast);">Sign Up</a>
                     </li>
                 </ul>
             </div>
 
             <!-- Resources -->
-            <div class="col-lg-2 col-md-4 mb-4 mb-lg-0">
-                <h6 class="fw-semibold mb-3">Resources</h6>
+            <div class="col-lg-2 col-md-3 col-6">
+                <h6 class="fw-bold mb-3" style="color: var(--text-primary); font-size: 0.9rem;">Resources</h6>
                 <ul class="list-unstyled">
                     <li class="mb-2">
-                        <a href="#" class="text-muted text-decoration-none">Documentation</a>
+                        <a href="#" class="footer-link text-muted text-decoration-none" style="font-size: 0.9rem; transition: color var(--transition-fast);">Documentation</a>
                     </li>
                     <li class="mb-2">
-                        <a href="#" class="text-muted text-decoration-none">Help Center</a>
+                        <a href="#" class="footer-link text-muted text-decoration-none" style="font-size: 0.9rem; transition: color var(--transition-fast);">Help Center</a>
                     </li>
                     <li class="mb-2">
-                        <a href="#" class="text-muted text-decoration-none">Blog</a>
+                        <a href="#" class="footer-link text-muted text-decoration-none" style="font-size: 0.9rem; transition: color var(--transition-fast);">Blog</a>
                     </li>
                 </ul>
             </div>
 
             <!-- Company -->
-            <div class="col-lg-2 col-md-4 mb-4 mb-lg-0">
-                <h6 class="fw-semibold mb-3">Company</h6>
+            <div class="col-lg-2 col-md-3 col-6">
+                <h6 class="fw-bold mb-3" style="color: var(--text-primary); font-size: 0.9rem;">Company</h6>
                 <ul class="list-unstyled">
                     <li class="mb-2">
-                        <a href="#about" class="text-muted text-decoration-none">About</a>
+                        <a href="#about" class="footer-link text-muted text-decoration-none" style="font-size: 0.9rem; transition: color var(--transition-fast);">About</a>
                     </li>
                     <li class="mb-2">
-                        <a href="#" class="text-muted text-decoration-none">Contact</a>
+                        <a href="#" class="footer-link text-muted text-decoration-none" style="font-size: 0.9rem; transition: color var(--transition-fast);">Contact</a>
                     </li>
                     <li class="mb-2">
-                        <a href="#" class="text-muted text-decoration-none">Privacy</a>
+                        <a href="#" class="footer-link text-muted text-decoration-none" style="font-size: 0.9rem; transition: color var(--transition-fast);">Privacy Policy</a>
                     </li>
                 </ul>
             </div>
 
-            <!-- Newsletter -->
-            <div class="col-lg-2">
-                <h6 class="fw-semibold mb-3">Stay Updated</h6>
-                <p class="text-muted small">Get the latest tips and updates.</p>
+            <!-- Call to Action -->
+            <div class="col-lg-2 col-md-3 col-6">
+                <h6 class="fw-bold mb-3" style="color: var(--text-primary); font-size: 0.9rem;">Get Started</h6>
+                {% if not user.is_authenticated %}
+                    <a href="{% url 'accounts:signup' %}" class="btn btn-primary w-100 mb-2" style="border-radius: var(--radius-lg); font-weight: 600; font-size: 0.85rem;">
+                        <i class="bi bi-rocket-takeoff me-1"></i>Sign Up Free
+                    </a>
+                    <a href="{% url 'accounts:login' %}" class="btn btn-outline-primary w-100" style="border-radius: var(--radius-lg); font-weight: 600; font-size: 0.85rem;">
+                        Sign In
+                    </a>
+                {% else %}
+                    <a href="{% url 'tracker:dashboard' %}" class="btn btn-primary w-100" style="border-radius: var(--radius-lg); font-weight: 600; font-size: 0.85rem;">
+                        <i class="bi bi-grid me-1"></i>Dashboard
+                    </a>
+                {% endif %}
             </div>
         </div>
 
-        <hr class="my-4">
+        <hr class="my-4" style="border-color: var(--color-gray-300); opacity: 0.5;">
 
         <!-- Copyright -->
-        <div class="row">
-            <div class="col-md-6 text-center text-md-start">
-                <p class="text-muted small mb-0">
+        <div class="row align-items-center">
+            <div class="col-md-6 text-center text-md-start mb-3 mb-md-0">
+                <p class="text-muted small mb-0" style="font-size: 0.85rem;">
                     &copy; {% now "Y" %} AppTracker. All rights reserved.
                 </p>
             </div>
             <div class="col-md-6 text-center text-md-end">
-                <p class="text-muted small mb-0">
-                    Made with <i class="bi bi-heart-fill text-danger"></i> for job seekers
+                <p class="text-muted small mb-0" style="font-size: 0.85rem;">
+                    Made with <i class="bi bi-heart-fill" style="color: #ef4444;"></i> for job seekers and students
                 </p>
             </div>
         </div>
     </div>
 </footer>
+
+<style>
+    /* Footer hover effects */
+    .social-link:hover {
+        background: var(--color-primary) !important;
+        color: white !important;
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-md);
+    }
+
+    .footer-link:hover {
+        color: var(--color-primary) !important;
+        padding-left: 4px;
+    }
+</style>

@@ -27,8 +27,7 @@ class SignUpView(CreateView):
 
     def form_valid(self, form):
         response = super().form_valid(form)
-        # Create user profile
-        UserProfile.objects.create(user=self.object)
+        # UserProfile is automatically created by the post_save signal in models.py
         messages.success(self.request, 'Account created successfully! Please login.')
         return response
 
