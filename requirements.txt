@@ -1,6 +1,7 @@
 # Core Django
 Django==4.2.25
 djangorestframework==3.16.1
+dj_database_url
 
 # Database
 psycopg2-binary==2.9.11
