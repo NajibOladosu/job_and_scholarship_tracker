@@ -389,6 +389,13 @@ Common issues and solutions when deploying to Railway:
 - **Solution**: Verify URL exists in app's urls.py before using in templates
 - **Note**: The tracker app uses `dashboard` not `application_list` for the main view
 
+**6. Static Files Missing (ValueError: Missing staticfiles manifest entry)**
+- **Error**: `ValueError: Missing staticfiles manifest entry for 'images/favicon.svg'`
+- **Cause**: Template references static files that don't exist or weren't collected
+- **Solution**: Ensure all static files referenced in templates exist in `static/` directory
+- **Files**: Check `.gitignore` - should ignore `/staticfiles/` but NOT `/static/`
+- **Note**: Static source files (CSS, JS, images) must be committed to git for Railway deployment
+
 ### Environment Variables (Production)
 
 Required in production:
