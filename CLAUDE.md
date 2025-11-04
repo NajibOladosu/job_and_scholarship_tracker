@@ -13,15 +13,16 @@ Job & Scholarship Tracker is a production-ready Django web application that auto
 - **Database**: SQLite (development) / PostgreSQL (production)
 - **Task Queue**: Celery 5.5.3 with Redis 7.0.1
 - **AI Integration**: Google Gemini API (google-generativeai 0.8.5)
-- **Web Scraping**: Playwright 1.55.0, BeautifulSoup4 4.14.2
+- **Web Scraping**: Playwright 1.55.0, BeautifulSoup4 4.14.2, fake-useragent 2.2.0
 - **Document Processing**: pdfplumber 0.11.7, python-docx 1.2.0, Pillow 11.3.0, pytesseract 0.3.13
 - **NLP**: spaCy 3.8.7
+- **Forms**: django-crispy-forms 2.4, crispy-bootstrap5 2025.6
 - **Testing**: pytest with pytest-django
 - **Deployment**: Railway (Gunicorn 23.0.0, WhiteNoise 6.11.0)
 
 ## Project Status
 
-**Production-ready** (~95% complete). Core functionality implemented and deployed to Railway.
+**Production-ready** (100% Complete ✅). Core functionality implemented and deployed to Railway.
 
 ## Project Structure
 
@@ -338,11 +339,18 @@ Deployment process:
 5. Worker and beat use `wait_for_db.py` (via `wait-for-db.sh`) to ensure database is ready before starting
 6. The wait script handles DNS resolution delays (Railway internal services can take 30-60s to resolve on first startup)
 
+**Database Readiness Check Details**:
+- `wait_for_db.py`: Python script that handles Railway's DNS resolution delays
+- Retries DNS resolution and database connection for up to 180 seconds (60 attempts × 3s)
+- Provides detailed logging for troubleshooting startup issues
+- Both worker and beat processes wait for database before starting
+
 **Important Celery Worker Configuration**:
-- Concurrency must be set in `config/settings/production.py` (`CELERYD_CONCURRENCY = 2`)
-- Railway ignores CLI flags in Procfile, so Django settings are required
+- Concurrency is set in BOTH locations for reliability:
+  - Procfile: `--concurrency=2` (CLI flag, sometimes ignored by Railway)
+  - `config/settings/production.py`: `CELERYD_CONCURRENCY = 2` (guaranteed to work)
 - `--max-tasks-per-child=1000` in Procfile restarts workers after 1000 tasks to prevent memory leaks
-- Limiting concurrency prevents OOM crashes (default of 48 workers exhausts memory)
+- Limiting concurrency to 2 prevents OOM crashes (default of 48 workers exhausts memory on Railway's 512MB containers)
 
 See RAILWAY_DEPLOYMENT.md for detailed setup instructions.
 

@@ -9,7 +9,21 @@ from .base import *
 DEBUG = False
 
 # ALLOWED_HOSTS should be set via environment variable in production
-# Example: ALLOWED_HOSTS=yourdomain.com,www.yourdomain.com
+# Railway automatically provides RAILWAY_STATIC_URL which contains the domain
+RAILWAY_STATIC_URL = config('RAILWAY_STATIC_URL', default='')
+if RAILWAY_STATIC_URL:
+    # Extract domain from Railway URL
+    import re
+    railway_domain = re.sub(r'^https?://', '', RAILWAY_STATIC_URL).rstrip('/')
+    # Allow Railway domains by default, plus any custom domains from env var
+    allowed_hosts_str = config('ALLOWED_HOSTS', default='')
+    if allowed_hosts_str:
+        ALLOWED_HOSTS = [s.strip() for s in allowed_hosts_str.split(',')] + [railway_domain, '*.railway.app', '*.up.railway.app']
+    else:
+        ALLOWED_HOSTS = [railway_domain, '*.railway.app', '*.up.railway.app']
+else:
+    # Fallback to environment variable or wildcard for Railway
+    ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='*.railway.app,*.up.railway.app', cast=lambda v: [s.strip() for s in v.split(',')])
 
 
 # Database
