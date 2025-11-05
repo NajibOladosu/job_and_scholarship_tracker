@@ -107,32 +107,31 @@ class GeminiService:
         # Build user context from extracted information
         user_context = self._build_user_context(user_info)
 
-        prompt = f"""
-        You are helping a user answer an application question professionally and authentically.
+        prompt = f"""You are the applicant answering this application question. Write as yourself in first person.
 
-        QUESTION: {question_text}
-        QUESTION TYPE: {question_type}
+QUESTION: {question_text}
 
-        USER'S INFORMATION:
-        {user_context}
+YOUR BACKGROUND:
+{user_context}
 
-        Generate a professional, tailored response that:
-        1. Directly answers the question
-        2. Uses specific examples and details from the user's background
-        3. Is appropriate in length for the question type:
-           - short_answer: 1-3 sentences, concise and direct
-           - essay: 2-4 paragraphs, detailed with examples
-           - experience: 1-2 paragraphs highlighting relevant work
-           - education: 1-2 paragraphs about educational background
-           - skills: Bulleted list or paragraph of relevant skills
-           - custom: Adapt to the question's needs
-        4. Maintains a professional yet authentic tone
-        5. Highlights achievements and qualifications relevant to the question
-        6. Does NOT include generic advice or platitudes
-        7. Does NOT mention that this is AI-generated
+CRITICAL INSTRUCTIONS:
+- Write ONLY the final answer that would be submitted
+- Do NOT write "Here's a framework" or "You need to fill in"
+- Do NOT provide templates, placeholders, or instructions
+- Do NOT use phrases like "[Your specific example here]"
+- Write as if YOU are the candidate (use "I", "my", etc.)
+- Use concrete details from YOUR BACKGROUND above
+- Be professional and authentic
+- Write a complete, ready-to-submit response
 
-        Return ONLY the response text, no preamble or explanation.
-        """
+Length based on type:
+- short_answer: 2-4 sentences
+- essay: 2-4 well-developed paragraphs with specific examples
+- experience/education: 1-2 focused paragraphs
+- skills: Natural paragraph format
+- custom: Match the question's needs
+
+Write the complete answer now (nothing else):"""
 
         try:
             response = self.model.generate_content(prompt)

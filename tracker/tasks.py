@@ -245,8 +245,12 @@ def generate_response_task(self, question_id: int, context: Optional[Dict] = Non
         user_info = {}
         extracted_info = ExtractedInformation.objects.filter(document__user=user).select_related('document')
 
+        logger.info(f"Found {extracted_info.count()} ExtractedInformation records for user {user.id}")
+
         for info in extracted_info:
             data_type = info.data_type
+            logger.info(f"Processing extraction: type={data_type}, from document={info.document.original_filename}")
+
             if data_type not in user_info:
                 user_info[data_type] = info.content
             elif isinstance(info.content, list):
@@ -258,6 +262,14 @@ def generate_response_task(self, question_id: int, context: Optional[Dict] = Non
                     user_info[data_type] = info.content
 
         logger.info(f"Collected information types: {list(user_info.keys())}")
+
+        # Log warning if no data found
+        if not user_info:
+            logger.warning(
+                f"No extracted information found for user {user.id}. "
+                f"Document count: {Document.objects.filter(user=user).count()}, "
+                f"Processed: {Document.objects.filter(user=user, is_processed=True).count()}"
+            )
 
         # Use Gemini API to generate response
         from services.gemini_service import get_gemini_service
