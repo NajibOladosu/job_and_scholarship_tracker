@@ -25,8 +25,23 @@ def document_upload_view(request):
             document.user = request.user
             document.save()
 
-            # Trigger background processing
-            process_document_task.delay(document.id)
+            # Read file content for Railway compatibility
+            # (Railway containers don't share filesystem between web and worker)
+            import base64
+            document.file.seek(0)  # Reset file pointer to beginning
+            file_content_bytes = document.file.read()
+            file_content_b64 = base64.b64encode(file_content_bytes).decode('utf-8')
+
+            # Get file extension
+            import os
+            file_extension = os.path.splitext(document.original_filename)[1].lower()
+
+            # Trigger background processing with file content
+            process_document_task.delay(
+                document.id,
+                file_content=file_content_b64,
+                file_extension=file_extension
+            )
 
             messages.success(
                 request,

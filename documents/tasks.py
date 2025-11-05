@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 
 @shared_task(base=BaseTask, bind=True, max_retries=3)
 @exponential_backoff_retry(max_retries=3, base_delay=60)
-def process_document_task(self, document_id: int) -> Dict[str, any]:
+def process_document_task(self, document_id: int, file_content: str = None, file_extension: str = None) -> Dict[str, any]:
     """
     Process an uploaded document and extract information.
 
@@ -30,6 +30,8 @@ def process_document_task(self, document_id: int) -> Dict[str, any]:
 
     Args:
         document_id: ID of the Document to process
+        file_content: Optional base64-encoded file content (for Railway compatibility)
+        file_extension: Optional file extension (e.g., '.pdf', '.docx')
 
     Returns:
         Dict containing processing results and status
@@ -50,6 +52,7 @@ def process_document_task(self, document_id: int) -> Dict[str, any]:
     """
     tracker = TaskStatusTracker()
     tracker.log_start(self.name, self.request.id, document_id=document_id)
+    temp_file_path = None
 
     try:
         # Get document from database
@@ -57,15 +60,33 @@ def process_document_task(self, document_id: int) -> Dict[str, any]:
         logger.info(f"Processing document: {document.original_filename}")
 
         # Validate file exists and is readable
-        if not document.file:
+        if not document.file and not file_content:
             raise ValueError(f"Document {document_id} has no file attached")
 
         # Parse document using document parser service
         from services.document_parser import get_document_parser
         parser = get_document_parser()
 
-        logger.info(f"Parsing document: {document.file.path}")
-        parse_result = parser.parse_document(document.file.path, document.document_type)
+        # Handle file content for Railway (separate containers for web/worker)
+        if file_content:
+            import base64
+            import tempfile
+            logger.info(f"Using file content passed from upload (Railway mode)")
+
+            # Decode base64 content
+            file_bytes = base64.b64decode(file_content)
+
+            # Write to temporary file
+            with tempfile.NamedTemporaryFile(delete=False, suffix=file_extension or '.pdf') as temp_file:
+                temp_file.write(file_bytes)
+                temp_file_path = temp_file.name
+                logger.info(f"Written file content to temporary file: {temp_file_path}")
+
+            parse_result = parser.parse_document(temp_file_path, document.document_type)
+        else:
+            # Use file path for local development
+            logger.info(f"Parsing document: {document.file.path}")
+            parse_result = parser.parse_document(document.file.path, document.document_type)
 
         if not parse_result['success']:
             raise ValueError(f"Failed to parse document: {parse_result['error']}")
@@ -110,6 +131,15 @@ def process_document_task(self, document_id: int) -> Dict[str, any]:
         except:
             pass
         raise
+    finally:
+        # Clean up temporary file if created
+        if temp_file_path:
+            import os
+            try:
+                os.unlink(temp_file_path)
+                logger.info(f"Cleaned up temporary file: {temp_file_path}")
+            except Exception as e:
+                logger.warning(f"Failed to clean up temporary file {temp_file_path}: {e}")
 
 
 @shared_task(base=BaseTask, bind=True, max_retries=3)

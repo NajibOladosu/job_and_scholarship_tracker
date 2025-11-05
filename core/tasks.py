@@ -39,8 +39,8 @@ class BaseTask(Task):
             extra={
                 'task_name': self.name,
                 'task_id': task_id,
-                'args': args,
-                'kwargs': kwargs,
+                'task_args': str(args),
+                'task_kwargs': str(kwargs),
                 'exception': str(exc),
             },
             exc_info=einfo
@@ -63,8 +63,8 @@ class BaseTask(Task):
             extra={
                 'task_name': self.name,
                 'task_id': task_id,
-                'args': args,
-                'kwargs': kwargs,
+                'task_args': str(args),
+                'task_kwargs': str(kwargs),
                 'exception': str(exc),
             }
         )
@@ -85,8 +85,8 @@ class BaseTask(Task):
             extra={
                 'task_name': self.name,
                 'task_id': task_id,
-                'args': args,
-                'kwargs': kwargs,
+                'task_args': str(args),
+                'task_kwargs': str(kwargs),
             }
         )
         super().on_success(retval, task_id, args, kwargs)
@@ -233,8 +233,8 @@ def safe_task_execution(func: Callable) -> Callable:
                 f"Unhandled exception in task {func.__name__}: {e}",
                 extra={
                     'task_name': func.__name__,
-                    'args': args,
-                    'kwargs': kwargs,
+                    'task_args': str(args),
+                    'task_kwargs': str(kwargs),
                 }
             )
             # Re-raise to ensure task is marked as failed
