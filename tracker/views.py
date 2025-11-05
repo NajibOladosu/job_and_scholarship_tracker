@@ -277,6 +277,7 @@ def edit_response_view(request, question_pk):
 def generate_responses_view(request, application_pk):
     """
     Generate AI responses for all questions in application.
+    Supports regeneration via 'regenerate' POST parameter.
     """
     application = get_object_or_404(Application, pk=application_pk, user=request.user)
 
@@ -292,12 +293,22 @@ def generate_responses_view(request, application_pk):
             )
             return redirect('documents:upload')
 
+        # Check if regenerate flag is set
+        regenerate = request.POST.get('regenerate', 'false').lower() == 'true'
+
         # Trigger batch generation task
-        batch_generate_responses_task.delay(application.id)
-        messages.success(
-            request,
-            'Generating responses for all questions! This may take a few moments. Refresh the page to see updates.'
-        )
+        batch_generate_responses_task.delay(application.id, regenerate=regenerate)
+
+        if regenerate:
+            messages.success(
+                request,
+                'Regenerating ALL responses! This may take a few moments. Refresh the page to see updates.'
+            )
+        else:
+            messages.success(
+                request,
+                'Generating responses for all questions! This may take a few moments. Refresh the page to see updates.'
+            )
         return redirect('tracker:application_detail', pk=application.pk)
 
     return redirect('tracker:application_detail', pk=application.pk)
