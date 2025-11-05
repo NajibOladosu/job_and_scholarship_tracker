@@ -59,14 +59,16 @@ class ApplicationAdmin(admin.ModelAdmin):
 
     def question_count(self, obj):
         """Get number of questions for this application."""
-        return obj.questions.count()
+        # Use the annotated value if available, otherwise count
+        return getattr(obj, 'num_questions', obj.questions.count())
     question_count.short_description = _('Questions')
-    question_count.admin_order_field = 'question_count'
+    question_count.admin_order_field = 'num_questions'
 
     def get_queryset(self, request):
         """Optimize queryset with annotations."""
         qs = super().get_queryset(request)
-        return qs.select_related('user').annotate(question_count=Count('questions'))
+        # Use 'num_questions' to avoid conflict with the model's question_count property
+        return qs.select_related('user').annotate(num_questions=Count('questions'))
 
 
 @admin.register(Question)

@@ -20,9 +20,9 @@ def dashboard_view(request):
     Main dashboard showing user's applications.
     """
     # Get user's applications
-    applications = Application.objects.filter(user=request.user).annotate(
-        question_count=Count('questions')
-    ).order_by('-created_at')
+    # Note: We don't annotate question_count here because Application model has a property with that name
+    # The template will use the property instead
+    applications = Application.objects.filter(user=request.user).order_by('-created_at')
 
     # Apply filters
     filter_form = ApplicationFilterForm(request.GET)
