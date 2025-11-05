@@ -183,7 +183,7 @@ DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='noreply@jobtracker.co
 
 
 # Google Gemini API Configuration (for AI features)
-GOOGLE_API_KEY = config('GOOGLE_API_KEY', default='')
+GEMINI_API_KEY = config('GEMINI_API_KEY', default='')
 
 
 # Authentication

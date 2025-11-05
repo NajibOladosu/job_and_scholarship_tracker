@@ -1,0 +1,228 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Add Question - AppTracker{% endblock %}
+
+{% block content %}
+<div class="container-xxl px-4 fade-in" style="max-width: 1400px;">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'tracker:dashboard' %}" class="text-decoration-none"><i class="bi bi-house-door me-1"></i>Dashboard</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'tracker:application_detail' application.pk %}" class="text-decoration-none">{{ application.title }}</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Add Question</li>
+        </ol>
+    </nav>
+
+    <div class="row">
+        <div class="col-12">
+            <!-- Page Header -->
+            <div class="text-center mb-4">
+                <div class="mb-3" style="width: 80px; height: 80px; margin: 0 auto; background: var(--color-primary-gradient); border-radius: var(--radius-xl); display: flex; align-items: center; justify-content: center; box-shadow: var(--shadow-lg);">
+                    <i class="bi bi-plus-circle text-white" style="font-size: 2.5rem;"></i>
+                </div>
+                <h1 class="h2 fw-bold mb-2" style="color: var(--text-primary);">
+                    Add Question
+                </h1>
+                <p style="color: var(--text-muted);">
+                    Manually add a question to <strong>{{ application.title }}</strong>
+                </p>
+            </div>
+
+            <!-- Form Card -->
+            <div class="card mb-4" style="max-width: 1000px; margin-left: auto; margin-right: auto;">
+                <div class="card-body p-4 p-md-5">
+                    <form method="post" action="" novalidate id="questionForm">
+                        {% csrf_token %}
+
+                        {% if form.non_field_errors %}
+                            <div class="alert mb-4" style="background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%); border: none; border-left: 4px solid var(--color-danger);" role="alert">
+                                <i class="bi bi-exclamation-circle-fill me-2" style="color: var(--color-danger);"></i>
+                                {{ form.non_field_errors }}
+                            </div>
+                        {% endif %}
+
+                        <!-- Question Information -->
+                        <div class="mb-5">
+                            <h5 class="fw-bold mb-4" style="color: var(--text-primary); border-left: 4px solid var(--color-primary); padding-left: 1rem;">
+                                <i class="bi bi-question-circle-fill me-2" style="color: var(--color-primary);"></i>
+                                Question Details
+                            </h5>
+
+                            <!-- Question Text -->
+                            <div class="mb-4">
+                                <label for="{{ form.question_text.id_for_label }}" class="form-label">
+                                    <i class="bi bi-chat-left-text-fill me-1" style="color: var(--color-primary);"></i>
+                                    Question Text
+                                    <span style="color: var(--color-danger);">*</span>
+                                </label>
+                                {{ form.question_text }}
+                                {% if form.question_text.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        <i class="bi bi-exclamation-circle me-1"></i>
+                                        {{ form.question_text.errors }}
+                                    </div>
+                                {% endif %}
+                                <div class="form-text">Enter the full question text as it appears in the application.</div>
+                            </div>
+
+                            <!-- Question Type -->
+                            <div class="mb-4">
+                                <label for="{{ form.question_type.id_for_label }}" class="form-label">
+                                    <i class="bi bi-file-earmark-text me-1" style="color: var(--color-primary);"></i>
+                                    Question Type
+                                    <span style="color: var(--color-danger);">*</span>
+                                </label>
+                                {{ form.question_type }}
+                                {% if form.question_type.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        <i class="bi bi-exclamation-circle me-1"></i>
+                                        {{ form.question_type.errors }}
+                                    </div>
+                                {% endif %}
+                                <div class="form-text">Select the type of response expected (short answer, essay, etc.).</div>
+                            </div>
+
+                            <!-- Row for Order and Is Required -->
+                            <div class="row g-4 mb-4">
+                                <!-- Order -->
+                                <div class="col-md-6">
+                                    <label for="{{ form.order.id_for_label }}" class="form-label">
+                                        <i class="bi bi-sort-numeric-down me-1" style="color: var(--color-primary);"></i>
+                                        Display Order
+                                        <span style="color: var(--color-danger);">*</span>
+                                    </label>
+                                    {{ form.order }}
+                                    {% if form.order.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            <i class="bi bi-exclamation-circle me-1"></i>
+                                            {{ form.order.errors }}
+                                        </div>
+                                    {% endif %}
+                                    <div class="form-text">Position of this question in the list (1, 2, 3, etc.).</div>
+                                </div>
+
+                                <!-- Is Required -->
+                                <div class="col-md-6">
+                                    <label class="form-label d-block">
+                                        <i class="bi bi-asterisk me-1" style="color: var(--color-primary);"></i>
+                                        Required Question
+                                    </label>
+                                    <div class="form-check form-switch" style="padding-left: 3rem; margin-top: 0.5rem;">
+                                        {{ form.is_required }}
+                                        <label class="form-check-label" for="{{ form.is_required.id_for_label }}">
+                                            Mark this question as required
+                                        </label>
+                                    </div>
+                                    {% if form.is_required.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            <i class="bi bi-exclamation-circle me-1"></i>
+                                            {{ form.is_required.errors }}
+                                        </div>
+                                    {% endif %}
+                                    <div class="form-text">Toggle if this question must be answered.</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Form Actions -->
+                        <div class="d-flex gap-3 pt-4" style="border-top: 2px solid var(--color-gray-200);">
+                            <button type="submit" class="btn btn-primary btn-lg px-5" id="submitBtn">
+                                <i class="bi bi-check-circle-fill me-2"></i>
+                                <span>Add Question</span>
+                            </button>
+                            <a href="{% url 'tracker:application_detail' application.pk %}" class="btn btn-outline-secondary btn-lg px-4">
+                                <i class="bi bi-x-circle me-2"></i>
+                                Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Quick Tips -->
+            <div class="card border-0 shadow-sm mt-4 bg-primary bg-opacity-10">
+                <div class="card-body">
+                    <h6 class="fw-bold mb-3">
+                        <i class="bi bi-lightbulb text-primary me-2"></i>
+                        Quick Tips
+                    </h6>
+                    <ul class="mb-0 ps-3">
+                        <li class="mb-2">Copy the question exactly as it appears in the application</li>
+                        <li class="mb-2">Select the appropriate type to help generate better responses</li>
+                        <li class="mb-2">Set the order to control how questions appear in the list</li>
+                        <li>Use the "Generate Response" feature after adding questions to get AI-powered answers</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Custom Styles -->
+<style>
+    /* Add validation styles */
+    .form-control.is-invalid,
+    .form-select.is-invalid {
+        border-color: #dc3545;
+    }
+
+    /* Better form spacing */
+    .form-label {
+        margin-bottom: 0.5rem;
+    }
+
+    /* Switch styling */
+    .form-check-input {
+        width: 3rem;
+        height: 1.5rem;
+        cursor: pointer;
+    }
+
+    .form-check-label {
+        cursor: pointer;
+        padding-top: 0.125rem;
+    }
+</style>
+
+<!-- Custom JavaScript for form enhancement -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add Bootstrap validation classes
+        const form = document.querySelector('form');
+        if (form) {
+            const inputs = form.querySelectorAll('input, select, textarea');
+            inputs.forEach(input => {
+                // Add is-invalid class if there are errors
+                const errorDiv = input.parentElement.querySelector('.invalid-feedback');
+                if (errorDiv && errorDiv.textContent.trim()) {
+                    input.classList.add('is-invalid');
+                }
+
+                // Remove is-invalid class on input
+                input.addEventListener('input', function() {
+                    this.classList.remove('is-invalid');
+                });
+            });
+
+            // Form submission validation
+            form.addEventListener('submit', function(e) {
+                let isValid = true;
+                const requiredFields = form.querySelectorAll('[required]');
+
+                requiredFields.forEach(field => {
+                    if (!field.value.trim()) {
+                        field.classList.add('is-invalid');
+                        isValid = false;
+                    }
+                });
+
+                if (!isValid) {
+                    e.preventDefault();
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}
