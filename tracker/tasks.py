@@ -290,7 +290,7 @@ def generate_response_task(self, question_id: int, context: Optional[Dict] = Non
             'status': 'success',
             'question_id': question_id,
             'response_id': response.id,
-            'created': created,
+            'was_created': created,  # Renamed from 'created' to avoid LogRecord conflict
             'response_length': len(generated_text) if generated_text else 0
         }
 
