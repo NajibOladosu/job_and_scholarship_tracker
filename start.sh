@@ -1,8 +1,11 @@
 #!/bin/bash
-# Railway start script - runs migrations then starts the web server
+# Railway start script - collects static files, runs migrations, then starts web server
 
 # Exit on error
 set -e
+
+echo "Collecting static files..."
+python manage.py collectstatic --noinput --settings=config.settings.production
 
 echo "Running database migrations..."
 python manage.py migrate --settings=config.settings.production --noinput
