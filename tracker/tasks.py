@@ -241,30 +241,52 @@ def generate_response_task(self, question_id: int, context: Optional[Dict] = Non
 
         logger.info(f"Gathering user context for response generation")
 
-        # Get all extracted information for user
+        # Get all extracted information for THIS USER ONLY (security: don't use other users' data)
         user_info = {}
-        extracted_info = ExtractedInformation.objects.filter(document__user=user).select_related('document')
+        extracted_info = ExtractedInformation.objects.filter(
+            document__user=user
+        ).select_related('document').order_by('-extracted_at')
 
         logger.info(f"Found {extracted_info.count()} ExtractedInformation records for user {user.id}")
 
         for info in extracted_info:
             data_type = info.data_type
+            content = info.content
             logger.info(f"Processing extraction: type={data_type}, from document={info.document.original_filename}")
 
             if data_type not in user_info:
-                user_info[data_type] = info.content
-            elif isinstance(info.content, list):
-                # Merge lists
+                # First occurrence - use as-is
+                user_info[data_type] = content
+            else:
+                # Data type already exists - merge intelligently
                 existing = user_info[data_type]
-                if isinstance(existing, list):
-                    user_info[data_type] = existing + info.content
-                else:
-                    user_info[data_type] = info.content
+
+                if isinstance(content, list) and isinstance(existing, list):
+                    # Merge lists (remove duplicates for simple types like skills)
+                    if data_type in ['skills', 'certifications', 'languages']:
+                        # For simple lists, deduplicate
+                        user_info[data_type] = list(set(existing + content))
+                    else:
+                        # For complex lists (education, experience, projects), append all
+                        user_info[data_type] = existing + content
+                elif isinstance(content, str) and isinstance(existing, str):
+                    # For strings like name, email, phone - keep most recent (first in order_by)
+                    # For summary - combine them
+                    if data_type == 'summary':
+                        user_info[data_type] = f"{existing}\n\n{content}"
+                    # Otherwise keep existing (most recent)
 
         logger.info(f"Collected information types: {list(user_info.keys())}")
 
-        # Log warning if no data found
-        if not user_info:
+        # Log detailed statistics
+        if user_info:
+            for data_type, content in user_info.items():
+                if isinstance(content, list):
+                    logger.info(f"  - {data_type}: {len(content)} items")
+                elif isinstance(content, str):
+                    logger.info(f"  - {data_type}: {len(content)} characters")
+        else:
+            # Log warning if no data found
             logger.warning(
                 f"No extracted information found for user {user.id}. "
                 f"Document count: {Document.objects.filter(user=user).count()}, "

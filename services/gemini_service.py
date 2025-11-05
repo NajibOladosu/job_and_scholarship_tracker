@@ -163,42 +163,58 @@ Write the complete answer now (nothing else):"""
             dict: Dictionary with extracted information by category
         """
         prompt = f"""
-        Extract structured information from this {document_type}.
+        You are an expert at extracting information from {document_type} documents.
+        Carefully analyze the document below and extract ALL available information.
 
         Document Text:
-        {text_content[:10000]}  # Limit to avoid token limits
+        {text_content[:10000]}
 
-        Return a JSON object with these categories:
+        Return a JSON object with these exact fields:
         {{
-            "name": "full name",
-            "email": "email address",
-            "phone": "phone number",
+            "name": "full name or null",
+            "email": "email address or null",
+            "phone": "phone number or null",
             "education": [
                 {{
-                    "institution": "school name",
-                    "degree": "degree type",
-                    "field": "field of study",
+                    "institution": "school/university name",
+                    "degree": "degree type (BS, MS, PhD, etc.)",
+                    "field": "major/field of study",
                     "graduation_year": "year",
-                    "gpa": "GPA if mentioned"
+                    "gpa": "GPA if mentioned",
+                    "achievements": "honors, awards, relevant coursework"
                 }}
             ],
             "experience": [
                 {{
-                    "company": "company name",
-                    "title": "job title",
-                    "duration": "time period",
-                    "responsibilities": ["list", "of", "key", "responsibilities"]
+                    "company": "company/organization name",
+                    "title": "job title/position",
+                    "duration": "time period (e.g., Jan 2020 - Dec 2021)",
+                    "responsibilities": ["responsibility 1", "responsibility 2", "..."],
+                    "achievements": "key accomplishments or metrics"
                 }}
             ],
-            "skills": ["skill1", "skill2", "skill3"],
-            "certifications": ["cert1", "cert2"]
+            "skills": ["technical skill 1", "technical skill 2", "soft skill 1", "..."],
+            "certifications": ["certification name 1", "certification name 2", "..."],
+            "projects": [
+                {{
+                    "name": "project name",
+                    "description": "brief description",
+                    "technologies": "technologies used"
+                }}
+            ],
+            "languages": ["language 1", "language 2", "..."],
+            "summary": "brief professional summary or objective from the document"
         }}
 
-        Guidelines:
-        - Extract all available information
-        - Use null or empty arrays for missing information
-        - Be precise and accurate
-        - Return ONLY the JSON object, no additional text
+        CRITICAL INSTRUCTIONS:
+        - Extract EVERY piece of information you can find
+        - If a field has no data, use null for strings or [] for arrays
+        - For education: include ALL schools, degrees, and academic achievements
+        - For experience: include ALL jobs, internships, volunteer work, and their responsibilities
+        - For skills: include technical skills, programming languages, tools, frameworks, AND soft skills
+        - For projects: include personal projects, academic projects, research
+        - Be thorough and detailed - this information will be used to answer application questions
+        - Return ONLY the JSON object, no markdown, no explanations
         """
 
         try:
@@ -217,11 +233,24 @@ Write the complete answer now (nothing else):"""
 
             # Parse JSON
             extracted_info = json.loads(response_text)
-            logger.info(f"Extracted information from {document_type}")
+
+            # Log what was extracted
+            extracted_fields = [k for k, v in extracted_info.items() if v and (not isinstance(v, list) or len(v) > 0)]
+            logger.info(f"Successfully extracted from {document_type}: {', '.join(extracted_fields)}")
+
+            # Log detailed counts
+            if extracted_info.get('education'):
+                logger.info(f"  - {len(extracted_info['education'])} education entries")
+            if extracted_info.get('experience'):
+                logger.info(f"  - {len(extracted_info['experience'])} experience entries")
+            if extracted_info.get('skills'):
+                logger.info(f"  - {len(extracted_info['skills'])} skills")
+
             return extracted_info
 
         except json.JSONDecodeError as e:
             logger.error(f"Failed to parse Gemini response as JSON: {e}")
+            logger.error(f"Raw response: {response_text[:500]}")
             return {}
         except Exception as e:
             logger.error(f"Error extracting document information with Gemini: {e}")
@@ -239,11 +268,17 @@ Write the complete answer now (nothing else):"""
         """
         context_parts = []
 
+        # Professional Summary
+        if user_info.get('summary'):
+            context_parts.append(f"Professional Summary:\n{user_info['summary']}\n")
+
         # Name and contact
         if user_info.get('name'):
             context_parts.append(f"Name: {user_info['name']}")
         if user_info.get('email'):
             context_parts.append(f"Email: {user_info['email']}")
+        if user_info.get('phone'):
+            context_parts.append(f"Phone: {user_info['phone']}")
 
         # Education
         education = user_info.get('education', [])
@@ -256,6 +291,8 @@ Write the complete answer now (nothing else):"""
                 if edu.get('gpa'):
                     edu_text += f", GPA: {edu['gpa']}"
                 context_parts.append(edu_text)
+                if edu.get('achievements'):
+                    context_parts.append(f"    Achievements: {edu['achievements']}")
 
         # Work Experience
         experience = user_info.get('experience', [])
@@ -263,9 +300,26 @@ Write the complete answer now (nothing else):"""
             context_parts.append("\nWork Experience:")
             for exp in experience:
                 context_parts.append(f"  - {exp.get('title', '')} at {exp.get('company', '')}")
-                context_parts.append(f"    Duration: {exp.get('duration', '')}")
+                if exp.get('duration'):
+                    context_parts.append(f"    Duration: {exp['duration']}")
                 if exp.get('responsibilities'):
-                    context_parts.append(f"    Responsibilities: {', '.join(exp['responsibilities'][:3])}")
+                    context_parts.append(f"    Responsibilities:")
+                    for resp in exp['responsibilities']:
+                        context_parts.append(f"      • {resp}")
+                if exp.get('achievements'):
+                    context_parts.append(f"    Achievements: {exp['achievements']}")
+
+        # Projects
+        projects = user_info.get('projects', [])
+        if projects:
+            context_parts.append("\nProjects:")
+            for proj in projects:
+                proj_text = f"  - {proj.get('name', '')}"
+                if proj.get('description'):
+                    proj_text += f": {proj['description']}"
+                context_parts.append(proj_text)
+                if proj.get('technologies'):
+                    context_parts.append(f"    Technologies: {proj['technologies']}")
 
         # Skills
         skills = user_info.get('skills', [])
@@ -277,7 +331,12 @@ Write the complete answer now (nothing else):"""
         if certifications:
             context_parts.append(f"\nCertifications: {', '.join(certifications)}")
 
-        return '\n'.join(context_parts) if context_parts else "No user information available."
+        # Languages
+        languages = user_info.get('languages', [])
+        if languages:
+            context_parts.append(f"\nLanguages: {', '.join(languages)}")
+
+        return '\n'.join(context_parts) if context_parts else "No user information available. Please upload your resume or other documents to provide context for generating personalized responses."
 
 
 # Singleton instance
