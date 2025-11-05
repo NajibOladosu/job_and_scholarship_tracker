@@ -19,7 +19,7 @@ class GeminiService:
         Initialize Gemini API with API key from settings.
         """
         genai.configure(api_key=settings.GEMINI_API_KEY)
-        self.model = genai.GenerativeModel('gemini-1.5-flash')
+        self.model = genai.GenerativeModel('gemini-1.5-pro')
 
     def extract_questions_from_content(self, content, application_type='job'):
         """

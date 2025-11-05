@@ -110,7 +110,7 @@ def process_document_task(self, document_id: int, file_content: str = None, file
         result = {
             'status': 'success',
             'document_id': document_id,
-            'filename': document.original_filename,
+            'document_filename': document.original_filename,
             'processed_at': document.processed_at.isoformat(),
             'extraction_task_id': extraction_result.id
         }
