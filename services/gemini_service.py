@@ -19,8 +19,9 @@ class GeminiService:
         Initialize Gemini API with API key from settings.
         """
         genai.configure(api_key=settings.GEMINI_API_KEY)
-        # Use gemini-1.5-flash (available in v1beta API, faster and more stable)
-        self.model = genai.GenerativeModel('gemini-1.5-flash')
+        # Try models/gemini-pro with full path - this should work with v1beta
+        # If this fails, user needs to run test_gemini_api.py to find working model
+        self.model = genai.GenerativeModel('models/gemini-pro')
 
     def extract_questions_from_content(self, content, application_type='job'):
         """
