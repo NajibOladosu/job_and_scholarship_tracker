@@ -112,10 +112,14 @@ class ExtractedInformation(models.Model):
     DATA_TYPE_CHOICES = [
         ('name', _('Name')),
         ('email', _('Email')),
+        ('phone', _('Phone')),
         ('education', _('Education')),
         ('experience', _('Work Experience')),
         ('skills', _('Skills')),
         ('certifications', _('Certifications')),
+        ('projects', _('Projects')),
+        ('languages', _('Languages')),
+        ('summary', _('Professional Summary')),
     ]
 
     document = models.ForeignKey(

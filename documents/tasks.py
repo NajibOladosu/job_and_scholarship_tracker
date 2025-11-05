@@ -194,22 +194,40 @@ def extract_information_task(self, document_id: int, text_content: str = None) -
         extraction_types = [
             ('name', extracted_data.get('name')),
             ('email', extracted_data.get('email')),
+            ('phone', extracted_data.get('phone')),
             ('education', extracted_data.get('education')),
             ('experience', extracted_data.get('experience')),
             ('skills', extracted_data.get('skills')),
             ('certifications', extracted_data.get('certifications')),
+            ('projects', extracted_data.get('projects')),
+            ('languages', extracted_data.get('languages')),
+            ('summary', extracted_data.get('summary')),
         ]
 
         created_count = 0
         for data_type, content in extraction_types:
-            if content:  # Only save if content exists
-                ExtractedInformation.objects.create(
-                    document=document,
-                    data_type=data_type,
-                    content=content,
-                    confidence_score=0.0  # TODO: Get actual confidence from AI
-                )
-                created_count += 1
+            # Save if content exists and is not empty
+            # For strings: check if not None and not empty
+            # For lists: check if not None and has items
+            if content is not None:
+                if isinstance(content, str) and content.strip():
+                    ExtractedInformation.objects.create(
+                        document=document,
+                        data_type=data_type,
+                        content=content,
+                        confidence_score=0.85  # Default confidence for AI extraction
+                    )
+                    created_count += 1
+                    logger.info(f"Saved {data_type}: {str(content)[:100]}")
+                elif isinstance(content, list) and len(content) > 0:
+                    ExtractedInformation.objects.create(
+                        document=document,
+                        data_type=data_type,
+                        content=content,
+                        confidence_score=0.85  # Default confidence for AI extraction
+                    )
+                    created_count += 1
+                    logger.info(f"Saved {data_type}: {len(content)} items")
 
         result = {
             'status': 'success',
