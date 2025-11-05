@@ -124,6 +124,15 @@
                                 Generate AI Responses
                             </button>
                         </form>
+                        <form method="post" action="{% url 'tracker:generate_responses' application.pk %}" class="m-0">
+                            {% csrf_token %}
+                            <input type="hidden" name="regenerate" value="true">
+                            <button type="submit" class="btn btn-warning w-100"
+                                    onclick="return confirm('This will regenerate ALL responses, replacing existing ones. Continue?');">
+                                <i class="bi bi-arrow-clockwise me-2"></i>
+                                Regenerate All Responses
+                            </button>
+                        </form>
                         {% endif %}
                         <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">
                             <i class="bi bi-trash-fill me-2"></i>
