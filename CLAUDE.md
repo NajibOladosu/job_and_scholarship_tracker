@@ -163,11 +163,14 @@ pytest
 pytest --cov=. --cov-report=html
 
 # Run specific app tests
-pytest accounts/tests/
-pytest tracker/tests/
-pytest documents/tests/
-pytest notifications/tests/
-pytest services/tests/
+pytest accounts/tests/      # Full test directory
+pytest tracker/tests/       # Full test directory
+pytest documents/tests/     # Full test directory
+pytest notifications/      # Single test file (tests.py)
+pytest core/               # Single test file (tests.py)
+
+# Note: services/ has no separate tests
+# Services are tested indirectly through app tests (tracker, documents)
 
 # Run specific test file
 pytest tracker/tests/test_models.py
@@ -196,6 +199,11 @@ python manage.py test tracker
 
 Test configuration is in `pytest.ini` with markers for categorizing tests (unit, integration, slow, api, celery, external, permissions).
 Coverage reports exclude migrations, tests, and boilerplate files (see `.coveragerc`).
+
+**Test Structure:**
+- `accounts/`, `tracker/`, `documents/`: Use `tests/` directories with multiple test files
+- `notifications/`, `core/`: Use single `tests.py` files
+- `services/`: No separate tests; services are tested through the apps that consume them
 
 ### Celery Commands
 
@@ -622,3 +630,4 @@ Services are typically called from Celery tasks, not directly from views.
 14. **URL namespaces**: Always prefix URLs with namespace in templates and reverse() calls (e.g., `tracker:dashboard`)
 15. **Production.py settings**: Railway-specific fixes are in `config/settings/production.py` (proxy headers, concurrency limits)
 16. **Template div balance**: Always ensure opening and closing `<div>` tags are balanced in templates. Use Python to verify: `content.count('<div')` should equal `content.count('</div>')` within `{% block content %}` sections
+17. **Logging conflicts**: Avoid passing fields named 'created', 'name', 'msg', 'args', etc. as extra parameters to logger calls, as these conflict with Python's built-in LogRecord fields. Use prefixed names like 'task_name' instead of 'name'
