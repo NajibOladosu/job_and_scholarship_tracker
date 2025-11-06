@@ -1102,3 +1102,113 @@ def referral_delete_view(request, pk):
         'application': application,
     }
     return render(request, 'tracker/referral_confirm_delete.html', context)
+
+
+# ========== Additional API Endpoints ==========
+
+@login_required
+@require_POST
+def bulk_delete_api(request):
+    """
+    Bulk delete multiple applications via AJAX.
+    """
+    import json
+    try:
+        data = json.loads(request.body)
+        application_ids = data.get('application_ids', [])
+        
+        if not application_ids:
+            return JsonResponse({'error': 'No applications selected'}, status=400)
+        
+        # Delete applications owned by the user
+        deleted_count = Application.objects.filter(
+            id__in=application_ids,
+            user=request.user
+        ).delete()[0]
+        
+        return JsonResponse({
+            'success': True,
+            'deleted_count': deleted_count,
+            'message': f'Successfully deleted {deleted_count} application(s)'
+        })
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+@login_required
+def export_applications_view(request):
+    """
+    Export applications as CSV.
+    """
+    import csv
+    from django.http import HttpResponse
+    
+    # Get application IDs from query params
+    ids = request.GET.get('ids', '').split(',') if request.GET.get('ids') else []
+    
+    # Filter applications
+    applications = Application.objects.filter(user=request.user)
+    if ids and ids[0]:  # Check if ids list is not empty or ['']
+        applications = applications.filter(id__in=ids)
+    
+    applications = applications.select_related('user').order_by('-created_at')
+    
+    # Create CSV response
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="applications_export.csv"'
+    
+    writer = csv.writer(response)
+    writer.writerow(['Title', 'Company', 'Type', 'Status', 'Priority', 'Deadline', 'URL', 'Created'])
+    
+    for app in applications:
+        writer.writerow([
+            app.title,
+            app.company_or_institution,
+            app.get_application_type_display(),
+            app.get_status_display(),
+            app.get_priority_display(),
+            app.deadline.strftime('%Y-%m-%d') if app.deadline else '',
+            app.url or '',
+            app.created_at.strftime('%Y-%m-%d %H:%M'),
+        ])
+    
+    return response
+
+
+@login_required
+@require_POST
+def schedule_interview_api(request):
+    """
+    Quick schedule interview API endpoint (called from modal).
+    """
+    import json
+    try:
+        data = json.loads(request.body)
+        application_id = data.get('application_id')
+        interview_type = data.get('interview_type')
+        scheduled_date = data.get('scheduled_date')
+        meeting_link = data.get('meeting_link', '')
+        
+        if not all([application_id, interview_type, scheduled_date]):
+            return JsonResponse({'error': 'Missing required fields'}, status=400)
+        
+        # Get application
+        application = get_object_or_404(Application, id=application_id, user=request.user)
+        
+        # Create interview
+        interview = Interview.objects.create(
+            application=application,
+            user=request.user,
+            interview_type=interview_type,
+            scheduled_date=scheduled_date,
+            meeting_link=meeting_link,
+            status='scheduled'
+        )
+        
+        return JsonResponse({
+            'success': True,
+            'interview_id': interview.id,
+            'message': 'Interview scheduled successfully'
+        })
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
