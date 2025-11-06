@@ -15,10 +15,11 @@ from django.core.paginator import Paginator
 from django.views.decorators.cache import cache_page
 from django.core.cache import cache
 from datetime import datetime
-from .models import Application, Question, Response, ApplicationStatus, Note, Tag
+from .models import Application, Question, Response, ApplicationStatus, Note, Tag, Interview, Interviewer, Referral
 from .forms import (
     ApplicationForm, QuickApplicationForm, QuestionForm, ResponseForm,
-    ApplicationFilterForm, NoteForm, TagForm, EnhancedApplicationFilterForm
+    ApplicationFilterForm, NoteForm, TagForm, EnhancedApplicationFilterForm,
+    InterviewForm, InterviewerInlineFormSet, ReferralForm, QuickInterviewForm
 )
 from .tasks import scrape_url_task, batch_generate_responses_task, generate_response_task
 from .utils.analytics import calculate_summary_stats, generate_sankey_data, get_timeline_data
@@ -28,16 +29,18 @@ import json
 @login_required
 def dashboard_view(request):
     """
-    Main dashboard showing user's applications.
+    Main dashboard showing user's applications with enhanced filtering.
     """
-    # Get user's applications
-    # Note: We don't annotate question_count here because Application model has a property with that name
-    # The template will use the property instead
-    applications = Application.objects.filter(user=request.user).order_by('-created_at')
+    # Get user's non-archived applications
+    applications = Application.objects.filter(
+        user=request.user,
+        is_archived=False
+    ).select_related().prefetch_related('tags').order_by('-created_at')
 
-    # Apply filters
-    filter_form = ApplicationFilterForm(request.GET)
+    # Apply enhanced filters
+    filter_form = EnhancedApplicationFilterForm(request.GET, user=request.user)
     if filter_form.is_valid():
+        # Search filter
         search = filter_form.cleaned_data.get('search')
         if search:
             applications = applications.filter(
@@ -46,17 +49,62 @@ def dashboard_view(request):
                 Q(description__icontains=search)
             )
 
-        app_type = filter_form.cleaned_data.get('application_type')
-        if app_type:
-            applications = applications.filter(application_type=app_type)
+        # Multi-status filter
+        statuses = filter_form.cleaned_data.get('statuses')
+        if statuses:
+            applications = applications.filter(status__in=statuses)
 
-        status = filter_form.cleaned_data.get('status')
-        if status:
-            applications = applications.filter(status=status)
+        # Multi-type filter
+        application_types = filter_form.cleaned_data.get('application_types')
+        if application_types:
+            applications = applications.filter(application_type__in=application_types)
 
-        priority = filter_form.cleaned_data.get('priority')
-        if priority:
-            applications = applications.filter(priority=priority)
+        # Multi-priority filter
+        priorities = filter_form.cleaned_data.get('priorities')
+        if priorities:
+            applications = applications.filter(priority__in=priorities)
+
+        # Tag filter
+        tags = filter_form.cleaned_data.get('tags')
+        if tags:
+            applications = applications.filter(tags__id__in=tags).distinct()
+
+        # Deadline date range
+        deadline_from = filter_form.cleaned_data.get('deadline_from')
+        deadline_to = filter_form.cleaned_data.get('deadline_to')
+        if deadline_from:
+            applications = applications.filter(deadline__gte=deadline_from)
+        if deadline_to:
+            from datetime import datetime, time
+            # Include the entire day
+            deadline_end = datetime.combine(deadline_to, time.max)
+            applications = applications.filter(deadline__lte=deadline_end)
+
+        # Created date range
+        created_from = filter_form.cleaned_data.get('created_from')
+        created_to = filter_form.cleaned_data.get('created_to')
+        if created_from:
+            applications = applications.filter(created_at__gte=created_from)
+        if created_to:
+            from datetime import datetime, time
+            created_end = datetime.combine(created_to, time.max)
+            applications = applications.filter(created_at__lte=created_end)
+
+        # Has deadline filter
+        has_deadline = filter_form.cleaned_data.get('has_deadline')
+        if has_deadline == 'true':
+            applications = applications.exclude(deadline__isnull=True)
+        elif has_deadline == 'false':
+            applications = applications.filter(deadline__isnull=True)
+
+        # Overdue filter
+        is_overdue = filter_form.cleaned_data.get('is_overdue')
+        if is_overdue:
+            now = timezone.now()
+            applications = applications.filter(
+                deadline__lt=now,
+                status__in=['draft', 'in_review']
+            )
 
     # Get statistics
     stats = {
@@ -66,11 +114,18 @@ def dashboard_view(request):
         'in_review': applications.filter(status='in_review').count(),
         'interview': applications.filter(status='interview').count(),
         'offer': applications.filter(status='offer').count(),
+        'rejected': applications.filter(status='rejected').count(),
     }
+
+    # Pagination
+    paginator = Paginator(applications, 50)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
 
     context = {
         'title': 'Dashboard',
-        'applications': applications[:50],  # Limit for performance
+        'applications': page_obj.object_list,
+        'page_obj': page_obj,
         'filter_form': filter_form,
         'stats': stats,
     }
@@ -642,3 +697,397 @@ def timeline_data_api(request):
         cache.set(cache_key, data, 300)
 
     return JsonResponse(data, safe=False)
+
+
+# ========== Interview Management Views ==========
+
+@login_required
+def interview_create_view(request, application_id):
+    """
+    Create interview for application with optional interviewers.
+    """
+    application = get_object_or_404(Application, pk=application_id, user=request.user)
+
+    if request.method == 'POST':
+        interview_form = InterviewForm(request.POST)
+        interviewer_formset = InterviewerInlineFormSet(request.POST)
+
+        if interview_form.is_valid():
+            interview = interview_form.save(commit=False)
+            interview.application = application
+            interview.user = request.user
+            interview.save()
+
+            # Save interviewers if formset is valid
+            if interviewer_formset.is_valid():
+                interviewer_formset.instance = interview
+                interviewer_formset.save()
+
+            messages.success(request, 'Interview scheduled successfully!')
+            return redirect('tracker:application_detail', pk=application.pk)
+    else:
+        interview_form = InterviewForm()
+        interviewer_formset = InterviewerInlineFormSet()
+
+    context = {
+        'title': f'Schedule Interview - {application.title}',
+        'form': interview_form,
+        'interviewer_formset': interviewer_formset,
+        'application': application,
+    }
+    return render(request, 'tracker/interview_form.html', context)
+
+
+@login_required
+def interview_update_view(request, pk):
+    """
+    Update interview details and interviewers.
+    """
+    interview = get_object_or_404(
+        Interview.objects.select_related('application'),
+        pk=pk,
+        user=request.user
+    )
+
+    if request.method == 'POST':
+        interview_form = InterviewForm(request.POST, instance=interview)
+        interviewer_formset = InterviewerInlineFormSet(request.POST, instance=interview)
+
+        if interview_form.is_valid() and interviewer_formset.is_valid():
+            interview_form.save()
+            interviewer_formset.save()
+            messages.success(request, 'Interview updated successfully!')
+            return redirect('tracker:application_detail', pk=interview.application.pk)
+    else:
+        interview_form = InterviewForm(instance=interview)
+        interviewer_formset = InterviewerInlineFormSet(instance=interview)
+
+    context = {
+        'title': f'Edit Interview - {interview.application.title}',
+        'form': interview_form,
+        'interviewer_formset': interviewer_formset,
+        'interview': interview,
+        'application': interview.application,
+    }
+    return render(request, 'tracker/interview_form.html', context)
+
+
+@login_required
+def interview_delete_view(request, pk):
+    """
+    Delete interview.
+    """
+    interview = get_object_or_404(
+        Interview.objects.select_related('application'),
+        pk=pk,
+        user=request.user
+    )
+    application = interview.application
+
+    if request.method == 'POST':
+        interview.delete()
+        messages.success(request, 'Interview deleted successfully.')
+        return redirect('tracker:application_detail', pk=application.pk)
+
+    context = {
+        'title': 'Delete Interview',
+        'interview': interview,
+        'application': application,
+    }
+    return render(request, 'tracker/interview_confirm_delete.html', context)
+
+
+@login_required
+def interview_list_view(request):
+    """
+    Calendar view of all user's interviews.
+    """
+    # Get all interviews for the user
+    interviews = Interview.objects.filter(
+        user=request.user
+    ).select_related('application').prefetch_related('interviewers').order_by('scheduled_date')
+
+    # Filter by status
+    status_filter = request.GET.get('status')
+    if status_filter:
+        interviews = interviews.filter(status=status_filter)
+
+    # Split into upcoming and past
+    now = timezone.now()
+    upcoming_interviews = interviews.filter(scheduled_date__gte=now)
+    past_interviews = interviews.filter(scheduled_date__lt=now)
+
+    context = {
+        'title': 'My Interviews',
+        'upcoming_interviews': upcoming_interviews,
+        'past_interviews': past_interviews,
+        'status_filter': status_filter,
+    }
+    return render(request, 'tracker/interview_list.html', context)
+
+
+# ========== Archive Functionality Views ==========
+
+@login_required
+@require_POST
+def application_archive_view(request, pk):
+    """
+    Archive an application.
+    """
+    application = get_object_or_404(Application, pk=pk, user=request.user)
+
+    if application.is_archived:
+        messages.warning(request, 'Application is already archived.')
+    else:
+        application.is_archived = True
+        application.archived_at = timezone.now()
+        application.save()
+        messages.success(request, f'{application.title} has been archived.')
+
+    # Redirect to referrer or dashboard
+    return redirect(request.META.get('HTTP_REFERER', 'tracker:dashboard'))
+
+
+@login_required
+@require_POST
+def application_unarchive_view(request, pk):
+    """
+    Restore archived application.
+    """
+    application = get_object_or_404(Application, pk=pk, user=request.user)
+
+    if not application.is_archived:
+        messages.warning(request, 'Application is not archived.')
+    else:
+        application.is_archived = False
+        application.archived_at = None
+        application.save()
+        messages.success(request, f'{application.title} has been restored.')
+
+    # Redirect to referrer or archive list
+    return redirect(request.META.get('HTTP_REFERER', 'tracker:archive_list'))
+
+
+@login_required
+def archive_list_view(request):
+    """
+    View archived applications.
+    """
+    # Get all archived applications
+    applications = Application.objects.filter(
+        user=request.user,
+        is_archived=True
+    ).order_by('-archived_at')
+
+    # Apply search filter
+    search = request.GET.get('search', '').strip()
+    if search:
+        applications = applications.filter(
+            Q(title__icontains=search) |
+            Q(company_or_institution__icontains=search) |
+            Q(description__icontains=search)
+        )
+
+    # Pagination
+    paginator = Paginator(applications, 25)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    context = {
+        'title': 'Archived Applications',
+        'page_obj': page_obj,
+        'applications': page_obj.object_list,
+        'search': search,
+        'total_archived': applications.count(),
+    }
+    return render(request, 'tracker/archive_list.html', context)
+
+
+# ========== Quick Actions API ==========
+
+@login_required
+@require_POST
+def quick_add_interview_api(request, application_id):
+    """
+    AJAX endpoint for quickly scheduling an interview.
+    """
+    try:
+        application = get_object_or_404(Application, pk=application_id, user=request.user)
+
+        data = json.loads(request.body)
+        interview_type = data.get('interview_type')
+        scheduled_date = data.get('scheduled_date')
+        meeting_link = data.get('meeting_link', '')
+
+        if not interview_type or not scheduled_date:
+            return JsonResponse({
+                'success': False,
+                'message': 'Interview type and scheduled date are required.'
+            }, status=400)
+
+        # Parse datetime
+        from django.utils.dateparse import parse_datetime
+        scheduled_datetime = parse_datetime(scheduled_date)
+        if not scheduled_datetime:
+            return JsonResponse({
+                'success': False,
+                'message': 'Invalid date format.'
+            }, status=400)
+
+        # Create interview
+        interview = Interview.objects.create(
+            application=application,
+            user=request.user,
+            interview_type=interview_type,
+            scheduled_date=scheduled_datetime,
+            meeting_link=meeting_link
+        )
+
+        return JsonResponse({
+            'success': True,
+            'message': 'Interview scheduled successfully!',
+            'interview_id': interview.id,
+            'interview_type': interview.get_interview_type_display(),
+            'scheduled_date': interview.scheduled_date.strftime('%Y-%m-%d %H:%M')
+        })
+
+    except json.JSONDecodeError:
+        return JsonResponse({
+            'success': False,
+            'message': 'Invalid JSON'
+        }, status=400)
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'message': str(e)
+        }, status=500)
+
+
+@login_required
+@require_POST
+def bulk_archive_api(request):
+    """
+    Archive multiple applications at once via AJAX.
+    """
+    try:
+        data = json.loads(request.body)
+        application_ids = data.get('application_ids', [])
+
+        if not application_ids:
+            return JsonResponse({
+                'success': False,
+                'message': 'No applications selected.'
+            }, status=400)
+
+        # Get applications owned by user
+        applications = Application.objects.filter(
+            pk__in=application_ids,
+            user=request.user,
+            is_archived=False
+        )
+
+        # Archive them
+        count = applications.update(
+            is_archived=True,
+            archived_at=timezone.now()
+        )
+
+        return JsonResponse({
+            'success': True,
+            'message': f'{count} application(s) archived successfully.',
+            'count': count
+        })
+
+    except json.JSONDecodeError:
+        return JsonResponse({
+            'success': False,
+            'message': 'Invalid JSON'
+        }, status=400)
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'message': str(e)
+        }, status=500)
+
+
+# ========== Referral Views ==========
+
+@login_required
+def referral_create_view(request, application_id):
+    """
+    Add referral to application.
+    """
+    application = get_object_or_404(Application, pk=application_id, user=request.user)
+
+    if request.method == 'POST':
+        form = ReferralForm(request.POST)
+        if form.is_valid():
+            referral = form.save(commit=False)
+            referral.application = application
+            referral.user = request.user
+            referral.save()
+            messages.success(request, 'Referral added successfully!')
+            return redirect('tracker:application_detail', pk=application.pk)
+    else:
+        form = ReferralForm()
+
+    context = {
+        'title': f'Add Referral - {application.title}',
+        'form': form,
+        'application': application,
+    }
+    return render(request, 'tracker/referral_form.html', context)
+
+
+@login_required
+def referral_update_view(request, pk):
+    """
+    Update referral details.
+    """
+    referral = get_object_or_404(
+        Referral.objects.select_related('application'),
+        pk=pk,
+        user=request.user
+    )
+
+    if request.method == 'POST':
+        form = ReferralForm(request.POST, instance=referral)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Referral updated successfully!')
+            return redirect('tracker:application_detail', pk=referral.application.pk)
+    else:
+        form = ReferralForm(instance=referral)
+
+    context = {
+        'title': f'Edit Referral - {referral.application.title}',
+        'form': form,
+        'referral': referral,
+        'application': referral.application,
+    }
+    return render(request, 'tracker/referral_form.html', context)
+
+
+@login_required
+def referral_delete_view(request, pk):
+    """
+    Delete referral.
+    """
+    referral = get_object_or_404(
+        Referral.objects.select_related('application'),
+        pk=pk,
+        user=request.user
+    )
+    application = referral.application
+
+    if request.method == 'POST':
+        referral.delete()
+        messages.success(request, 'Referral deleted successfully.')
+        return redirect('tracker:application_detail', pk=application.pk)
+
+    context = {
+        'title': 'Delete Referral',
+        'referral': referral,
+        'application': application,
+    }
+    return render(request, 'tracker/referral_confirm_delete.html', context)

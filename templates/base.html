@@ -1,12 +1,13 @@
 {% load static %}
 <!DOCTYPE html>
-<html lang="en" class="scroll-smooth">
+<html lang="en" class="scroll-smooth" data-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <meta name="description" content="Track your job and scholarship applications with ease. Stay organized and never miss a deadline.">
     <meta name="author" content="Job & Scholarship Tracker">
+    <meta name="theme-color" content="#4F46E5" id="theme-color-meta">
 
     <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="{% static 'images/favicon.svg' %}">
@@ -21,6 +22,76 @@
 
     <!-- Custom CSS -->
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
+
+    <!-- Theme CSS (dynamically loaded) -->
+    <link rel="stylesheet" href="" id="theme-stylesheet">
+
+    <!-- Theme Loader Script (inline for immediate execution) -->
+    <script>
+        (function() {
+            'use strict';
+
+            const themeManager = {
+                themes: {
+                    'light': {
+                        name: 'Default Light',
+                        file: '',
+                        themeColor: '#4F46E5'
+                    },
+                    'dark': {
+                        name: 'Dark Theme',
+                        file: '{% static "css/theme-dark.css" %}',
+                        themeColor: '#1F2937'
+                    },
+                    'book': {
+                        name: 'Book Theme',
+                        file: '{% static "css/theme-book.css" %}',
+                        themeColor: '#F5E6D3'
+                    }
+                },
+
+                init() {
+                    const savedTheme = localStorage.getItem('appTheme') || 'light';
+                    this.applyTheme(savedTheme);
+                },
+
+                applyTheme(themeName) {
+                    const theme = this.themes[themeName] || this.themes['light'];
+                    const html = document.documentElement;
+                    const themeStylesheet = document.getElementById('theme-stylesheet');
+                    const themeColorMeta = document.getElementById('theme-color-meta');
+
+                    // Set theme attribute
+                    html.setAttribute('data-theme', themeName);
+
+                    // Load theme stylesheet
+                    if (themeStylesheet) {
+                        themeStylesheet.href = theme.file;
+                    }
+
+                    // Update theme color meta tag
+                    if (themeColorMeta) {
+                        themeColorMeta.setAttribute('content', theme.themeColor);
+                    }
+
+                    // Save preference
+                    localStorage.setItem('appTheme', themeName);
+
+                    // Add smooth transition
+                    html.style.transition = 'background-color 0.3s ease, color 0.3s ease';
+                    setTimeout(() => {
+                        html.style.transition = '';
+                    }, 300);
+                }
+            };
+
+            // Initialize immediately to prevent flash
+            themeManager.init();
+
+            // Expose globally
+            window.ThemeManager = themeManager;
+        })();
+    </script>
 
     <!-- HTMX for dynamic interactions -->
     <script src="https://unpkg.com/htmx.org@1.9.10" defer></script>
@@ -72,8 +143,10 @@
     <!-- Bootstrap Bundle with Popper -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
 
-    <!-- Custom JavaScript -->
+    <!-- Custom JavaScript (load order is important) -->
     <script src="{% static 'js/main.js' %}"></script>
+    <script src="{% static 'js/filters.js' %}" defer></script>
+    <script src="{% static 'js/interviews.js' %}" defer></script>
 
     {% block extra_js %}{% endblock %}
 </body>

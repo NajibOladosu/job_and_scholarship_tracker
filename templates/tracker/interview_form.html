@@ -1,0 +1,503 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{% if form.instance.pk %}Edit{% else %}Schedule{% endif %} Interview - AppTracker{% endblock %}
+
+{% block extra_css %}
+<style>
+    .interview-form-container {
+        max-width: 900px;
+        margin: 0 auto;
+    }
+
+    .form-section {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        padding: 2rem;
+        margin-bottom: 1.5rem;
+        border: 1px solid #e5e7eb;
+    }
+
+    .section-title {
+        font-weight: 700;
+        margin-bottom: 1.5rem;
+        padding-bottom: 0.75rem;
+        border-bottom: 2px solid #e5e7eb;
+        color: #1f2937;
+    }
+
+    .section-title i {
+        color: #6366f1;
+    }
+
+    .interview-type-selector {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .type-option {
+        position: relative;
+    }
+
+    .type-option input[type="radio"] {
+        position: absolute;
+        opacity: 0;
+    }
+
+    .type-option label {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 1.5rem 1rem;
+        border: 2px solid #e5e7eb;
+        border-radius: 12px;
+        cursor: pointer;
+        transition: all 0.2s;
+        background: white;
+        text-align: center;
+    }
+
+    .type-option input[type="radio"]:checked + label {
+        border-color: #6366f1;
+        background: linear-gradient(135deg, rgba(99, 102, 241, 0.05) 0%, rgba(139, 92, 246, 0.05) 100%);
+        box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2);
+    }
+
+    .type-option label:hover {
+        border-color: #a5b4fc;
+    }
+
+    .type-icon {
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .interviewers-section {
+        background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
+        border-radius: 8px;
+        padding: 1rem;
+        border: 1px dashed #d1d5db;
+    }
+
+    .interviewer-chip {
+        display: inline-flex;
+        align-items: center;
+        background: white;
+        border: 1px solid #e5e7eb;
+        border-radius: 20px;
+        padding: 0.5rem 1rem;
+        margin: 0.25rem;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    }
+
+    .interviewer-chip .remove-btn {
+        margin-left: 0.5rem;
+        cursor: pointer;
+        color: #ef4444;
+    }
+
+    .tips-box {
+        background: linear-gradient(135deg, rgba(99, 102, 241, 0.05) 0%, rgba(139, 92, 246, 0.05) 100%);
+        border-left: 4px solid #6366f1;
+        border-radius: 8px;
+        padding: 1rem 1.5rem;
+        margin-top: 1.5rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="interview-form-container fade-in">
+        <!-- Breadcrumb -->
+        <nav aria-label="breadcrumb" class="mb-4">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item">
+                    <a href="{% url 'tracker:dashboard' %}" class="text-decoration-none">
+                        <i class="bi bi-house-door me-1"></i>Dashboard
+                    </a>
+                </li>
+                {% if application %}
+                <li class="breadcrumb-item">
+                    <a href="{% url 'tracker:application_detail' application.pk %}" class="text-decoration-none">
+                        {{ application.title|truncatewords:5 }}
+                    </a>
+                </li>
+                {% endif %}
+                <li class="breadcrumb-item active" aria-current="page">
+                    {% if form.instance.pk %}Edit Interview{% else %}Schedule Interview{% endif %}
+                </li>
+            </ol>
+        </nav>
+
+        <!-- Header -->
+        <div class="text-center mb-4">
+            <div class="mb-3" style="width: 80px; height: 80px; margin: 0 auto; background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); border-radius: 16px; display: flex; align-items: center; justify-content: center; box-shadow: 0 8px 16px rgba(99, 102, 241, 0.3);">
+                <i class="bi bi-calendar-check text-white" style="font-size: 2.5rem;"></i>
+            </div>
+            <h1 class="h2 fw-bold mb-2">
+                {% if form.instance.pk %}
+                    Edit Interview
+                {% else %}
+                    Schedule Interview
+                {% endif %}
+            </h1>
+            <p class="text-muted mb-0">Keep track of your interview schedule and preparation</p>
+        </div>
+
+        <!-- Main Form -->
+        <form method="post" id="interview-form" novalidate>
+            {% csrf_token %}
+
+            {% if form.non_field_errors %}
+                <div class="alert alert-danger mb-4" role="alert">
+                    <i class="bi bi-exclamation-circle-fill me-2"></i>
+                    {{ form.non_field_errors }}
+                </div>
+            {% endif %}
+
+            <!-- Basic Information -->
+            <div class="form-section">
+                <h5 class="section-title">
+                    <i class="bi bi-info-circle-fill me-2"></i>
+                    Basic Information
+                </h5>
+
+                <!-- Application Selection -->
+                {% if not application %}
+                <div class="mb-4">
+                    <label for="id_application" class="form-label fw-semibold">
+                        <i class="bi bi-briefcase me-1"></i>
+                        Application
+                        <span class="text-danger">*</span>
+                    </label>
+                    <select name="application" id="id_application" class="form-select form-select-lg" required>
+                        <option value="">Select an application...</option>
+                        <!-- Options will be populated from the form -->
+                    </select>
+                    <small class="form-text text-muted">Choose which application this interview is for</small>
+                </div>
+                {% endif %}
+
+                <!-- Interview Title -->
+                <div class="mb-4">
+                    <label for="id_title" class="form-label fw-semibold">
+                        <i class="bi bi-card-heading me-1"></i>
+                        Interview Title
+                        <span class="text-danger">*</span>
+                    </label>
+                    <input type="text"
+                           name="title"
+                           id="id_title"
+                           class="form-control form-control-lg"
+                           placeholder="e.g., Technical Interview with Engineering Team"
+                           required>
+                    <small class="form-text text-muted">A descriptive title for this interview</small>
+                </div>
+
+                <!-- Interview Type -->
+                <div class="mb-4">
+                    <label class="form-label fw-semibold d-block">
+                        <i class="bi bi-diagram-3 me-1"></i>
+                        Interview Type
+                        <span class="text-danger">*</span>
+                    </label>
+
+                    <div class="interview-type-selector">
+                        <div class="type-option">
+                            <input type="radio" name="interview_type" id="type_phone" value="phone" required>
+                            <label for="type_phone">
+                                <i class="bi bi-telephone-fill type-icon text-primary"></i>
+                                <strong>Phone</strong>
+                            </label>
+                        </div>
+
+                        <div class="type-option">
+                            <input type="radio" name="interview_type" id="type_video" value="video" checked>
+                            <label for="type_video">
+                                <i class="bi bi-camera-video-fill type-icon text-success"></i>
+                                <strong>Video Call</strong>
+                            </label>
+                        </div>
+
+                        <div class="type-option">
+                            <input type="radio" name="interview_type" id="type_onsite" value="onsite">
+                            <label for="type_onsite">
+                                <i class="bi bi-building type-icon text-warning"></i>
+                                <strong>On-site</strong>
+                            </label>
+                        </div>
+
+                        <div class="type-option">
+                            <input type="radio" name="interview_type" id="type_other" value="other">
+                            <label for="type_other">
+                                <i class="bi bi-three-dots type-icon text-secondary"></i>
+                                <strong>Other</strong>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Date & Time -->
+            <div class="form-section">
+                <h5 class="section-title">
+                    <i class="bi bi-clock-fill me-2"></i>
+                    Date & Time
+                </h5>
+
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label for="id_date" class="form-label fw-semibold">
+                            <i class="bi bi-calendar-date me-1"></i>
+                            Interview Date
+                            <span class="text-danger">*</span>
+                        </label>
+                        <input type="date"
+                               name="date"
+                               id="id_date"
+                               class="form-control form-control-lg"
+                               required>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label for="id_time" class="form-label fw-semibold">
+                            <i class="bi bi-clock me-1"></i>
+                            Interview Time
+                            <span class="text-danger">*</span>
+                        </label>
+                        <input type="time"
+                               name="time"
+                               id="id_time"
+                               class="form-control form-control-lg"
+                               required>
+                    </div>
+                </div>
+
+                <div class="mt-3">
+                    <label for="id_duration" class="form-label fw-semibold">
+                        <i class="bi bi-hourglass-split me-1"></i>
+                        Expected Duration (minutes)
+                    </label>
+                    <input type="number"
+                           name="duration"
+                           id="id_duration"
+                           class="form-control"
+                           placeholder="e.g., 60"
+                           min="15"
+                           max="480"
+                           value="60">
+                    <small class="form-text text-muted">How long do you expect this interview to last?</small>
+                </div>
+            </div>
+
+            <!-- Location / Link -->
+            <div class="form-section">
+                <h5 class="section-title">
+                    <i class="bi bi-geo-alt-fill me-2"></i>
+                    Location / Meeting Link
+                </h5>
+
+                <div class="mb-3">
+                    <label for="id_location" class="form-label fw-semibold">
+                        <i class="bi bi-pin-map me-1"></i>
+                        Location or Video Link
+                    </label>
+                    <input type="text"
+                           name="location"
+                           id="id_location"
+                           class="form-control form-control-lg"
+                           placeholder="e.g., https://zoom.us/j/123456789 or 123 Main St, Office Building">
+                    <small class="form-text text-muted">
+                        Add the Zoom/Teams link, physical address, or phone number
+                    </small>
+                </div>
+            </div>
+
+            <!-- Interviewers -->
+            <div class="form-section">
+                <h5 class="section-title">
+                    <i class="bi bi-people-fill me-2"></i>
+                    Interviewers
+                </h5>
+
+                <div class="interviewers-section">
+                    <div class="mb-3">
+                        <label for="interviewer-input" class="form-label fw-semibold small">
+                            Add interviewer names or roles
+                        </label>
+                        <div class="input-group">
+                            <input type="text"
+                                   id="interviewer-input"
+                                   class="form-control"
+                                   placeholder="e.g., John Smith - Engineering Manager">
+                            <button type="button" class="btn btn-outline-primary" onclick="addInterviewer()">
+                                <i class="bi bi-plus-circle me-1"></i>
+                                Add
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="interviewers-list">
+                        <!-- Interviewer chips will be added here -->
+                    </div>
+
+                    <input type="hidden" name="interviewers" id="interviewers-hidden">
+                </div>
+            </div>
+
+            <!-- Notes -->
+            <div class="form-section">
+                <h5 class="section-title">
+                    <i class="bi bi-journal-text me-2"></i>
+                    Preparation Notes
+                </h5>
+
+                <div class="mb-3">
+                    <label for="id_notes" class="form-label fw-semibold">
+                        <i class="bi bi-pencil me-1"></i>
+                        Notes & Reminders
+                    </label>
+                    <textarea name="notes"
+                              id="id_notes"
+                              class="form-control"
+                              rows="6"
+                              placeholder="Add any notes about preparation, topics to review, questions to ask, etc."></textarea>
+                    <small class="form-text text-muted">
+                        Keep track of what you need to prepare or important points to remember
+                    </small>
+                </div>
+
+                <!-- Tips -->
+                <div class="tips-box">
+                    <h6 class="fw-bold mb-2">
+                        <i class="bi bi-lightbulb text-warning me-2"></i>
+                        Interview Preparation Tips
+                    </h6>
+                    <ul class="mb-0 small">
+                        <li>Research the company and role thoroughly</li>
+                        <li>Prepare examples from your experience (STAR method)</li>
+                        <li>Have questions ready to ask the interviewer</li>
+                        <li>Test your tech setup 15 minutes before (for video calls)</li>
+                        <li>Dress appropriately and ensure a quiet environment</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Form Actions -->
+            <div class="d-flex gap-3 justify-content-between pb-4">
+                <a href="{% if application %}{% url 'tracker:application_detail' application.pk %}{% else %}{% url 'tracker:dashboard' %}{% endif %}"
+                   class="btn btn-outline-secondary btn-lg">
+                    <i class="bi bi-x-circle me-2"></i>
+                    Cancel
+                </a>
+                <button type="submit" class="btn btn-primary btn-lg">
+                    <i class="bi bi-check-circle-fill me-2"></i>
+                    {% if form.instance.pk %}Update Interview{% else %}Schedule Interview{% endif %}
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Interviewers management
+let interviewers = [];
+
+function addInterviewer() {
+    const input = document.getElementById('interviewer-input');
+    const name = input.value.trim();
+
+    if (name && !interviewers.includes(name)) {
+        interviewers.push(name);
+        updateInterviewersList();
+        input.value = '';
+    }
+}
+
+function removeInterviewer(name) {
+    interviewers = interviewers.filter(i => i !== name);
+    updateInterviewersList();
+}
+
+function updateInterviewersList() {
+    const list = document.getElementById('interviewers-list');
+    const hidden = document.getElementById('interviewers-hidden');
+
+    if (interviewers.length === 0) {
+        list.innerHTML = '<p class="text-muted small mb-0"><i class="bi bi-info-circle me-1"></i>No interviewers added yet</p>';
+    } else {
+        list.innerHTML = interviewers.map(name => `
+            <div class="interviewer-chip">
+                <i class="bi bi-person-fill me-2"></i>
+                <span>${escapeHtml(name)}</span>
+                <i class="bi bi-x-circle remove-btn" onclick="removeInterviewer('${escapeHtml(name)}')"></i>
+            </div>
+        `).join('');
+    }
+
+    hidden.value = JSON.stringify(interviewers);
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+// Allow adding interviewer with Enter key
+document.addEventListener('DOMContentLoaded', function() {
+    const input = document.getElementById('interviewer-input');
+    input.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            addInterviewer();
+        }
+    });
+
+    // Set minimum date to today
+    const dateInput = document.getElementById('id_date');
+    const today = new Date().toISOString().split('T')[0];
+    dateInput.setAttribute('min', today);
+
+    // Initialize interviewers list
+    updateInterviewersList();
+
+    // Form validation
+    const form = document.getElementById('interview-form');
+    form.addEventListener('submit', function(e) {
+        const requiredFields = form.querySelectorAll('[required]');
+        let isValid = true;
+
+        requiredFields.forEach(field => {
+            if (!field.value.trim()) {
+                field.classList.add('is-invalid');
+                isValid = false;
+            } else {
+                field.classList.remove('is-invalid');
+            }
+        });
+
+        if (!isValid) {
+            e.preventDefault();
+            alert('Please fill in all required fields.');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+    });
+
+    // Remove validation styling on input
+    const inputs = form.querySelectorAll('input, select, textarea');
+    inputs.forEach(input => {
+        input.addEventListener('input', function() {
+            this.classList.remove('is-invalid');
+        });
+    });
+});
+</script>
+{% endblock %}

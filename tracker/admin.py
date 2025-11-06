@@ -4,7 +4,7 @@ Admin configuration for tracker app models.
 from django.contrib import admin
 from django.utils.translation import gettext_lazy as _
 from django.db.models import Count
-from .models import Application, Question, Response, ApplicationStatus, Tag, Note
+from .models import Application, Question, Response, ApplicationStatus, Tag, Note, Interview, Interviewer, Referral
 
 
 class QuestionInline(admin.TabularInline):
@@ -253,3 +253,138 @@ class NoteAdmin(admin.ModelAdmin):
     def get_queryset(self, request):
         """Optimize queryset."""
         return super().get_queryset(request).select_related('user', 'application')
+
+
+class InterviewerInline(admin.TabularInline):
+    """
+    Inline admin for interviewers within interview.
+    """
+    model = Interviewer
+    extra = 1
+    fields = ('name', 'title', 'email', 'phone', 'linkedin_url')
+
+
+@admin.register(Interview)
+class InterviewAdmin(admin.ModelAdmin):
+    """
+    Admin interface for Interview model.
+    """
+    list_display = (
+        'application', 'interview_type', 'scheduled_date',
+        'status', 'duration_minutes', 'user', 'interviewer_count', 'created_at'
+    )
+    list_filter = ('interview_type', 'status', 'scheduled_date', 'created_at')
+    search_fields = (
+        'application__title', 'application__company_or_institution',
+        'notes', 'location', 'user__email', 'user__first_name', 'user__last_name'
+    )
+    readonly_fields = ('created_at', 'updated_at', 'is_upcoming', 'is_past')
+    date_hierarchy = 'scheduled_date'
+    inlines = [InterviewerInline]
+
+    fieldsets = (
+        (_('Interview Details'), {
+            'fields': ('application', 'user', 'interview_type', 'scheduled_date', 'duration_minutes', 'status')
+        }),
+        (_('Location/Link'), {
+            'fields': ('location', 'meeting_link')
+        }),
+        (_('Notes'), {
+            'fields': ('notes',)
+        }),
+        (_('Metadata'), {
+            'fields': ('created_at', 'updated_at', 'is_upcoming', 'is_past'),
+            'classes': ('collapse',)
+        }),
+    )
+
+    def interviewer_count(self, obj):
+        """Get number of interviewers for this interview."""
+        return obj.interviewers.count()
+    interviewer_count.short_description = _('Interviewers')
+
+    def get_queryset(self, request):
+        """Optimize queryset."""
+        return super().get_queryset(request).select_related(
+            'application', 'application__user', 'user'
+        ).prefetch_related('interviewers')
+
+
+@admin.register(Interviewer)
+class InterviewerAdmin(admin.ModelAdmin):
+    """
+    Admin interface for Interviewer model.
+    """
+    list_display = ('name', 'title', 'interview_application', 'email', 'phone', 'created_at')
+    list_filter = ('created_at', 'title')
+    search_fields = ('name', 'title', 'email', 'phone', 'interview__application__title', 'notes')
+    readonly_fields = ('created_at',)
+    date_hierarchy = 'created_at'
+
+    fieldsets = (
+        (_('Interviewer Information'), {
+            'fields': ('interview', 'name', 'title')
+        }),
+        (_('Contact Details'), {
+            'fields': ('email', 'phone', 'linkedin_url')
+        }),
+        (_('Notes'), {
+            'fields': ('notes',)
+        }),
+        (_('Metadata'), {
+            'fields': ('created_at',),
+            'classes': ('collapse',)
+        }),
+    )
+
+    def interview_application(self, obj):
+        """Get the application title for this interview."""
+        return obj.interview.application.title
+    interview_application.short_description = _('Application')
+
+    def get_queryset(self, request):
+        """Optimize queryset."""
+        return super().get_queryset(request).select_related(
+            'interview', 'interview__application'
+        )
+
+
+@admin.register(Referral)
+class ReferralAdmin(admin.ModelAdmin):
+    """
+    Admin interface for Referral model.
+    """
+    list_display = (
+        'name', 'application', 'company', 'relationship',
+        'referred_date', 'email', 'user', 'created_at'
+    )
+    list_filter = ('referred_date', 'created_at', 'company')
+    search_fields = (
+        'name', 'company', 'relationship', 'email', 'phone',
+        'application__title', 'application__company_or_institution',
+        'user__email', 'user__first_name', 'user__last_name', 'notes'
+    )
+    readonly_fields = ('created_at',)
+    date_hierarchy = 'referred_date'
+
+    fieldsets = (
+        (_('Referral Information'), {
+            'fields': ('application', 'user', 'name', 'relationship', 'company', 'referred_date')
+        }),
+        (_('Contact Details'), {
+            'fields': ('email', 'phone')
+        }),
+        (_('Notes'), {
+            'fields': ('notes',)
+        }),
+        (_('Metadata'), {
+            'fields': ('created_at',),
+            'classes': ('collapse',)
+        }),
+    )
+
+    def get_queryset(self, request):
+        """Optimize queryset."""
+        return super().get_queryset(request).select_related(
+            'application', 'application__user', 'user'
+        )

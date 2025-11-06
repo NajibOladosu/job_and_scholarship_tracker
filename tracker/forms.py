@@ -3,7 +3,7 @@ Forms for tracker app (applications, questions, responses).
 """
 from django import forms
 from django.utils.translation import gettext_lazy as _
-from .models import Application, Question, Response, Note, Tag
+from .models import Application, Question, Response, Note, Tag, Interview, Interviewer, Referral
 
 
 class ApplicationForm(forms.ModelForm):
@@ -300,3 +300,187 @@ class EnhancedApplicationFilterForm(forms.Form):
         if user:
             user_tags = Tag.objects.filter(user=user).order_by('name')
             self.fields['tags'].choices = [(tag.id, tag.name) for tag in user_tags]
+
+
+class InterviewForm(forms.ModelForm):
+    """
+    Form for creating and editing interviews.
+    """
+    class Meta:
+        model = Interview
+        fields = [
+            'interview_type', 'scheduled_date', 'duration_minutes',
+            'location', 'meeting_link', 'notes', 'status'
+        ]
+        widgets = {
+            'interview_type': forms.Select(attrs={'class': 'form-select'}),
+            'scheduled_date': forms.DateTimeInput(attrs={
+                'class': 'form-control',
+                'type': 'datetime-local'
+            }),
+            'duration_minutes': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'placeholder': '60',
+                'min': '15',
+                'step': '15'
+            }),
+            'location': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 2,
+                'placeholder': 'Physical address or room number'
+            }),
+            'meeting_link': forms.URLInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'https://zoom.us/j/...'
+            }),
+            'notes': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 4,
+                'placeholder': 'Interview preparation notes, topics to cover, feedback...'
+            }),
+            'status': forms.Select(attrs={'class': 'form-select'}),
+        }
+        help_texts = {
+            'duration_minutes': _('Expected interview duration in minutes'),
+            'meeting_link': _('Video call link (Zoom, Teams, Google Meet, etc.)'),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['location'].required = False
+        self.fields['meeting_link'].required = False
+        self.fields['notes'].required = False
+        self.fields['duration_minutes'].initial = 60
+
+
+class QuickInterviewForm(forms.ModelForm):
+    """
+    Quick form for scheduling interviews with minimal fields.
+    """
+    class Meta:
+        model = Interview
+        fields = ['interview_type', 'scheduled_date', 'meeting_link']
+        widgets = {
+            'interview_type': forms.Select(attrs={
+                'class': 'form-select'
+            }),
+            'scheduled_date': forms.DateTimeInput(attrs={
+                'class': 'form-control',
+                'type': 'datetime-local'
+            }),
+            'meeting_link': forms.URLInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'https://zoom.us/j/...'
+            }),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['meeting_link'].required = False
+
+
+class InterviewerForm(forms.ModelForm):
+    """
+    Form for adding interviewers to an interview.
+    """
+    class Meta:
+        model = Interviewer
+        fields = ['name', 'title', 'email', 'phone', 'linkedin_url', 'notes']
+        widgets = {
+            'name': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Full name'
+            }),
+            'title': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Job title (e.g., Senior Engineer)'
+            }),
+            'email': forms.EmailInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'email@company.com'
+            }),
+            'phone': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': '+1-555-0123'
+            }),
+            'linkedin_url': forms.URLInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'https://linkedin.com/in/...'
+            }),
+            'notes': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 2,
+                'placeholder': 'Background, research notes...'
+            }),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['email'].required = False
+        self.fields['phone'].required = False
+        self.fields['linkedin_url'].required = False
+        self.fields['notes'].required = False
+
+
+# Inline formset for adding multiple interviewers
+InterviewerInlineFormSet = forms.inlineformset_factory(
+    Interview,
+    Interviewer,
+    form=InterviewerForm,
+    extra=1,
+    can_delete=True,
+    min_num=0,
+    validate_min=True,
+)
+
+
+class ReferralForm(forms.ModelForm):
+    """
+    Form for adding referrals to applications.
+    """
+    class Meta:
+        model = Referral
+        fields = [
+            'name', 'relationship', 'company', 'email',
+            'phone', 'referred_date', 'notes'
+        ]
+        widgets = {
+            'name': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Referrer full name'
+            }),
+            'relationship': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'e.g., Former colleague, Friend, Mentor'
+            }),
+            'company': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Company name'
+            }),
+            'email': forms.EmailInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'email@company.com'
+            }),
+            'phone': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': '+1-555-0123'
+            }),
+            'referred_date': forms.DateInput(attrs={
+                'class': 'form-control',
+                'type': 'date'
+            }),
+            'notes': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 3,
+                'placeholder': 'Additional details about the referral...'
+            }),
+        }
+        help_texts = {
+            'relationship': _('Your relationship to the referrer'),
+            'referred_date': _('Date when the referral was made'),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['phone'].required = False
+        self.fields['notes'].required = False

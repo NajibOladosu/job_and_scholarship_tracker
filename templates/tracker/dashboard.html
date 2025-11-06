@@ -3,6 +3,60 @@
 
 {% block title %}Dashboard - AppTracker{% endblock %}
 
+{% block extra_css %}
+<style>
+    .bulk-actions-bar {
+        position: fixed;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 1050;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        animation: slideUp 0.3s ease;
+    }
+    @keyframes slideUp {
+        from { transform: translate(-50%, 100px); opacity: 0; }
+        to { transform: translate(-50%, 0); opacity: 1; }
+    }
+    .application-card-checkbox {
+        position: absolute;
+        top: 12px;
+        left: 12px;
+        z-index: 10;
+    }
+    .card-hover-lift {
+        transition: all 0.3s ease;
+    }
+    .card-hover-lift:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.15) !important;
+    }
+    .filter-badge {
+        position: relative;
+        top: -2px;
+    }
+    .tag-badge {
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+    .tag-badge:hover {
+        transform: scale(1.05);
+        opacity: 0.9;
+    }
+    .keyboard-hint {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        z-index: 1040;
+        opacity: 0.7;
+        transition: opacity 0.2s;
+    }
+    .keyboard-hint:hover {
+        opacity: 1;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="container-fluid p-0">
     <!-- Welcome Header with Quick Actions -->
@@ -27,7 +81,7 @@
 
                     <!-- Quick Actions Dropdown -->
                     <div class="dropdown">
-                        <button class="btn btn-outline-primary btn-lg dropdown-toggle" type="button" id="quickActionsDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                        <button class="btn btn-outline-primary btn-lg dropdown-toggle" type="button" id="quickActionsDropdown" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Quick actions menu">
                             <i class="bi bi-lightning me-2"></i>
                             Quick Actions
                         </button>
@@ -39,9 +93,22 @@
                                 </a>
                             </li>
                             <li>
+                                <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#scheduleInterviewModal">
+                                    <i class="bi bi-calendar-check text-success me-2"></i>
+                                    Schedule Interview
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
                                 <a class="dropdown-item" href="{% url 'tracker:dashboard' %}?status=draft">
                                     <i class="bi bi-pencil text-secondary me-2"></i>
                                     View Drafts
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{% url 'tracker:dashboard' %}?status=interview">
+                                    <i class="bi bi-camera-video text-purple me-2"></i>
+                                    View Interviews
                                 </a>
                             </li>
                             <li>
@@ -50,11 +117,23 @@
                                     High Priority
                                 </a>
                             </li>
+                            <li>
+                                <a class="dropdown-item" href="{% url 'tracker:dashboard' %}?show_archived=true">
+                                    <i class="bi bi-archive text-muted me-2"></i>
+                                    View Archived
+                                </a>
+                            </li>
                             <li><hr class="dropdown-divider"></li>
                             <li>
                                 <a class="dropdown-item" href="{% url 'documents:document_list' %}">
                                     <i class="bi bi-folder2-open text-info me-2"></i>
                                     My Documents
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="#" id="exportDataBtn">
+                                    <i class="bi bi-download text-primary me-2"></i>
+                                    Export Data
                                 </a>
                             </li>
                         </ul>
@@ -67,7 +146,7 @@
     <!-- Statistics Cards -->
     <div class="row g-4 mb-5">
         <!-- Total Applications -->
-        <div class="col-sm-6 col-xl-3">
+        <div class="col-sm-6 col-xl-3 col-lg-4">
             <div class="stats-card card h-100">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-start">
@@ -90,7 +169,7 @@
         </div>
 
         <!-- Draft Applications -->
-        <div class="col-sm-6 col-xl-3">
+        <div class="col-sm-6 col-xl-3 col-lg-4">
             <div class="stats-card card h-100">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-start">
@@ -113,7 +192,7 @@
         </div>
 
         <!-- In Review -->
-        <div class="col-sm-6 col-xl-3">
+        <div class="col-sm-6 col-xl-3 col-lg-4">
             <div class="stats-card card h-100">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-start">
@@ -135,8 +214,31 @@
             </div>
         </div>
 
+        <!-- Interviews -->
+        <div class="col-sm-6 col-xl-3 col-lg-4">
+            <div class="stats-card card h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <p class="text-secondary text-uppercase small mb-2 fw-semibold" style="letter-spacing: 1px;">
+                                Interviews
+                            </p>
+                            <h2 class="fw-bold mb-0 display-6">{{ stats.interview|default:0 }}</h2>
+                            <p class="text-info small mb-0 mt-2">
+                                <i class="bi bi-camera-video me-1"></i>
+                                Scheduled
+                            </p>
+                        </div>
+                        <div class="stats-icon" style="background: rgba(59, 130, 246, 0.1);">
+                            <i class="bi bi-camera-video" style="color: #3b82f6; font-size: 28px;"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Offers -->
-        <div class="col-sm-6 col-xl-3">
+        <div class="col-sm-6 col-xl-3 col-lg-4">
             <div class="stats-card card h-100">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-start">
@@ -157,6 +259,29 @@
                 </div>
             </div>
         </div>
+
+        <!-- Archived -->
+        <div class="col-sm-6 col-xl-3 col-lg-4">
+            <div class="stats-card card h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <p class="text-secondary text-uppercase small mb-2 fw-semibold" style="letter-spacing: 1px;">
+                                Archived
+                            </p>
+                            <h2 class="fw-bold mb-0 display-6">{{ stats.archived|default:0 }}</h2>
+                            <p class="text-muted small mb-0 mt-2">
+                                <i class="bi bi-archive me-1"></i>
+                                Stored
+                            </p>
+                        </div>
+                        <div class="stats-icon" style="background: rgba(107, 114, 128, 0.1);">
+                            <i class="bi bi-archive" style="color: #6b7280; font-size: 28px;"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Filter Section -->
@@ -166,21 +291,30 @@
                 <h5 class="fw-bold mb-0">
                     <i class="bi bi-funnel me-2 text-primary"></i>
                     Filter & Sort Applications
+                    {% if filter_count %}
+                        <span class="badge bg-primary filter-badge ms-2">{{ filter_count }}</span>
+                    {% endif %}
                 </h5>
-                <a href="{% url 'tracker:dashboard' %}" class="btn btn-sm btn-outline-secondary">
-                    <i class="bi bi-x-circle me-1"></i> Clear Filters
-                </a>
+                <div class="d-flex gap-2">
+                    <button type="button" class="btn btn-sm btn-outline-secondary" id="toggleAdvancedFilters">
+                        <i class="bi bi-sliders me-1"></i> Advanced
+                    </button>
+                    <a href="{% url 'tracker:dashboard' %}" class="btn btn-sm btn-outline-secondary">
+                        <i class="bi bi-x-circle me-1"></i> Clear All
+                    </a>
+                </div>
             </div>
+
             <form method="get" action="{% url 'tracker:dashboard' %}" id="filterForm">
                 <div class="row g-3">
                     <!-- Search Bar -->
-                    <div class="col-md-5">
+                    <div class="col-md-6">
                         <label for="id_search" class="form-label fw-semibold small">
                             <i class="bi bi-search me-1"></i> Search
                         </label>
                         <div class="input-group">
                             {{ filter_form.search }}
-                            <button class="btn btn-outline-secondary" type="submit">
+                            <button class="btn btn-outline-secondary" type="submit" aria-label="Search applications">
                                 <i class="bi bi-search"></i>
                             </button>
                         </div>
@@ -209,18 +343,126 @@
                         </label>
                         {{ filter_form.priority }}
                     </div>
+                </div>
 
-                    <!-- Apply Button -->
-                    <div class="col-md-1 col-6 d-flex align-items-end">
-                        <button type="submit" class="btn btn-primary w-100">
-                            <i class="bi bi-check-lg"></i>
-                        </button>
+                <!-- Advanced Filters (Collapsible) -->
+                <div class="collapse mt-4" id="advancedFilters">
+                    <div class="border-top pt-4">
+                        <h6 class="fw-semibold mb-3 text-secondary">
+                            <i class="bi bi-sliders me-2"></i>Advanced Filters
+                        </h6>
+                        <div class="row g-3">
+                            <!-- Tags Filter -->
+                            {% if filter_form.tags %}
+                            <div class="col-md-6">
+                                <label for="id_tags" class="form-label fw-semibold small">
+                                    <i class="bi bi-tags me-1"></i> Tags
+                                </label>
+                                {{ filter_form.tags }}
+                                <small class="form-text text-muted">Hold Ctrl/Cmd to select multiple</small>
+                            </div>
+                            {% endif %}
+
+                            <!-- Show Archived Toggle -->
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold small">
+                                    <i class="bi bi-archive me-1"></i> Display Options
+                                </label>
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="show_archived" name="show_archived"
+                                           {% if request.GET.show_archived %}checked{% endif %}>
+                                    <label class="form-check-label" for="show_archived">
+                                        Show archived applications
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- Deadline Range -->
+                            <div class="col-md-6">
+                                <label for="id_deadline_from" class="form-label fw-semibold small">
+                                    <i class="bi bi-calendar-range me-1"></i> Deadline From
+                                </label>
+                                {% if filter_form.deadline_from %}
+                                    {{ filter_form.deadline_from }}
+                                {% else %}
+                                    <input type="date" class="form-control" id="id_deadline_from" name="deadline_from"
+                                           value="{{ request.GET.deadline_from }}">
+                                {% endif %}
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="id_deadline_to" class="form-label fw-semibold small">
+                                    <i class="bi bi-calendar-range me-1"></i> Deadline To
+                                </label>
+                                {% if filter_form.deadline_to %}
+                                    {{ filter_form.deadline_to }}
+                                {% else %}
+                                    <input type="date" class="form-control" id="id_deadline_to" name="deadline_to"
+                                           value="{{ request.GET.deadline_to }}">
+                                {% endif %}
+                            </div>
+
+                            <!-- Created Date Range -->
+                            <div class="col-md-6">
+                                <label for="id_created_from" class="form-label fw-semibold small">
+                                    <i class="bi bi-calendar-plus me-1"></i> Created From
+                                </label>
+                                {% if filter_form.created_from %}
+                                    {{ filter_form.created_from }}
+                                {% else %}
+                                    <input type="date" class="form-control" id="id_created_from" name="created_from"
+                                           value="{{ request.GET.created_from }}">
+                                {% endif %}
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="id_created_to" class="form-label fw-semibold small">
+                                    <i class="bi bi-calendar-plus me-1"></i> Created To
+                                </label>
+                                {% if filter_form.created_to %}
+                                    {{ filter_form.created_to }}
+                                {% else %}
+                                    <input type="date" class="form-control" id="id_created_to" name="created_to"
+                                           value="{{ request.GET.created_to }}">
+                                {% endif %}
+                            </div>
+
+                            <!-- Filter Presets -->
+                            <div class="col-12">
+                                <label class="form-label fw-semibold small">
+                                    <i class="bi bi-lightning-fill me-1"></i> Quick Filters
+                                </label>
+                                <div class="d-flex flex-wrap gap-2">
+                                    <button type="button" class="btn btn-sm btn-outline-primary filter-preset" data-preset="urgent">
+                                        <i class="bi bi-exclamation-triangle me-1"></i>Urgent (Due in 3 days)
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-warning filter-preset" data-preset="this_week">
+                                        <i class="bi bi-calendar-week me-1"></i>This Week
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-info filter-preset" data-preset="this_month">
+                                        <i class="bi bi-calendar-month me-1"></i>This Month
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-success filter-preset" data-preset="active">
+                                        <i class="bi bi-activity me-1"></i>Active Only
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-3 d-flex justify-content-end gap-2">
+                            <button type="button" class="btn btn-secondary btn-sm" id="resetAdvancedFilters">
+                                <i class="bi bi-arrow-clockwise me-1"></i>Reset Advanced
+                            </button>
+                            <button type="submit" class="btn btn-primary btn-sm">
+                                <i class="bi bi-check-lg me-1"></i>Apply Filters
+                            </button>
+                        </div>
                     </div>
                 </div>
 
                 <!-- Active Filters Display -->
                 <div class="mt-3">
-                    {% if request.GET.search or request.GET.application_type or request.GET.status or request.GET.priority %}
+                    {% if request.GET.search or request.GET.application_type or request.GET.status or request.GET.priority or request.GET.tags or request.GET.deadline_from or request.GET.deadline_to or request.GET.created_from or request.GET.created_to %}
                     <div class="d-flex flex-wrap gap-2 align-items-center">
                         <small class="text-muted fw-semibold">Active Filters:</small>
                         {% if request.GET.search %}
@@ -255,6 +497,30 @@
                                 </a>
                             </span>
                         {% endif %}
+                        {% if request.GET.tags %}
+                            <span class="badge bg-secondary">
+                                Tags: {{ request.GET.tags }}
+                                <a href="?{% for key, value in request.GET.items %}{% if key != 'tags' %}{{ key }}={{ value }}&{% endif %}{% endfor %}" class="text-white ms-1">
+                                    <i class="bi bi-x"></i>
+                                </a>
+                            </span>
+                        {% endif %}
+                        {% if request.GET.deadline_from %}
+                            <span class="badge bg-light text-dark border">
+                                Deadline From: {{ request.GET.deadline_from }}
+                                <a href="?{% for key, value in request.GET.items %}{% if key != 'deadline_from' %}{{ key }}={{ value }}&{% endif %}{% endfor %}" class="text-dark ms-1">
+                                    <i class="bi bi-x"></i>
+                                </a>
+                            </span>
+                        {% endif %}
+                        {% if request.GET.deadline_to %}
+                            <span class="badge bg-light text-dark border">
+                                Deadline To: {{ request.GET.deadline_to }}
+                                <a href="?{% for key, value in request.GET.items %}{% if key != 'deadline_to' %}{{ key }}={{ value }}&{% endif %}{% endfor %}" class="text-dark ms-1">
+                                    <i class="bi bi-x"></i>
+                                </a>
+                            </span>
+                        {% endif %}
                     </div>
                     {% endif %}
                 </div>
@@ -267,18 +533,51 @@
         <div class="row g-4">
             <!-- Main Content Column -->
             <div class="col-lg-9">
-                <div class="mb-4">
-                    <h5 class="fw-bold mb-3">
+                <div class="mb-4 d-flex justify-content-between align-items-center">
+                    <h5 class="fw-bold mb-0">
                         <i class="bi bi-grid-3x3-gap me-2 text-primary"></i>
                         Your Applications <span class="text-muted small">({{ stats.total }})</span>
                     </h5>
+                    <div class="d-flex gap-2 align-items-center">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="selectAllApplications" aria-label="Select all applications">
+                            <label class="form-check-label small text-muted" for="selectAllApplications">
+                                Select All
+                            </label>
+                        </div>
+                        <div class="dropdown">
+                            <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button"
+                                    id="bulkActionsMenu" data-bs-toggle="dropdown" aria-expanded="false" disabled>
+                                <i class="bi bi-three-dots"></i> Bulk Actions
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="bulkActionsMenu">
+                                <li><a class="dropdown-item" href="#" id="bulkArchive">
+                                    <i class="bi bi-archive me-2"></i>Archive Selected
+                                </a></li>
+                                <li><a class="dropdown-item" href="#" id="bulkExport">
+                                    <i class="bi bi-download me-2"></i>Export Selected
+                                </a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item text-danger" href="#" id="bulkDelete">
+                                    <i class="bi bi-trash me-2"></i>Delete Selected
+                                </a></li>
+                            </ul>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="row g-4 mb-5">
                     {% for application in applications %}
                     <div class="col-lg-6">
-                        <div class="card card-hover-lift h-100 border-0 position-relative">
-                            <div class="card-body p-4">
+                        <div class="card card-hover-lift h-100 border-0 position-relative" data-application-id="{{ application.pk }}">
+                            <!-- Selection Checkbox -->
+                            <div class="application-card-checkbox">
+                                <input class="form-check-input application-checkbox" type="checkbox"
+                                       value="{{ application.pk }}" id="app-{{ application.pk }}"
+                                       aria-label="Select {{ application.title }}">
+                            </div>
+
+                            <div class="card-body p-4" style="padding-left: 3rem !important;">
                                 <!-- Application Header -->
                                 <div class="d-flex justify-content-between align-items-start mb-3">
                                     <div class="flex-grow-1 me-3">
@@ -329,6 +628,31 @@
                                         </div>
                                     </div>
                                 </div>
+
+                                <!-- Tags Display -->
+                                {% if application.tags.all %}
+                                <div class="mb-3">
+                                    <div class="d-flex flex-wrap gap-1">
+                                        {% for tag in application.tags.all %}
+                                        <span class="badge bg-light text-dark border tag-badge"
+                                              style="font-weight: 500; font-size: 0.7rem;"
+                                              data-tag="{{ tag.name }}">
+                                            <i class="bi bi-tag-fill me-1" style="font-size: 0.6rem;"></i>{{ tag.name }}
+                                        </span>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                {% endif %}
+
+                                <!-- Notes Preview -->
+                                {% if application.notes %}
+                                <div class="mb-3">
+                                    <div class="small text-muted" style="max-height: 2.4em; overflow: hidden;">
+                                        <i class="bi bi-sticky me-1"></i>
+                                        {{ application.notes|truncatewords:15 }}
+                                    </div>
+                                </div>
+                                {% endif %}
 
                                 <!-- Deadline -->
                                 {% if application.deadline %}
@@ -406,6 +730,36 @@
 
             <!-- Quick Stats Sidebar -->
             <div class="col-lg-3">
+                <!-- Upcoming Interviews -->
+                {% if interview_apps %}
+                <div class="card border-0 shadow-sm mb-4" style="border-left: 4px solid #3b82f6 !important;">
+                    <div class="card-header bg-white border-0 pt-4 pb-3">
+                        <h6 class="fw-bold mb-0">
+                            <i class="bi bi-camera-video text-primary me-2"></i>
+                            Upcoming Interviews
+                        </h6>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="list-group list-group-flush">
+                            {% for app in interview_apps|slice:":3" %}
+                            <a href="{% url 'tracker:application_detail' app.pk %}"
+                               class="list-group-item list-group-item-action border-0 py-3">
+                                <div class="d-flex w-100 justify-content-between align-items-start">
+                                    <div class="flex-grow-1 me-2">
+                                        <h6 class="mb-1 small fw-semibold text-truncate">{{ app.title|truncatewords:3 }}</h6>
+                                        <p class="mb-0 text-muted" style="font-size: 0.75rem;">{{ app.company_or_institution|truncatewords:3 }}</p>
+                                    </div>
+                                    <div class="text-end">
+                                        <span class="badge bg-primary" style="font-size: 0.65rem;">Interview</span>
+                                    </div>
+                                </div>
+                            </a>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
                 <!-- Upcoming Deadlines -->
                 <div class="card border-0 shadow-sm mb-4">
                     <div class="card-header bg-white border-0 pt-4 pb-3">
@@ -453,6 +807,29 @@
                     </div>
                 </div>
 
+                <!-- Tags Cloud -->
+                {% if all_tags %}
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header bg-white border-0 pt-4 pb-3">
+                        <h6 class="fw-bold mb-0">
+                            <i class="bi bi-tags text-info me-2"></i>
+                            Popular Tags
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-flex flex-wrap gap-2">
+                            {% for tag in all_tags|slice:":10" %}
+                            <a href="{% url 'tracker:dashboard' %}?tags={{ tag.name }}"
+                               class="badge bg-light text-dark border tag-badge text-decoration-none"
+                               style="font-weight: 500;">
+                                <i class="bi bi-tag-fill me-1" style="font-size: 0.6rem;"></i>{{ tag.name }}
+                            </a>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
                 <!-- Quick Tips -->
                 <div class="card border-0 shadow-sm" style="background: linear-gradient(135deg, rgba(99, 102, 241, 0.05) 0%, rgba(139, 92, 246, 0.05) 100%);">
                     <div class="card-body p-4">
@@ -471,11 +848,15 @@
                             </li>
                             <li class="mb-2">
                                 <i class="bi bi-check-circle text-success me-2"></i>
-                                Use priority tags to focus on important applications
+                                Use tags to organize applications by category
+                            </li>
+                            <li class="mb-2">
+                                <i class="bi bi-check-circle text-success me-2"></i>
+                                Archive completed applications to keep dashboard clean
                             </li>
                             <li class="mb-0">
                                 <i class="bi bi-check-circle text-success me-2"></i>
-                                Paste URLs for automatic question extraction
+                                Use bulk actions to manage multiple applications
                             </li>
                         </ul>
                     </div>
@@ -551,10 +932,437 @@
     {% endif %}
 </div>
 
+<!-- Bulk Actions Bar -->
+<div id="bulkActionsBar" class="bulk-actions-bar card border-0 shadow-lg" style="display: none;">
+    <div class="card-body py-3 px-4">
+        <div class="d-flex align-items-center justify-content-between">
+            <div class="d-flex align-items-center gap-3">
+                <span class="fw-bold text-primary">
+                    <span id="selectedCount">0</span> selected
+                </span>
+                <div class="vr"></div>
+                <div class="btn-group" role="group" aria-label="Bulk actions">
+                    <button type="button" class="btn btn-sm btn-outline-primary" id="bulkArchiveBtn">
+                        <i class="bi bi-archive me-1"></i>Archive
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" id="bulkExportBtn">
+                        <i class="bi bi-download me-1"></i>Export
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-danger" id="bulkDeleteBtn">
+                        <i class="bi bi-trash me-1"></i>Delete
+                    </button>
+                </div>
+            </div>
+            <button type="button" class="btn btn-sm btn-light" id="clearSelectionBtn">
+                <i class="bi bi-x-lg"></i>
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Schedule Interview Modal -->
+<div class="modal fade" id="scheduleInterviewModal" tabindex="-1" aria-labelledby="scheduleInterviewModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h5 class="modal-title fw-bold" id="scheduleInterviewModalLabel">
+                    <i class="bi bi-calendar-check text-success me-2"></i>
+                    Schedule Interview
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="scheduleInterviewForm">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="interviewApplication" class="form-label fw-semibold">Select Application</label>
+                        <select class="form-select" id="interviewApplication" required>
+                            <option value="">Choose an application...</option>
+                            {% for app in applications %}
+                            <option value="{{ app.pk }}">{{ app.title }} - {{ app.company_or_institution }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="interviewDate" class="form-label fw-semibold">Interview Date & Time</label>
+                        <input type="datetime-local" class="form-control" id="interviewDate" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="interviewNotes" class="form-label fw-semibold">Notes (Optional)</label>
+                        <textarea class="form-control" id="interviewNotes" rows="3" placeholder="Add interview details, location, etc."></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-success" id="confirmScheduleInterview">
+                    <i class="bi bi-check-lg me-1"></i>Schedule Interview
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Keyboard Shortcuts Hint -->
+<div class="keyboard-hint d-none d-md-block">
+    <button class="btn btn-sm btn-light shadow-sm" data-bs-toggle="modal" data-bs-target="#keyboardShortcutsModal">
+        <i class="bi bi-keyboard me-1"></i>
+        Press <kbd>?</kbd> for shortcuts
+    </button>
+</div>
+
+<!-- Keyboard Shortcuts Modal -->
+<div class="modal fade" id="keyboardShortcutsModal" tabindex="-1" aria-labelledby="keyboardShortcutsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h5 class="modal-title fw-bold" id="keyboardShortcutsModalLabel">
+                    <i class="bi bi-keyboard me-2"></i>
+                    Keyboard Shortcuts
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <table class="table table-sm">
+                    <tbody>
+                        <tr>
+                            <td><kbd>N</kbd></td>
+                            <td>New Application</td>
+                        </tr>
+                        <tr>
+                            <td><kbd>F</kbd></td>
+                            <td>Focus Search</td>
+                        </tr>
+                        <tr>
+                            <td><kbd>A</kbd></td>
+                            <td>Toggle Advanced Filters</td>
+                        </tr>
+                        <tr>
+                            <td><kbd>Ctrl</kbd> + <kbd>A</kbd></td>
+                            <td>Select All Applications</td>
+                        </tr>
+                        <tr>
+                            <td><kbd>Esc</kbd></td>
+                            <td>Clear Selection</td>
+                        </tr>
+                        <tr>
+                            <td><kbd>?</kbd></td>
+                            <td>Show This Help</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Mobile FAB -->
 <a href="{% url 'tracker:application_create' %}"
    class="btn btn-primary rounded-circle shadow-lg position-fixed d-md-none"
-   style="width: 60px; height: 60px; bottom: 24px; right: 24px; z-index: 100;">
+   style="width: 60px; height: 60px; bottom: 24px; right: 24px; z-index: 100;"
+   aria-label="Create new application">
     <i class="bi bi-plus-lg" style="font-size: 24px;"></i>
 </a>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // CSRF Token for AJAX requests
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+    // Bulk Selection Logic
+    const selectAllCheckbox = document.getElementById('selectAllApplications');
+    const applicationCheckboxes = document.querySelectorAll('.application-checkbox');
+    const bulkActionsBar = document.getElementById('bulkActionsBar');
+    const selectedCountSpan = document.getElementById('selectedCount');
+    const bulkActionsMenu = document.getElementById('bulkActionsMenu');
+
+    function updateBulkActionsUI() {
+        const checkedBoxes = document.querySelectorAll('.application-checkbox:checked');
+        const count = checkedBoxes.length;
+
+        selectedCountSpan.textContent = count;
+
+        if (count > 0) {
+            bulkActionsBar.style.display = 'block';
+            if (bulkActionsMenu) bulkActionsMenu.disabled = false;
+        } else {
+            bulkActionsBar.style.display = 'none';
+            if (bulkActionsMenu) bulkActionsMenu.disabled = true;
+        }
+
+        // Update select all checkbox state
+        if (selectAllCheckbox) {
+            selectAllCheckbox.checked = count === applicationCheckboxes.length && count > 0;
+            selectAllCheckbox.indeterminate = count > 0 && count < applicationCheckboxes.length;
+        }
+    }
+
+    // Select All functionality
+    if (selectAllCheckbox) {
+        selectAllCheckbox.addEventListener('change', function() {
+            applicationCheckboxes.forEach(checkbox => {
+                checkbox.checked = this.checked;
+            });
+            updateBulkActionsUI();
+        });
+    }
+
+    // Individual checkbox change
+    applicationCheckboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', updateBulkActionsUI);
+    });
+
+    // Clear selection
+    const clearSelectionBtn = document.getElementById('clearSelectionBtn');
+    if (clearSelectionBtn) {
+        clearSelectionBtn.addEventListener('click', function() {
+            applicationCheckboxes.forEach(checkbox => {
+                checkbox.checked = false;
+            });
+            updateBulkActionsUI();
+        });
+    }
+
+    // Bulk Archive
+    function handleBulkArchive() {
+        const checkedBoxes = document.querySelectorAll('.application-checkbox:checked');
+        const applicationIds = Array.from(checkedBoxes).map(cb => cb.value);
+
+        if (confirm(`Archive ${applicationIds.length} application(s)?`)) {
+            fetch('{% url "tracker:bulk_archive" %}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken
+                },
+                body: JSON.stringify({ application_ids: applicationIds })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert('Error archiving applications: ' + (data.error || 'Unknown error'));
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while archiving applications.');
+            });
+        }
+    }
+
+    document.getElementById('bulkArchiveBtn')?.addEventListener('click', handleBulkArchive);
+    document.getElementById('bulkArchive')?.addEventListener('click', function(e) {
+        e.preventDefault();
+        handleBulkArchive();
+    });
+
+    // Bulk Export
+    function handleBulkExport() {
+        const checkedBoxes = document.querySelectorAll('.application-checkbox:checked');
+        const applicationIds = Array.from(checkedBoxes).map(cb => cb.value);
+
+        window.location.href = `{% url "tracker:export_applications" %}?ids=${applicationIds.join(',')}`;
+    }
+
+    document.getElementById('bulkExportBtn')?.addEventListener('click', handleBulkExport);
+    document.getElementById('bulkExport')?.addEventListener('click', function(e) {
+        e.preventDefault();
+        handleBulkExport();
+    });
+    document.getElementById('exportDataBtn')?.addEventListener('click', function(e) {
+        e.preventDefault();
+        window.location.href = '{% url "tracker:export_applications" %}';
+    });
+
+    // Bulk Delete
+    function handleBulkDelete() {
+        const checkedBoxes = document.querySelectorAll('.application-checkbox:checked');
+        const applicationIds = Array.from(checkedBoxes).map(cb => cb.value);
+
+        if (confirm(`Permanently delete ${applicationIds.length} application(s)? This action cannot be undone.`)) {
+            fetch('{% url "tracker:bulk_delete" %}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken
+                },
+                body: JSON.stringify({ application_ids: applicationIds })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert('Error deleting applications: ' + (data.error || 'Unknown error'));
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while deleting applications.');
+            });
+        }
+    }
+
+    document.getElementById('bulkDeleteBtn')?.addEventListener('click', handleBulkDelete);
+    document.getElementById('bulkDelete')?.addEventListener('click', function(e) {
+        e.preventDefault();
+        handleBulkDelete();
+    });
+
+    // Advanced Filters Toggle
+    const toggleAdvancedFiltersBtn = document.getElementById('toggleAdvancedFilters');
+    const advancedFiltersCollapse = document.getElementById('advancedFilters');
+
+    if (toggleAdvancedFiltersBtn && advancedFiltersCollapse) {
+        const bsCollapse = new bootstrap.Collapse(advancedFiltersCollapse, { toggle: false });
+
+        toggleAdvancedFiltersBtn.addEventListener('click', function() {
+            bsCollapse.toggle();
+        });
+    }
+
+    // Reset Advanced Filters
+    const resetAdvancedFiltersBtn = document.getElementById('resetAdvancedFilters');
+    if (resetAdvancedFiltersBtn) {
+        resetAdvancedFiltersBtn.addEventListener('click', function() {
+            document.getElementById('id_tags')?.selectedIndex = -1;
+            document.getElementById('show_archived').checked = false;
+            document.getElementById('id_deadline_from').value = '';
+            document.getElementById('id_deadline_to').value = '';
+            document.getElementById('id_created_from').value = '';
+            document.getElementById('id_created_to').value = '';
+        });
+    }
+
+    // Filter Presets
+    const filterPresets = document.querySelectorAll('.filter-preset');
+    filterPresets.forEach(button => {
+        button.addEventListener('click', function() {
+            const preset = this.dataset.preset;
+            const today = new Date();
+
+            switch(preset) {
+                case 'urgent':
+                    const threeDays = new Date(today);
+                    threeDays.setDate(today.getDate() + 3);
+                    document.getElementById('id_deadline_from').value = today.toISOString().split('T')[0];
+                    document.getElementById('id_deadline_to').value = threeDays.toISOString().split('T')[0];
+                    break;
+                case 'this_week':
+                    const weekEnd = new Date(today);
+                    weekEnd.setDate(today.getDate() + 7);
+                    document.getElementById('id_deadline_from').value = today.toISOString().split('T')[0];
+                    document.getElementById('id_deadline_to').value = weekEnd.toISOString().split('T')[0];
+                    break;
+                case 'this_month':
+                    const monthEnd = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+                    document.getElementById('id_deadline_from').value = today.toISOString().split('T')[0];
+                    document.getElementById('id_deadline_to').value = monthEnd.toISOString().split('T')[0];
+                    break;
+                case 'active':
+                    const statusSelect = document.getElementById('id_status');
+                    if (statusSelect) {
+                        statusSelect.value = 'submitted';
+                    }
+                    break;
+            }
+
+            document.getElementById('filterForm').submit();
+        });
+    });
+
+    // Schedule Interview
+    const confirmScheduleInterview = document.getElementById('confirmScheduleInterview');
+    if (confirmScheduleInterview) {
+        confirmScheduleInterview.addEventListener('click', function() {
+            const applicationId = document.getElementById('interviewApplication').value;
+            const interviewDate = document.getElementById('interviewDate').value;
+            const interviewNotes = document.getElementById('interviewNotes').value;
+
+            if (!applicationId || !interviewDate) {
+                alert('Please select an application and interview date.');
+                return;
+            }
+
+            fetch('{% url "tracker:schedule_interview" %}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken
+                },
+                body: JSON.stringify({
+                    application_id: applicationId,
+                    interview_date: interviewDate,
+                    notes: interviewNotes
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    bootstrap.Modal.getInstance(document.getElementById('scheduleInterviewModal')).hide();
+                    location.reload();
+                } else {
+                    alert('Error scheduling interview: ' + (data.error || 'Unknown error'));
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while scheduling the interview.');
+            });
+        });
+    }
+
+    // Keyboard Shortcuts
+    document.addEventListener('keydown', function(e) {
+        // Don't trigger if user is typing in an input field
+        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') {
+            return;
+        }
+
+        switch(e.key.toLowerCase()) {
+            case 'n':
+                e.preventDefault();
+                window.location.href = '{% url "tracker:application_create" %}';
+                break;
+            case 'f':
+                e.preventDefault();
+                document.getElementById('id_search')?.focus();
+                break;
+            case 'a':
+                if (!e.ctrlKey && !e.metaKey) {
+                    e.preventDefault();
+                    toggleAdvancedFiltersBtn?.click();
+                }
+                break;
+            case '?':
+                e.preventDefault();
+                const shortcutsModal = new bootstrap.Modal(document.getElementById('keyboardShortcutsModal'));
+                shortcutsModal.show();
+                break;
+            case 'escape':
+                clearSelectionBtn?.click();
+                break;
+        }
+
+        // Ctrl/Cmd + A for select all
+        if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'a' && applicationCheckboxes.length > 0) {
+            e.preventDefault();
+            selectAllCheckbox?.click();
+        }
+    });
+
+    // Tag badge click to filter
+    document.querySelectorAll('.tag-badge[data-tag]').forEach(badge => {
+        badge.addEventListener('click', function(e) {
+            if (e.target.closest('a')) return; // Don't handle if inside a link
+            const tagName = this.dataset.tag;
+            window.location.href = `{% url "tracker:dashboard" %}?tags=${encodeURIComponent(tagName)}`;
+        });
+    });
+});
+</script>
 {% endblock %}

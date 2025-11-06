@@ -20,6 +20,40 @@
                 <i class="bi bi-search"></i>
             </button>
 
+            <!-- Theme Switcher Dropdown -->
+            <div class="dropdown">
+                <button class="topbar-action-btn dropdown-toggle" id="themeDropdown" data-bs-toggle="dropdown" aria-expanded="false" title="Theme">
+                    <i class="bi bi-palette"></i>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 mt-2" aria-labelledby="themeDropdown" style="min-width: 200px; border-radius: var(--radius-xl);">
+                    <li class="dropdown-header px-3 py-2">
+                        <span class="fw-bold">Select Theme</span>
+                    </li>
+                    <li><hr class="dropdown-divider my-0"></li>
+                    <li>
+                        <a class="dropdown-item px-3 py-2 theme-option d-flex align-items-center" href="#" data-theme="light">
+                            <i class="bi bi-sun me-2 text-warning"></i>
+                            <span class="flex-grow-1">Default Light</span>
+                            <i class="bi bi-check2 text-primary theme-check d-none"></i>
+                        </a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item px-3 py-2 theme-option d-flex align-items-center" href="#" data-theme="dark">
+                            <i class="bi bi-moon-stars me-2 text-info"></i>
+                            <span class="flex-grow-1">Dark Theme</span>
+                            <i class="bi bi-check2 text-primary theme-check d-none"></i>
+                        </a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item px-3 py-2 theme-option d-flex align-items-center" href="#" data-theme="book">
+                            <i class="bi bi-book me-2 text-success"></i>
+                            <span class="flex-grow-1">Book Theme</span>
+                            <i class="bi bi-check2 text-primary theme-check d-none"></i>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
             <!-- Notifications Dropdown -->
             <div class="dropdown">
                 <button class="topbar-action-btn dropdown-toggle" id="notificationsDropdown" data-bs-toggle="dropdown" aria-expanded="false" title="Notifications">
@@ -111,3 +145,64 @@
         </div>
     </div>
 </div>
+
+<!-- Theme Switcher Script -->
+<script>
+    (function() {
+        'use strict';
+
+        function initThemeSwitcher() {
+            // Wait for ThemeManager to be available
+            if (typeof window.ThemeManager === 'undefined') {
+                setTimeout(initThemeSwitcher, 100);
+                return;
+            }
+
+            const themeOptions = document.querySelectorAll('.theme-option');
+
+            // Update checkmarks based on current theme
+            function updateThemeCheckmarks() {
+                const currentTheme = localStorage.getItem('appTheme') || 'light';
+                themeOptions.forEach(option => {
+                    const themeName = option.dataset.theme;
+                    const checkmark = option.querySelector('.theme-check');
+                    if (themeName === currentTheme) {
+                        checkmark.classList.remove('d-none');
+                    } else {
+                        checkmark.classList.add('d-none');
+                    }
+                });
+            }
+
+            // Handle theme selection
+            themeOptions.forEach(option => {
+                option.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const themeName = this.dataset.theme;
+                    window.ThemeManager.applyTheme(themeName);
+                    updateThemeCheckmarks();
+
+                    // Show toast notification
+                    if (window.AppTracker && window.AppTracker.toast) {
+                        const themeNames = {
+                            'light': 'Default Light',
+                            'dark': 'Dark Theme',
+                            'book': 'Book Theme'
+                        };
+                        window.AppTracker.toast.success(`Theme changed to ${themeNames[themeName]}`);
+                    }
+                });
+            });
+
+            // Initialize checkmarks
+            updateThemeCheckmarks();
+        }
+
+        // Initialize when DOM is ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initThemeSwitcher);
+        } else {
+            initThemeSwitcher();
+        }
+    })();
+</script>

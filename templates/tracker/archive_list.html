@@ -1,0 +1,407 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Archived Applications - AppTracker{% endblock %}
+
+{% block extra_css %}
+<style>
+    .archive-card {
+        transition: all 0.2s ease;
+        border: 1px solid #e5e7eb;
+    }
+
+    .archive-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .archive-badge {
+        background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
+    }
+
+    .restore-animation {
+        animation: restore 0.5s ease;
+    }
+
+    @keyframes restore {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+    }
+
+    .empty-archive {
+        padding: 4rem 2rem;
+        text-align: center;
+    }
+
+    .empty-archive-icon {
+        width: 120px;
+        height: 120px;
+        background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(139, 92, 246, 0.1) 100%);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 2rem;
+    }
+
+    .stats-banner {
+        background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        border-left: 4px solid #6b7280;
+    }
+
+    .filter-bar {
+        background: white;
+        border-radius: 12px;
+        padding: 1rem 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        border: 1px solid #e5e7eb;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 fade-in">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item">
+                <a href="{% url 'tracker:dashboard' %}" class="text-decoration-none">
+                    <i class="bi bi-house-door me-1"></i>Dashboard
+                </a>
+            </li>
+            <li class="breadcrumb-item active" aria-current="page">Archive</li>
+        </ol>
+    </nav>
+
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h2 fw-bold mb-2">
+                <i class="bi bi-archive-fill me-2 text-secondary"></i>
+                Archived Applications
+            </h1>
+            <p class="text-muted mb-0">
+                View and manage your archived job and scholarship applications
+            </p>
+        </div>
+        <div>
+            <a href="{% url 'tracker:dashboard' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-1"></i>
+                Back to Dashboard
+            </a>
+        </div>
+    </div>
+
+    <!-- Stats Banner -->
+    <div class="stats-banner">
+        <div class="row text-center">
+            <div class="col-md-3">
+                <div class="fw-bold h3 mb-1">{{ total_archived|default:0 }}</div>
+                <div class="text-muted small">Total Archived</div>
+            </div>
+            <div class="col-md-3">
+                <div class="fw-bold h3 mb-1">{{ archived_jobs|default:0 }}</div>
+                <div class="text-muted small">Jobs</div>
+            </div>
+            <div class="col-md-3">
+                <div class="fw-bold h3 mb-1">{{ archived_scholarships|default:0 }}</div>
+                <div class="text-muted small">Scholarships</div>
+            </div>
+            <div class="col-md-3">
+                <div class="fw-bold h3 mb-1">{{ archived_this_month|default:0 }}</div>
+                <div class="text-muted small">This Month</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filter Bar -->
+    <div class="filter-bar">
+        <form method="get" class="row g-3 align-items-end">
+            <div class="col-md-5">
+                <label for="search" class="form-label small fw-semibold">
+                    <i class="bi bi-search me-1"></i>Search
+                </label>
+                <input type="text"
+                       name="search"
+                       id="search"
+                       class="form-control"
+                       placeholder="Search archived applications..."
+                       value="{{ request.GET.search }}">
+            </div>
+
+            <div class="col-md-3">
+                <label for="type" class="form-label small fw-semibold">
+                    <i class="bi bi-tag me-1"></i>Type
+                </label>
+                <select name="type" id="type" class="form-select">
+                    <option value="">All Types</option>
+                    <option value="job" {% if request.GET.type == 'job' %}selected{% endif %}>Job</option>
+                    <option value="scholarship" {% if request.GET.type == 'scholarship' %}selected{% endif %}>Scholarship</option>
+                </select>
+            </div>
+
+            <div class="col-md-3">
+                <label for="sort" class="form-label small fw-semibold">
+                    <i class="bi bi-sort-down me-1"></i>Sort By
+                </label>
+                <select name="sort" id="sort" class="form-select">
+                    <option value="-archived_at" {% if request.GET.sort == '-archived_at' or not request.GET.sort %}selected{% endif %}>Recently Archived</option>
+                    <option value="archived_at" {% if request.GET.sort == 'archived_at' %}selected{% endif %}>Oldest First</option>
+                    <option value="title" {% if request.GET.sort == 'title' %}selected{% endif %}>Title (A-Z)</option>
+                    <option value="-title" {% if request.GET.sort == '-title' %}selected{% endif %}>Title (Z-A)</option>
+                </select>
+            </div>
+
+            <div class="col-md-1">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="bi bi-funnel"></i>
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Applications List -->
+    {% if applications %}
+        <div class="row g-4 mb-5">
+            {% for application in applications %}
+            <div class="col-lg-6">
+                <div class="card archive-card h-100">
+                    <div class="card-body p-4">
+                        <!-- Header -->
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <div class="flex-grow-1 me-3">
+                                <h5 class="fw-bold mb-2">
+                                    {{ application.title|truncatewords:8 }}
+                                </h5>
+                                <p class="text-secondary small mb-0">
+                                    <i class="bi bi-building me-1"></i>
+                                    {{ application.company_or_institution|truncatewords:5 }}
+                                </p>
+                            </div>
+                            <span class="archive-badge badge">
+                                <i class="bi bi-archive-fill me-1"></i>
+                                Archived
+                            </span>
+                        </div>
+
+                        <!-- Meta Information -->
+                        <div class="row g-2 mb-3">
+                            <div class="col-6">
+                                <div class="small">
+                                    <i class="bi bi-tag text-primary me-1"></i>
+                                    <span class="text-secondary">{{ application.get_application_type_display }}</span>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="small">
+                                    <i class="bi bi-flag text-primary me-1"></i>
+                                    <span class="text-secondary">{{ application.get_priority_display }} Priority</span>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="small">
+                                    <i class="bi bi-circle-fill text-primary me-1" style="font-size: 0.5rem;"></i>
+                                    <span class="text-secondary">{{ application.get_status_display }}</span>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="small">
+                                    <i class="bi bi-question-circle text-primary me-1"></i>
+                                    <span class="text-secondary">{{ application.questions.count }} Question{{ application.questions.count|pluralize }}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Archive Date -->
+                        <div class="pt-3 border-top">
+                            <small class="text-muted d-block mb-3">
+                                <i class="bi bi-clock-history me-1"></i>
+                                Archived {{ application.archived_at|timesince }} ago
+                                {% if application.archived_at %}
+                                    ({{ application.archived_at|date:"M d, Y" }})
+                                {% endif %}
+                            </small>
+
+                            <!-- Actions -->
+                            <div class="d-flex gap-2">
+                                <a href="{% url 'tracker:application_detail' application.pk %}"
+                                   class="btn btn-sm btn-outline-primary flex-grow-1">
+                                    <i class="bi bi-eye me-1"></i>
+                                    View
+                                </a>
+                                <form method="post"
+                                      action="{% url 'tracker:restore_application' application.pk %}"
+                                      class="flex-grow-1"
+                                      onsubmit="return confirm('Restore this application to your active list?');">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-sm btn-success w-100">
+                                        <i class="bi bi-arrow-counterclockwise me-1"></i>
+                                        Restore
+                                    </button>
+                                </form>
+                                <button type="button"
+                                        class="btn btn-sm btn-outline-danger"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#deleteModal{{ application.pk }}">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Permanent Delete Modal -->
+                <div class="modal fade" id="deleteModal{{ application.pk }}" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content">
+                            <div class="modal-header border-0 bg-danger bg-opacity-10">
+                                <h5 class="modal-title fw-bold text-danger">
+                                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                                    Permanent Delete
+                                </h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                <p class="mb-2">Are you sure you want to <strong>permanently delete</strong> this archived application?</p>
+                                <p class="fw-bold text-danger mb-2">{{ application.title }}</p>
+                                <p class="text-muted small mb-0">
+                                    <i class="bi bi-exclamation-circle me-1"></i>
+                                    This action cannot be undone. All associated data will be permanently removed.
+                                </p>
+                            </div>
+                            <div class="modal-footer border-0">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                <form method="post" action="{% url 'tracker:application_delete' application.pk %}" class="d-inline">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-danger">
+                                        <i class="bi bi-trash-fill me-1"></i>
+                                        Delete Permanently
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Pagination -->
+        {% if is_paginated %}
+        <nav aria-label="Archive pagination" class="mb-5">
+            <ul class="pagination justify-content-center">
+                {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page=1{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.type %}&type={{ request.GET.type }}{% endif %}{% if request.GET.sort %}&sort={{ request.GET.sort }}{% endif %}">
+                            <i class="bi bi-chevron-double-left"></i>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.type %}&type={{ request.GET.type }}{% endif %}{% if request.GET.sort %}&sort={{ request.GET.sort }}{% endif %}">
+                            <i class="bi bi-chevron-left"></i>
+                        </a>
+                    </li>
+                {% endif %}
+
+                <li class="page-item active">
+                    <span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+                </li>
+
+                {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.type %}&type={{ request.GET.type }}{% endif %}{% if request.GET.sort %}&sort={{ request.GET.sort }}{% endif %}">
+                            <i class="bi bi-chevron-right"></i>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.type %}&type={{ request.GET.type }}{% endif %}{% if request.GET.sort %}&sort={{ request.GET.sort }}{% endif %}">
+                            <i class="bi bi-chevron-double-right"></i>
+                        </a>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+
+    {% else %}
+        <!-- Empty State -->
+        <div class="card border-0 shadow-sm">
+            <div class="card-body empty-archive">
+                <div class="empty-archive-icon">
+                    <i class="bi bi-archive" style="font-size: 3.5rem; color: #6366f1; opacity: 0.5;"></i>
+                </div>
+
+                {% if request.GET.search or request.GET.type %}
+                    <!-- No Search Results -->
+                    <h3 class="fw-bold mb-3">No Archived Applications Found</h3>
+                    <p class="text-muted mb-4 lead">
+                        We couldn't find any archived applications matching your filters.
+                    </p>
+                    <a href="{% url 'tracker:archive' %}" class="btn btn-primary">
+                        <i class="bi bi-x-circle me-2"></i>
+                        Clear Filters
+                    </a>
+                {% else %}
+                    <!-- Truly Empty Archive -->
+                    <h3 class="fw-bold mb-3">Archive is Empty</h3>
+                    <p class="text-muted mb-4 lead">
+                        You don't have any archived applications yet. When you archive applications, they'll appear here.
+                    </p>
+                    <a href="{% url 'tracker:dashboard' %}" class="btn btn-primary">
+                        <i class="bi bi-arrow-left me-2"></i>
+                        Go to Dashboard
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    {% endif %}
+
+    <!-- Info Box -->
+    <div class="card border-0 bg-light mt-4">
+        <div class="card-body p-4">
+            <div class="row align-items-center">
+                <div class="col-md-1 text-center">
+                    <i class="bi bi-info-circle-fill text-primary" style="font-size: 2rem;"></i>
+                </div>
+                <div class="col-md-11">
+                    <h6 class="fw-bold mb-2">About the Archive</h6>
+                    <p class="text-muted small mb-0">
+                        Archived applications are removed from your main dashboard but can be restored at any time.
+                        Use the archive to keep your active list clean while preserving important application history.
+                        You can permanently delete archived applications if you no longer need them.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Add animation when restoring
+    const restoreForms = document.querySelectorAll('form[action*="restore"]');
+    restoreForms.forEach(form => {
+        form.addEventListener('submit', function() {
+            const card = this.closest('.archive-card');
+            if (card) {
+                card.classList.add('restore-animation');
+            }
+        });
+    });
+
+    // Auto-submit filter form on select change
+    const filterSelects = document.querySelectorAll('#type, #sort');
+    filterSelects.forEach(select => {
+        select.addEventListener('change', function() {
+            this.form.submit();
+        });
+    });
+});
+</script>
+{% endblock %}

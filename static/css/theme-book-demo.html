@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Book Theme Demo - Job & Scholarship Tracker</title>
+
+    <!-- Bootstrap 5.3 (for icons and some utilities) -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.2/font/bootstrap-icons.min.css">
+
+    <!-- Book Theme -->
+    <link rel="stylesheet" href="theme-book.css">
+
+    <style>
+        /* Demo-specific styles */
+        .demo-section {
+            margin-bottom: 4rem;
+        }
+        .demo-section-title {
+            font-family: var(--font-sans);
+            font-size: var(--text-sm);
+            font-weight: 700;
+            color: var(--color-sepia);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: var(--spacing-xl);
+            padding-bottom: var(--spacing-md);
+            border-bottom: 2px solid var(--color-gray-200);
+        }
+        .component-demo {
+            margin-bottom: var(--spacing-2xl);
+        }
+        .component-label {
+            font-family: var(--font-mono);
+            font-size: var(--text-xs);
+            color: var(--color-gray-500);
+            margin-bottom: var(--spacing-sm);
+        }
+    </style>
+</head>
+<body class="has-sidebar">
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-content">
+            <!-- Header -->
+            <div class="sidebar-header">
+                <a href="#" class="sidebar-brand">
+                    <div class="brand-icon">
+                        <i class="bi bi-book"></i>
+                    </div>
+                    <div class="brand-text">
+                        Tracker
+                        <small>Career Management</small>
+                    </div>
+                </a>
+            </div>
+
+            <!-- Navigation -->
+            <nav class="sidebar-nav">
+                <ul class="nav-list">
+                    <li>
+                        <a href="#" class="nav-link active">
+                            <i class="bi bi-grid nav-icon"></i>
+                            <span class="nav-text">Dashboard</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" class="nav-link">
+                            <i class="bi bi-briefcase nav-icon"></i>
+                            <span class="nav-text">Applications</span>
+                            <span class="nav-badge">12</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" class="nav-link">
+                            <i class="bi bi-file-earmark-text nav-icon"></i>
+                            <span class="nav-text">Documents</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" class="nav-link">
+                            <i class="bi bi-bell nav-icon"></i>
+                            <span class="nav-text">Notifications</span>
+                            <span class="nav-badge">3</span>
+                        </a>
+                    </li>
+
+                    <li class="nav-section">
+                        <div class="nav-section-title">Tools</div>
+                    </li>
+                    <li>
+                        <a href="#" class="nav-link">
+                            <i class="bi bi-calendar nav-icon"></i>
+                            <span class="nav-text">Calendar</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" class="nav-link">
+                            <i class="bi bi-bar-chart nav-icon"></i>
+                            <span class="nav-text">Analytics</span>
+                        </a>
+                    </li>
+
+                    <li class="nav-section">
+                        <div class="nav-section-title">Settings</div>
+                    </li>
+                    <li>
+                        <a href="#" class="nav-link">
+                            <i class="bi bi-person nav-icon"></i>
+                            <span class="nav-text">Profile</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" class="nav-link">
+                            <i class="bi bi-gear nav-icon"></i>
+                            <span class="nav-text">Settings</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+
+            <!-- Footer -->
+            <div class="sidebar-footer">
+                <div class="user-info">
+                    <div class="user-avatar">JD</div>
+                    <div class="user-details">
+                        <div class="user-name">John Doe</div>
+                        <div class="user-email">john@example.com</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <div class="main-content-wrapper">
+        <!-- Topbar -->
+        <header class="topbar">
+            <div class="topbar-content">
+                <button class="menu-toggle">
+                    <i class="bi bi-list"></i>
+                </button>
+
+                <div class="topbar-title">
+                    <h1 class="page-heading">Book Theme Demo</h1>
+                    <p class="page-subheading">A showcase of all components and styles</p>
+                </div>
+
+                <div class="topbar-actions">
+                    <button class="topbar-action-btn">
+                        <i class="bi bi-search"></i>
+                    </button>
+                    <button class="topbar-action-btn">
+                        <i class="bi bi-bell"></i>
+                        <span class="notification-badge">5</span>
+                    </button>
+                    <button class="topbar-action-btn">
+                        <i class="bi bi-question-circle"></i>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="content-container">
+
+                <!-- Introduction -->
+                <div class="card fade-in" style="margin-bottom: 3rem;">
+                    <div class="card-body">
+                        <h2>Welcome to the Book Theme</h2>
+                        <p>
+                            This elegant theme is inspired by classic literature, beautiful notebooks, and timeless libraries.
+                            It features a sophisticated black and white color palette with minimal gold accents, creating
+                            a distraction-free environment perfect for managing your career applications.
+                        </p>
+                        <p class="text-muted mb-0">
+                            Scroll down to explore all the components, typography, and interactive elements available in this theme.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Typography Section -->
+                <section class="demo-section">
+                    <h2 class="demo-section-title">Typography</h2>
+
+                    <div class="card">
+                        <div class="card-body">
+                            <h1>Heading Level 1 - Display Font</h1>
+                            <h2>Heading Level 2 - Major Section</h2>
+                            <h3>Heading Level 3 - Subsection</h3>
+                            <h4>Heading Level 4 - Small Section</h4>
+                            <h5>Heading Level 5 - Minor Heading</h5>
+                            <h6>Heading Level 6 - Label Style</h6>
+
+                            <hr>
+
+                            <p>
+                                This is a paragraph using the elegant serif font. The quick brown fox jumps over the lazy dog.
+                                Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut
+                                labore et dolore magna aliqua.
+                            </p>
+
+                            <p class="text-muted">
+                                This is muted text, perfect for secondary information and subtle details that support
+                                the main content without demanding attention.
+                            </p>
+
+                            <p>
+                                <strong>Bold text</strong> for emphasis,
+                                <em>italic text</em> for style,
+                                <a href="#">links with underline</a>,
+                                and <code>inline code</code> for technical details.
+                            </p>
+
+                            <blockquote>
+                                "In the library of your career, every application is a carefully written chapter waiting
+                                to be added to your success story."
+                            </blockquote>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Cards Section -->
+                <section class="demo-section">
+                    <h2 class="demo-section-title">Cards & Stats</h2>
+
+                    <div class="row g-4 mb-4">
+                        <div class="col-md-3">
+                            <div class="stats-card">
+                                <div class="stats-icon">
+                                    <i class="bi bi-briefcase"></i>
+                                </div>
+                                <div class="stats-value">24</div>
+                                <div class="stats-label">Active</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="stats-card">
+                                <div class="stats-icon">
+                                    <i class="bi bi-check-circle"></i>
+                                </div>
+                                <div class="stats-value">12</div>
+                                <div class="stats-label">Submitted</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="stats-card">
+                                <div class="stats-icon">
+                                    <i class="bi bi-clock-history"></i>
+                                </div>
+                                <div class="stats-value">8</div>
+                                <div class="stats-label">Pending</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="stats-card">
+                                <div class="stats-icon">
+                                    <i class="bi bi-star"></i>
+                                </div>
+                                <div class="stats-value">4</div>
+                                <div class="stats-label">Interviews</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row g-4">
+                        <div class="col-md-6">
+                            <div class="card hover-lift">
+                                <div class="card-header">
+                                    <h4>Standard Card</h4>
+                                </div>
+                                <div class="card-body">
+                                    <p>This is a standard card with header, body, and footer sections. It has a subtle
+                                    paper texture and lifts on hover.</p>
+                                </div>
+                                <div class="card-footer">
+                                    <button class="btn btn-primary btn-sm">Action</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="card card-folded">
+                                <div class="card-body">
+                                    <h4>Folded Card</h4>
+                                    <p class="mb-0">
+                                        This card has a folded corner effect in the top-right. Hover to see the fold
+                                        animation. Perfect for featured content or special notices.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="application-card mt-4">
+                        <h5><a href="#">Senior Software Engineer</a></h5>
+                        <p class="text-muted mb-3">Tech Company Inc. • San Francisco, CA</p>
+                        <p class="mb-3">
+                            Exciting opportunity to join a fast-growing startup building innovative solutions.
+                            Looking for experienced engineers with strong Python and React skills.
+                        </p>
+                        <div class="d-flex gap-2 mb-3">
+                            <span class="badge badge-primary">Job</span>
+                            <span class="badge badge-warning">In Progress</span>
+                            <span class="badge badge-info">Remote</span>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-sm btn-primary">View Details</button>
+                            <button class="btn btn-sm btn-outline-secondary">Edit</button>
+                            <button class="btn btn-sm btn-outline-danger">Delete</button>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Buttons Section -->
+                <section class="demo-section">
+                    <h2 class="demo-section-title">Buttons</h2>
+
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="component-demo">
+                                <div class="component-label">Solid Buttons</div>
+                                <div class="d-flex flex-wrap gap-2">
+                                    <button class="btn btn-primary">Primary</button>
+                                    <button class="btn btn-secondary">Secondary</button>
+                                    <button class="btn btn-success">Success</button>
+                                    <button class="btn btn-danger">Danger</button>
+                                    <button class="btn btn-warning">Warning</button>
+                                    <button class="btn btn-ghost">Ghost</button>
+                                </div>
+                            </div>
+
+                            <div class="component-demo">
+                                <div class="component-label">Outline Buttons</div>
+                                <div class="d-flex flex-wrap gap-2">
+                                    <button class="btn btn-outline-primary">Primary</button>
+                                    <button class="btn btn-outline-secondary">Secondary</button>
+                                    <button class="btn btn-outline-success">Success</button>
+                                    <button class="btn btn-outline-danger">Danger</button>
+                                </div>
+                            </div>
+
+                            <div class="component-demo">
+                                <div class="component-label">Button Sizes</div>
+                                <div class="d-flex flex-wrap align-items-center gap-2">
+                                    <button class="btn btn-primary btn-sm">Small</button>
+                                    <button class="btn btn-primary">Default</button>
+                                    <button class="btn btn-primary btn-lg">Large</button>
+                                </div>
+                            </div>
+
+                            <div class="component-demo">
+                                <div class="component-label">Buttons with Icons</div>
+                                <div class="d-flex flex-wrap gap-2">
+                                    <button class="btn btn-primary">
+                                        <i class="bi bi-plus-circle"></i>
+                                        New Application
+                                    </button>
+                                    <button class="btn btn-outline-secondary">
+                                        <i class="bi bi-download"></i>
+                                        Export
+                                    </button>
+                                    <button class="btn btn-icon btn-outline-primary">
+                                        <i class="bi bi-heart"></i>
+                                    </button>
+                                    <button class="btn btn-icon btn-outline-secondary">
+                                        <i class="bi bi-share"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="component-demo mb-0">
+                                <div class="component-label">Link & Block Buttons</div>
+                                <button class="btn btn-link">Link Button</button>
+                                <button class="btn btn-primary btn-block mt-2">Full Width Block Button</button>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Forms Section -->
+                <section class="demo-section">
+                    <h2 class="demo-section-title">Form Elements</h2>
+
+                    <div class="card">
+                        <div class="card-body">
+                            <form>
+                                <div class="form-group">
+                                    <label class="form-label required">Company Name</label>
+                                    <input type="text" class="form-control" placeholder="Enter company name...">
+                                    <small class="form-text">The organization you're applying to</small>
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="form-label">Position Title</label>
+                                    <input type="text" class="form-control" placeholder="e.g., Senior Software Engineer">
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="form-label">Application Type</label>
+                                    <select class="form-select">
+                                        <option>Job Application</option>
+                                        <option>Scholarship</option>
+                                        <option>Internship</option>
+                                        <option>Graduate Program</option>
+                                    </select>
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="form-label">Cover Letter</label>
+                                    <textarea class="form-control" rows="6" placeholder="Write your cover letter here..."></textarea>
+                                    <small class="form-text">This textarea features notebook-style ruled lines</small>
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="form-label">Search</label>
+                                    <input type="search" class="form-control search-input" placeholder="Search...">
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="form-label">Priority Level</label>
+                                    <div class="d-flex gap-3">
+                                        <div class="form-check">
+                                            <input type="radio" class="form-check-input" name="priority" id="low" checked>
+                                            <label class="form-check-label" for="low">Low</label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input type="radio" class="form-check-input" name="priority" id="medium">
+                                            <label class="form-check-label" for="medium">Medium</label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input type="radio" class="form-check-input" name="priority" id="high">
+                                            <label class="form-check-label" for="high">High</label>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <div class="form-check">
+                                        <input type="checkbox" class="form-check-input" id="follow-up">
+                                        <label class="form-check-label" for="follow-up">
+                                            Send follow-up reminder
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input type="checkbox" class="form-check-input" id="public">
+                                        <label class="form-check-label" for="public">
+                                            Make application public
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <div class="form-actions">
+                                    <button type="submit" class="btn btn-primary">Save Application</button>
+                                    <button type="button" class="btn btn-outline-secondary">Cancel</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Tables Section -->
+                <section class="demo-section">
+                    <h2 class="demo-section-title">Tables</h2>
+
+                    <div class="table-wrapper">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Position</th>
+                                    <th>Company</th>
+                                    <th>Type</th>
+                                    <th>Deadline</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><a href="#">Software Engineer</a></td>
+                                    <td>Google Inc.</td>
+                                    <td><span class="badge badge-primary">Job</span></td>
+                                    <td>Dec 31, 2024</td>
+                                    <td><span class="badge badge-success">Applied</span></td>
+                                    <td>
+                                        <button class="btn btn-sm btn-icon btn-ghost"><i class="bi bi-eye"></i></button>
+                                        <button class="btn btn-sm btn-icon btn-ghost"><i class="bi bi-pencil"></i></button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><a href="#">Data Scientist</a></td>
+                                    <td>Meta</td>
+                                    <td><span class="badge badge-primary">Job</span></td>
+                                    <td>Jan 15, 2025</td>
+                                    <td><span class="badge badge-warning">In Progress</span></td>
+                                    <td>
+                                        <button class="btn btn-sm btn-icon btn-ghost"><i class="bi bi-eye"></i></button>
+                                        <button class="btn btn-sm btn-icon btn-ghost"><i class="bi bi-pencil"></i></button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><a href="#">Research Fellowship</a></td>
+                                    <td>MIT</td>
+                                    <td><span class="badge badge-info">Scholarship</span></td>
+                                    <td>Feb 1, 2025</td>
+                                    <td><span class="badge badge-secondary">Draft</span></td>
+                                    <td>
+                                        <button class="btn btn-sm btn-icon btn-ghost"><i class="bi bi-eye"></i></button>
+                                        <button class="btn btn-sm btn-icon btn-ghost"><i class="bi bi-pencil"></i></button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><a href="#">Product Manager</a></td>
+                                    <td>Apple</td>
+                                    <td><span class="badge badge-primary">Job</span></td>
+                                    <td>Jan 20, 2025</td>
+                                    <td><span class="badge badge-info">Interview</span></td>
+                                    <td>
+                                        <button class="btn btn-sm btn-icon btn-ghost"><i class="bi bi-eye"></i></button>
+                                        <button class="btn btn-sm btn-icon btn-ghost"><i class="bi bi-pencil"></i></button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- Badges Section -->
+                <section class="demo-section">
+                    <h2 class="demo-section-title">Badges</h2>
+
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="d-flex flex-wrap gap-2">
+                                <span class="badge badge-primary">Primary</span>
+                                <span class="badge badge-secondary">Secondary</span>
+                                <span class="badge badge-success">Success</span>
+                                <span class="badge badge-danger">Danger</span>
+                                <span class="badge badge-warning">Warning</span>
+                                <span class="badge badge-info">Info</span>
+                            </div>
+
+                            <hr>
+
+                            <div class="d-flex flex-wrap gap-2">
+                                <span class="badge badge-primary">Featured</span>
+                                <span class="badge badge-success">Applied</span>
+                                <span class="badge badge-warning">In Progress</span>
+                                <span class="badge badge-info">Interview</span>
+                                <span class="badge badge-danger">Rejected</span>
+                                <span class="badge badge-secondary">Draft</span>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Alerts Section -->
+                <section class="demo-section">
+                    <h2 class="demo-section-title">Alerts</h2>
+
+                    <div class="alert alert-success">
+                        <strong>Success!</strong> Your application has been submitted successfully.
+                    </div>
+
+                    <div class="alert alert-info">
+                        <strong>Info:</strong> You have 3 applications with upcoming deadlines this week.
+                    </div>
+
+                    <div class="alert alert-warning">
+                        <strong>Warning:</strong> Your resume needs to be updated before submitting.
+                    </div>
+
+                    <div class="alert alert-danger">
+                        <strong>Error:</strong> Failed to upload document. Please try again.
+                    </div>
+                </section>
+
+                <!-- Pagination Section -->
+                <section class="demo-section">
+                    <h2 class="demo-section-title">Pagination</h2>
+
+                    <div class="card">
+                        <div class="card-body">
+                            <nav>
+                                <ul class="pagination">
+                                    <li class="page-item disabled">
+                                        <a class="page-link" href="#"><i class="bi bi-chevron-left"></i></a>
+                                    </li>
+                                    <li class="page-item active">
+                                        <a class="page-link" href="#">1</a>
+                                    </li>
+                                    <li class="page-item">
+                                        <a class="page-link" href="#">2</a>
+                                    </li>
+                                    <li class="page-item">
+                                        <a class="page-link" href="#">3</a>
+                                    </li>
+                                    <li class="page-item">
+                                        <a class="page-link" href="#">4</a>
+                                    </li>
+                                    <li class="page-item">
+                                        <a class="page-link" href="#">5</a>
+                                    </li>
+                                    <li class="page-item">
+                                        <a class="page-link" href="#"><i class="bi bi-chevron-right"></i></a>
+                                    </li>
+                                </ul>
+                            </nav>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Empty State -->
+                <section class="demo-section">
+                    <h2 class="demo-section-title">Empty State</h2>
+
+                    <div class="empty-state-card">
+                        <div class="empty-state-icon">
+                            <i class="bi bi-inbox"></i>
+                        </div>
+                        <h3>No Applications Yet</h3>
+                        <p class="text-muted">
+                            You haven't created any applications yet. Get started by clicking the button below
+                            to add your first job or scholarship application.
+                        </p>
+                        <button class="btn btn-primary btn-lg">
+                            <i class="bi bi-plus-circle"></i>
+                            Create First Application
+                        </button>
+                    </div>
+                </section>
+
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer style="padding: 3rem 3rem 2rem; border-top: 2px solid var(--color-gray-200); background: var(--color-off-white);">
+            <div class="content-container">
+                <div class="text-center">
+                    <p class="text-muted mb-2">
+                        <small>Book Theme v1.0.0 • Designed for elegance and readability</small>
+                    </p>
+                    <p class="text-muted mb-0">
+                        <small>
+                            © 2024 Job & Scholarship Tracker •
+                            <a href="#" class="text-sepia">Documentation</a> •
+                            <a href="#" class="text-sepia">GitHub</a>
+                        </small>
+                    </p>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Floating Action Button -->
+    <button class="btn-fab" title="New Application">
+        <i class="bi bi-pen quill-float"></i>
+    </button>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Demo JavaScript -->
+    <script>
+        // Mobile menu toggle
+        document.querySelector('.menu-toggle')?.addEventListener('click', function() {
+            const sidebar = document.querySelector('.sidebar');
+            sidebar?.classList.toggle('show');
+
+            // Add overlay
+            if (sidebar?.classList.contains('show')) {
+                const overlay = document.createElement('div');
+                overlay.className = 'sidebar-overlay';
+                overlay.addEventListener('click', function() {
+                    sidebar.classList.remove('show');
+                    this.remove();
+                });
+                document.body.appendChild(overlay);
+            } else {
+                document.querySelector('.sidebar-overlay')?.remove();
+            }
+        });
+
+        // Animate elements on scroll
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver(function(entries) {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('fade-in');
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.demo-section').forEach(section => {
+            observer.observe(section);
+        });
+
+        // Add ink effect to buttons
+        document.querySelectorAll('.btn').forEach(button => {
+            button.classList.add('ink-effect');
+        });
+
+        console.log('%c📖 Book Theme Demo Loaded', 'font-size: 16px; font-weight: bold; color: #D4AF37;');
+        console.log('%cExplore the elegant components and sophisticated interactions!', 'font-style: italic; color: #8B7355;');
+    </script>
+</body>
+</html>

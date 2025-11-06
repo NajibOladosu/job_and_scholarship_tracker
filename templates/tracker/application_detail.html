@@ -20,7 +20,26 @@
                 <div class="col-lg-8">
                     <div class="d-flex align-items-start mb-3">
                         <div class="flex-grow-1">
-                            <h1 class="h2 fw-bold mb-3" style="color: var(--text-primary);">{{ application.title }}</h1>
+                            <div class="d-flex align-items-center gap-2 mb-2">
+                                <h1 class="h2 fw-bold mb-0" style="color: var(--text-primary);">{{ application.title }}</h1>
+                                {% if application.is_archived %}
+                                    <span class="badge archive-badge" style="background: var(--color-gray-500); padding: 0.5rem 1rem; font-size: 0.75rem;">
+                                        <i class="bi bi-archive-fill me-1"></i>Archived
+                                    </span>
+                                {% endif %}
+                            </div>
+
+                            <!-- Tags -->
+                            {% if application.tags.exists %}
+                            <div class="mb-3">
+                                {% for tag in application.tags.all %}
+                                    <a href="{% url 'tracker:dashboard' %}?tag={{ tag.id }}" class="badge tag-badge me-1 mb-1 text-decoration-none" style="background: {{ tag.color }}; padding: 0.4rem 0.8rem; font-size: 0.8rem; font-weight: 500;">
+                                        <i class="bi bi-tag-fill me-1"></i>{{ tag.name }}
+                                    </a>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+
                             <h5 class="mb-3" style="color: var(--text-secondary); font-weight: 500;">
                                 <i class="bi bi-building me-2"></i>
                                 {{ application.company_or_institution }}
@@ -134,6 +153,26 @@
                             </button>
                         </form>
                         {% endif %}
+
+                        <!-- Divider -->
+                        <hr class="my-2">
+
+                        <!-- Archive/Unarchive Button -->
+                        <form method="post" action="{% url 'tracker:toggle_archive' application.pk %}" class="m-0">
+                            {% csrf_token %}
+                            {% if application.is_archived %}
+                                <button type="submit" class="btn btn-outline-secondary w-100">
+                                    <i class="bi bi-arrow-counterclockwise me-2"></i>
+                                    Unarchive Application
+                                </button>
+                            {% else %}
+                                <button type="submit" class="btn btn-outline-secondary w-100">
+                                    <i class="bi bi-archive-fill me-2"></i>
+                                    Archive Application
+                                </button>
+                            {% endif %}
+                        </form>
+
                         <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">
                             <i class="bi bi-trash-fill me-2"></i>
                             Delete Application
@@ -160,12 +199,26 @@
     {% endif %}
 
     <!-- Tab Navigation -->
-    <ul class="nav nav-pills mb-4" id="applicationTabs" role="tablist" style="background: var(--bg-card); padding: 0.5rem; border-radius: var(--radius-xl); box-shadow: var(--shadow-sm);">
+    <ul class="nav nav-pills mb-4" id="applicationTabs" role="tablist" style="background: var(--bg-card); padding: 0.5rem; border-radius: var(--radius-xl); box-shadow: var(--shadow-sm); flex-wrap: wrap;">
         <li class="nav-item" role="presentation">
             <button class="nav-link active" id="questions-tab" data-bs-toggle="pill" data-bs-target="#questions" type="button" role="tab" aria-controls="questions" aria-selected="true">
                 <i class="bi bi-question-circle-fill me-2"></i>
-                Questions & Responses
+                Questions
                 <span class="badge ms-2" style="background: var(--color-primary);">{{ application.questions.count }}</span>
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="interviews-tab" data-bs-toggle="pill" data-bs-target="#interviews" type="button" role="tab" aria-controls="interviews" aria-selected="false">
+                <i class="bi bi-calendar-check-fill me-2"></i>
+                Interviews
+                <span class="badge ms-2" style="background: var(--color-info);">{{ application.interviews.count }}</span>
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="referrals-tab" data-bs-toggle="pill" data-bs-target="#referrals" type="button" role="tab" aria-controls="referrals" aria-selected="false">
+                <i class="bi bi-person-plus-fill me-2"></i>
+                Referrals
+                <span class="badge ms-2" style="background: var(--color-success);">{{ application.referrals.count }}</span>
             </button>
         </li>
         <li class="nav-item" role="presentation">
@@ -290,6 +343,292 @@
             </div>
         </div>
 
+        <!-- Interviews Tab -->
+        <div class="tab-pane fade" id="interviews" role="tabpanel" aria-labelledby="interviews-tab">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center" style="background: var(--color-gray-50); border-bottom: 2px solid var(--color-gray-200);">
+                    <h5 class="fw-bold mb-0" style="color: var(--text-primary);">
+                        <i class="bi bi-calendar-check-fill me-2" style="color: var(--color-info);"></i>
+                        Interviews
+                    </h5>
+                    <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#scheduleInterviewModal">
+                        <i class="bi bi-plus-circle-fill me-1"></i>
+                        Schedule Interview
+                    </button>
+                </div>
+                <div class="card-body">
+                    {% if application.interviews.exists %}
+                        <div class="row g-3">
+                            {% for interview in application.interviews.all %}
+                            <div class="col-12">
+                                <div class="card" style="border: 1px solid var(--color-gray-200); border-radius: var(--radius-lg); overflow: hidden;">
+                                    <div class="card-body p-4">
+                                        <div class="row">
+                                            <div class="col-md-8">
+                                                <!-- Interview Header -->
+                                                <div class="d-flex align-items-start mb-3">
+                                                    <div class="me-3" style="width: 50px; height: 50px; background: var(--color-info); border-radius: var(--radius-lg); display: flex; align-items: center; justify-content: center;">
+                                                        {% if interview.interview_type == 'phone' %}
+                                                            <i class="bi bi-telephone-fill text-white fs-4"></i>
+                                                        {% elif interview.interview_type == 'video' %}
+                                                            <i class="bi bi-camera-video-fill text-white fs-4"></i>
+                                                        {% elif interview.interview_type == 'onsite' %}
+                                                            <i class="bi bi-building text-white fs-4"></i>
+                                                        {% elif interview.interview_type == 'panel' %}
+                                                            <i class="bi bi-people-fill text-white fs-4"></i>
+                                                        {% endif %}
+                                                    </div>
+                                                    <div class="flex-grow-1">
+                                                        <h6 class="fw-bold mb-2" style="color: var(--text-primary);">{{ interview.get_interview_type_display }}</h6>
+                                                        <div class="mb-2">
+                                                            <i class="bi bi-calendar3 me-1" style="color: var(--text-muted);"></i>
+                                                            <span style="color: var(--text-secondary);">{{ interview.scheduled_date|date:"l, F d, Y" }}</span>
+                                                        </div>
+                                                        <div class="mb-2">
+                                                            <i class="bi bi-clock me-1" style="color: var(--text-muted);"></i>
+                                                            <span style="color: var(--text-secondary);">{{ interview.scheduled_date|date:"g:i A" }} ({{ interview.duration_minutes }} min)</span>
+                                                            {% if interview.is_upcoming %}
+                                                                <span class="badge ms-2" style="background: var(--color-warning); color: var(--text-primary); font-size: 0.7rem;">
+                                                                    <i class="bi bi-hourglass-split"></i> Upcoming
+                                                                </span>
+                                                            {% elif interview.is_past and interview.status == 'scheduled' %}
+                                                                <span class="badge ms-2" style="background: var(--color-danger); font-size: 0.7rem;">
+                                                                    <i class="bi bi-exclamation-triangle"></i> Past Due
+                                                                </span>
+                                                            {% endif %}
+                                                        </div>
+                                                        {% if interview.location %}
+                                                        <div class="mb-2">
+                                                            <i class="bi bi-geo-alt-fill me-1" style="color: var(--text-muted);"></i>
+                                                            <span style="color: var(--text-secondary);">{{ interview.location }}</span>
+                                                        </div>
+                                                        {% endif %}
+                                                        {% if interview.meeting_link %}
+                                                        <div class="mb-2">
+                                                            <i class="bi bi-link-45deg me-1" style="color: var(--text-muted);"></i>
+                                                            <a href="{{ interview.meeting_link }}" target="_blank" rel="noopener noreferrer" class="text-decoration-none" style="color: var(--color-primary);">
+                                                                Join Meeting
+                                                                <i class="bi bi-box-arrow-up-right ms-1" style="font-size: 0.8rem;"></i>
+                                                            </a>
+                                                        </div>
+                                                        {% endif %}
+                                                    </div>
+                                                    <div>
+                                                        {% if interview.status == 'scheduled' %}
+                                                            <span class="badge" style="background: var(--color-info); padding: 0.4rem 0.8rem;">{{ interview.get_status_display }}</span>
+                                                        {% elif interview.status == 'completed' %}
+                                                            <span class="badge" style="background: var(--color-success); padding: 0.4rem 0.8rem;">{{ interview.get_status_display }}</span>
+                                                        {% elif interview.status == 'cancelled' %}
+                                                            <span class="badge" style="background: var(--color-danger); padding: 0.4rem 0.8rem;">{{ interview.get_status_display }}</span>
+                                                        {% elif interview.status == 'rescheduled' %}
+                                                            <span class="badge" style="background: var(--color-warning); color: var(--text-primary); padding: 0.4rem 0.8rem;">{{ interview.get_status_display }}</span>
+                                                        {% endif %}
+                                                    </div>
+                                                </div>
+
+                                                <!-- Interviewers -->
+                                                {% if interview.interviewers.exists %}
+                                                <div class="mb-3 p-3 rounded" style="background: var(--color-gray-50);">
+                                                    <h6 class="fw-bold mb-2" style="color: var(--text-primary); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px;">
+                                                        <i class="bi bi-person-badge me-1"></i>Interviewers:
+                                                    </h6>
+                                                    <div class="row g-2">
+                                                        {% for interviewer in interview.interviewers.all %}
+                                                        <div class="col-md-6">
+                                                            <div class="d-flex align-items-start">
+                                                                <div class="me-2" style="width: 32px; height: 32px; background: var(--color-primary-gradient); border-radius: var(--radius-full); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                                                                    <span class="text-white fw-bold" style="font-size: 0.8rem;">{{ interviewer.name.0|upper }}</span>
+                                                                </div>
+                                                                <div class="flex-grow-1">
+                                                                    <div class="fw-bold" style="color: var(--text-primary); font-size: 0.9rem;">{{ interviewer.name }}</div>
+                                                                    <div style="color: var(--text-muted); font-size: 0.8rem;">{{ interviewer.title }}</div>
+                                                                    {% if interviewer.email %}
+                                                                    <div style="font-size: 0.75rem;">
+                                                                        <i class="bi bi-envelope me-1" style="color: var(--text-muted);"></i>
+                                                                        <a href="mailto:{{ interviewer.email }}" class="text-decoration-none" style="color: var(--color-primary);">{{ interviewer.email }}</a>
+                                                                    </div>
+                                                                    {% endif %}
+                                                                    {% if interviewer.linkedin_url %}
+                                                                    <div style="font-size: 0.75rem;">
+                                                                        <i class="bi bi-linkedin me-1" style="color: var(--text-muted);"></i>
+                                                                        <a href="{{ interviewer.linkedin_url }}" target="_blank" rel="noopener noreferrer" class="text-decoration-none" style="color: var(--color-primary);">LinkedIn Profile</a>
+                                                                    </div>
+                                                                    {% endif %}
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        {% endfor %}
+                                                    </div>
+                                                </div>
+                                                {% endif %}
+
+                                                <!-- Notes -->
+                                                {% if interview.notes %}
+                                                <div class="p-3 rounded" style="background: var(--color-gray-50); border-left: 4px solid var(--color-info);">
+                                                    <h6 class="fw-bold mb-2" style="color: var(--text-primary); font-size: 0.85rem;">
+                                                        <i class="bi bi-sticky me-1"></i>Notes:
+                                                    </h6>
+                                                    <p class="mb-0" style="white-space: pre-wrap; color: var(--text-secondary); font-size: 0.875rem; line-height: 1.6;">{{ interview.notes }}</p>
+                                                </div>
+                                                {% endif %}
+                                            </div>
+
+                                            <!-- Action Buttons -->
+                                            <div class="col-md-4">
+                                                <div class="d-grid gap-2">
+                                                    <a href="{% url 'tracker:edit_interview' interview.pk %}" class="btn btn-outline-primary btn-sm">
+                                                        <i class="bi bi-pencil-fill me-1"></i>
+                                                        Edit
+                                                    </a>
+                                                    <form method="post" action="{% url 'tracker:delete_interview' interview.pk %}" class="m-0">
+                                                        {% csrf_token %}
+                                                        <button type="submit" class="btn btn-outline-danger btn-sm w-100" onclick="return confirm('Delete this interview?');">
+                                                            <i class="bi bi-trash-fill me-1"></i>
+                                                            Delete
+                                                        </button>
+                                                    </form>
+                                                    {% if interview.is_upcoming %}
+                                                    <div class="alert alert-info mb-0 p-2 text-center" style="font-size: 0.8rem;">
+                                                        <i class="bi bi-info-circle me-1"></i>
+                                                        {% with days_until=interview.scheduled_date|timeuntil %}
+                                                            In {{ days_until }}
+                                                        {% endwith %}
+                                                    </div>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <div class="mb-4" style="width: 80px; height: 80px; margin: 0 auto; background: var(--color-gray-100); border-radius: var(--radius-full); display: flex; align-items: center; justify-content: center;">
+                                <i class="bi bi-calendar-check" style="font-size: 2.5rem; color: var(--color-gray-400);"></i>
+                            </div>
+                            <h5 class="mb-2" style="color: var(--text-primary);">No Interviews Scheduled</h5>
+                            <p class="mb-4" style="color: var(--text-muted);">Schedule your first interview to track important meetings and preparations.</p>
+                            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#scheduleInterviewModal">
+                                <i class="bi bi-plus-circle-fill me-2"></i>
+                                Schedule Interview
+                            </button>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Referrals Tab -->
+        <div class="tab-pane fade" id="referrals" role="tabpanel" aria-labelledby="referrals-tab">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center" style="background: var(--color-gray-50); border-bottom: 2px solid var(--color-gray-200);">
+                    <h5 class="fw-bold mb-0" style="color: var(--text-primary);">
+                        <i class="bi bi-person-plus-fill me-2" style="color: var(--color-success);"></i>
+                        Referrals
+                    </h5>
+                    <button type="button" class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#addReferralModal">
+                        <i class="bi bi-plus-circle-fill me-1"></i>
+                        Add Referral
+                    </button>
+                </div>
+                <div class="card-body">
+                    {% if application.referrals.exists %}
+                        <div class="row g-3">
+                            {% for referral in application.referrals.all %}
+                            <div class="col-md-6">
+                                <div class="card h-100" style="border: 1px solid var(--color-gray-200); border-radius: var(--radius-lg); overflow: hidden;">
+                                    <div class="card-body p-4">
+                                        <!-- Referrer Header -->
+                                        <div class="d-flex align-items-start mb-3">
+                                            <div class="me-3" style="width: 50px; height: 50px; background: var(--color-success); border-radius: var(--radius-full); display: flex; align-items: center; justify-content: center;">
+                                                <span class="text-white fw-bold fs-4">{{ referral.name.0|upper }}</span>
+                                            </div>
+                                            <div class="flex-grow-1">
+                                                <h6 class="fw-bold mb-1" style="color: var(--text-primary);">{{ referral.name }}</h6>
+                                                <div class="mb-1" style="color: var(--text-secondary); font-size: 0.875rem;">
+                                                    <i class="bi bi-building me-1" style="color: var(--text-muted);"></i>
+                                                    {{ referral.company }}
+                                                </div>
+                                                <div style="color: var(--text-muted); font-size: 0.8rem;">
+                                                    <i class="bi bi-diagram-3 me-1"></i>
+                                                    {{ referral.relationship }}
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Contact Information -->
+                                        <div class="mb-3 p-3 rounded" style="background: var(--color-gray-50);">
+                                            <h6 class="fw-bold mb-2" style="color: var(--text-primary); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px;">
+                                                <i class="bi bi-person-lines-fill me-1"></i>Contact:
+                                            </h6>
+                                            <div class="mb-1" style="font-size: 0.85rem;">
+                                                <i class="bi bi-envelope me-1" style="color: var(--text-muted);"></i>
+                                                <a href="mailto:{{ referral.email }}" class="text-decoration-none" style="color: var(--color-primary);">{{ referral.email }}</a>
+                                            </div>
+                                            {% if referral.phone %}
+                                            <div style="font-size: 0.85rem;">
+                                                <i class="bi bi-telephone me-1" style="color: var(--text-muted);"></i>
+                                                <a href="tel:{{ referral.phone }}" class="text-decoration-none" style="color: var(--color-primary);">{{ referral.phone }}</a>
+                                            </div>
+                                            {% endif %}
+                                        </div>
+
+                                        <!-- Referred Date -->
+                                        <div class="mb-3">
+                                            <small style="color: var(--text-muted);">
+                                                <i class="bi bi-calendar-event me-1"></i>
+                                                Referred: {{ referral.referred_date|date:"M d, Y" }}
+                                            </small>
+                                        </div>
+
+                                        <!-- Notes -->
+                                        {% if referral.notes %}
+                                        <div class="p-3 rounded mb-3" style="background: var(--color-gray-50); border-left: 4px solid var(--color-success);">
+                                            <h6 class="fw-bold mb-2" style="color: var(--text-primary); font-size: 0.85rem;">
+                                                <i class="bi bi-sticky me-1"></i>Notes:
+                                            </h6>
+                                            <p class="mb-0" style="white-space: pre-wrap; color: var(--text-secondary); font-size: 0.875rem; line-height: 1.6;">{{ referral.notes }}</p>
+                                        </div>
+                                        {% endif %}
+
+                                        <!-- Action Buttons -->
+                                        <div class="d-flex gap-2">
+                                            <a href="{% url 'tracker:edit_referral' referral.pk %}" class="btn btn-outline-primary btn-sm flex-grow-1">
+                                                <i class="bi bi-pencil-fill me-1"></i>
+                                                Edit
+                                            </a>
+                                            <form method="post" action="{% url 'tracker:delete_referral' referral.pk %}" class="flex-grow-1 m-0">
+                                                {% csrf_token %}
+                                                <button type="submit" class="btn btn-outline-danger btn-sm w-100" onclick="return confirm('Delete this referral?');">
+                                                    <i class="bi bi-trash-fill me-1"></i>
+                                                    Delete
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <div class="mb-4" style="width: 80px; height: 80px; margin: 0 auto; background: var(--color-gray-100); border-radius: var(--radius-full); display: flex; align-items: center; justify-content: center;">
+                                <i class="bi bi-person-plus" style="font-size: 2.5rem; color: var(--color-gray-400);"></i>
+                            </div>
+                            <h5 class="mb-2" style="color: var(--text-primary);">No Referrals Yet</h5>
+                            <p class="mb-4" style="color: var(--text-muted);">Track people who have referred you for this position to follow up and show appreciation.</p>
+                            <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addReferralModal">
+                                <i class="bi bi-plus-circle-fill me-2"></i>
+                                Add Referral
+                            </button>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
         <!-- Timeline Tab -->
         <div class="tab-pane fade" id="timeline" role="tabpanel" aria-labelledby="timeline-tab">
             <div class="card">
@@ -379,6 +718,70 @@
     </div>
 </div>
 
+<!-- Schedule Interview Modal -->
+<div class="modal fade" id="scheduleInterviewModal" tabindex="-1" aria-labelledby="scheduleInterviewModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content" style="border: none; border-radius: var(--radius-xl); box-shadow: var(--shadow-2xl);">
+            <div class="modal-header" style="background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%); border: none; border-top-left-radius: var(--radius-xl); border-top-right-radius: var(--radius-xl);">
+                <h5 class="modal-title fw-bold" id="scheduleInterviewModalLabel" style="color: var(--color-info);">
+                    <i class="bi bi-calendar-check-fill me-2"></i>
+                    Schedule Interview
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <p class="text-muted mb-3">Click the button below to go to the interview scheduling form where you can add all interview details.</p>
+                <div class="alert alert-info" role="alert">
+                    <i class="bi bi-info-circle me-2"></i>
+                    <strong>Pro Tip:</strong> Add interviewer names and contact information to prepare better for your interview!
+                </div>
+            </div>
+            <div class="modal-footer" style="border: none; background: var(--color-gray-50);">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="bi bi-x-circle me-1"></i>
+                    Cancel
+                </button>
+                <a href="{% url 'tracker:schedule_interview' application.pk %}" class="btn btn-primary">
+                    <i class="bi bi-calendar-plus-fill me-1"></i>
+                    Go to Scheduling Form
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Referral Modal -->
+<div class="modal fade" id="addReferralModal" tabindex="-1" aria-labelledby="addReferralModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content" style="border: none; border-radius: var(--radius-xl); box-shadow: var(--shadow-2xl);">
+            <div class="modal-header" style="background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%); border: none; border-top-left-radius: var(--radius-xl); border-top-right-radius: var(--radius-xl);">
+                <h5 class="modal-title fw-bold" id="addReferralModalLabel" style="color: var(--color-success);">
+                    <i class="bi bi-person-plus-fill me-2"></i>
+                    Add Referral
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <p class="text-muted mb-3">Click the button below to go to the referral form where you can add details about your referrer.</p>
+                <div class="alert alert-success" role="alert">
+                    <i class="bi bi-lightbulb me-2"></i>
+                    <strong>Remember:</strong> Keep track of your referrers to send thank-you notes and keep them updated on your progress!
+                </div>
+            </div>
+            <div class="modal-footer" style="border: none; background: var(--color-gray-50);">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="bi bi-x-circle me-1"></i>
+                    Cancel
+                </button>
+                <a href="{% url 'tracker:add_referral' application.pk %}" class="btn btn-success">
+                    <i class="bi bi-person-plus-fill me-1"></i>
+                    Go to Referral Form
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
 <style>
 /* Tab styling */
 .nav-pills .nav-link {
@@ -387,6 +790,7 @@
     font-weight: 600;
     color: var(--text-secondary);
     transition: all var(--transition-fast);
+    white-space: nowrap;
 }
 
 .nav-pills .nav-link:hover {
@@ -398,6 +802,19 @@
     background: var(--color-primary-gradient);
     color: var(--text-white);
     box-shadow: var(--shadow-md);
+}
+
+/* Mobile responsive tabs */
+@media (max-width: 768px) {
+    .nav-pills .nav-link {
+        padding: 0.5rem 0.75rem;
+        font-size: 0.875rem;
+    }
+
+    .nav-pills .nav-link .badge {
+        font-size: 0.7rem;
+        padding: 0.2rem 0.4rem;
+    }
 }
 
 /* Accordion styling */
@@ -424,6 +841,67 @@
 
 .copy-success {
     animation: copySuccess 0.3s ease;
+}
+
+/* Interview and Referral card styling */
+.interview-card, .referral-card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.interview-card:hover, .referral-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+}
+
+/* Timeline enhancements */
+.timeline-item {
+    transition: all 0.3s ease;
+}
+
+.timeline-item:hover {
+    padding-left: 0.5rem;
+}
+
+/* Tag badges */
+.tag-badge {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    display: inline-block;
+}
+
+.tag-badge:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* Archive indicator */
+.archive-badge {
+    animation: fadeIn 0.5s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+/* Responsive adjustments */
+@media (max-width: 992px) {
+    .interview-card .col-md-4,
+    .interview-card .col-md-8 {
+        max-width: 100%;
+        flex: 0 0 100%;
+    }
+}
+
+@media (max-width: 576px) {
+    .nav-pills {
+        overflow-x: auto;
+        flex-wrap: nowrap !important;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .nav-pills .nav-item {
+        flex-shrink: 0;
+    }
 }
 </style>
 

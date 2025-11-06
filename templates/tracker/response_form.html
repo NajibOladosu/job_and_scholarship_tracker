@@ -1,0 +1,328 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Edit Response - AppTracker{% endblock %}
+
+{% block extra_css %}
+<!-- Quill.js CSS -->
+<link href="https://cdn.quilljs.com/1.3.7/quill.snow.css" rel="stylesheet">
+
+<style>
+    .response-editor-container {
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    #quill-editor {
+        min-height: 400px;
+        background-color: white;
+        border-bottom-left-radius: 0.375rem;
+        border-bottom-right-radius: 0.375rem;
+    }
+
+    .ql-toolbar {
+        border-top-left-radius: 0.375rem;
+        border-top-right-radius: 0.375rem;
+        background-color: #f8f9fa;
+    }
+
+    .ql-container {
+        font-size: 1rem;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+
+    .original-response-card {
+        background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+        border-left: 4px solid #6366f1;
+        border-radius: 8px;
+        padding: 1.5rem;
+    }
+
+    .character-counter {
+        position: sticky;
+        bottom: 20px;
+        right: 20px;
+        background: white;
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        z-index: 100;
+        display: inline-block;
+        float: right;
+        margin-top: 1rem;
+    }
+
+    .quick-tips {
+        background: linear-gradient(135deg, rgba(99, 102, 241, 0.05) 0%, rgba(139, 92, 246, 0.05) 100%);
+        border-left: 3px solid #6366f1;
+        border-radius: 8px;
+        padding: 1rem;
+    }
+
+    .comparison-view {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    @media (max-width: 768px) {
+        .comparison-view {
+            grid-template-columns: 1fr;
+        }
+
+        #quill-editor {
+            min-height: 300px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="response-editor-container">
+        <!-- Breadcrumb -->
+        <nav aria-label="breadcrumb" class="mb-4">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item">
+                    <a href="{% url 'tracker:dashboard' %}" class="text-decoration-none">
+                        <i class="bi bi-house-door me-1"></i>Dashboard
+                    </a>
+                </li>
+                <li class="breadcrumb-item">
+                    <a href="{% url 'tracker:application_detail' question.application.pk %}" class="text-decoration-none">
+                        {{ question.application.title|truncatewords:5 }}
+                    </a>
+                </li>
+                <li class="breadcrumb-item active" aria-current="page">Edit Response</li>
+            </ol>
+        </nav>
+
+        <!-- Header -->
+        <div class="text-center mb-4">
+            <div class="mb-3" style="width: 80px; height: 80px; margin: 0 auto; background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); border-radius: 16px; display: flex; align-items: center; justify-content: center; box-shadow: 0 8px 16px rgba(99, 102, 241, 0.3);">
+                <i class="bi bi-pencil-square text-white" style="font-size: 2.5rem;"></i>
+            </div>
+            <h1 class="h2 fw-bold mb-2">Edit Response</h1>
+            <p class="text-muted mb-0">Customize your AI-generated response or write your own</p>
+        </div>
+
+        <!-- Question Card -->
+        <div class="card mb-4 shadow-sm">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">
+                    <i class="bi bi-question-circle-fill me-2"></i>
+                    Question
+                </h5>
+            </div>
+            <div class="card-body">
+                <p class="mb-3 lead">{{ question.question_text }}</p>
+                <div class="d-flex gap-2 flex-wrap">
+                    <span class="badge bg-info">{{ question.get_question_type_display }}</span>
+                    {% if question.is_required %}
+                        <span class="badge bg-danger">Required</span>
+                    {% endif %}
+                    {% if question.is_extracted %}
+                        <span class="badge bg-secondary">
+                            <i class="bi bi-robot"></i> Auto-extracted
+                        </span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Original AI Response (if exists and is AI-generated) -->
+        {% if response.is_ai_generated and response.ai_response %}
+        <div class="mb-4">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <h5 class="fw-bold mb-0">
+                    <i class="bi bi-stars text-warning me-2"></i>
+                    Original AI Response
+                </h5>
+                <button type="button" class="btn btn-sm btn-outline-primary" onclick="copyOriginalResponse()">
+                    <i class="bi bi-clipboard me-1"></i>
+                    Copy Original
+                </button>
+            </div>
+            <div class="original-response-card">
+                <div id="original-response-content" style="white-space: pre-wrap; line-height: 1.6;">{{ response.ai_response }}</div>
+            </div>
+            <small class="text-muted d-block mt-2">
+                <i class="bi bi-info-circle me-1"></i>
+                This is the original AI-generated response. Your edits will be saved separately.
+            </small>
+        </div>
+        {% endif %}
+
+        <!-- Response Editor Form -->
+        <form method="post" id="response-form">
+            {% csrf_token %}
+
+            <div class="card shadow-sm mb-3">
+                <div class="card-header bg-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0 fw-bold">
+                            <i class="bi bi-pencil-fill me-2 text-primary"></i>
+                            Your Response
+                        </h5>
+                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="clearResponse()">
+                            <i class="bi bi-eraser me-1"></i>
+                            Clear
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    <div id="quill-editor"></div>
+                    {{ form.final_response }}
+                </div>
+            </div>
+
+            <!-- Character Counter -->
+            <div class="character-counter">
+                <small class="text-muted">
+                    <i class="bi bi-text-paragraph me-1"></i>
+                    Characters: <span id="char-count" class="fw-bold">0</span>
+                </small>
+            </div>
+
+            <div style="clear: both;"></div>
+
+            <!-- Quick Tips -->
+            <div class="quick-tips mb-4">
+                <h6 class="fw-bold mb-2">
+                    <i class="bi bi-lightbulb text-warning me-2"></i>
+                    Writing Tips
+                </h6>
+                <ul class="mb-0 small ps-3">
+                    <li class="mb-1">Be specific and provide concrete examples when possible</li>
+                    <li class="mb-1">Tailor your response to the specific question and requirements</li>
+                    <li class="mb-1">Review for grammar, spelling, and clarity before saving</li>
+                    <li>Keep responses concise but comprehensive</li>
+                </ul>
+            </div>
+
+            <!-- Form Actions -->
+            <div class="d-flex justify-content-between gap-3 pb-4">
+                <div class="d-flex gap-2">
+                    <a href="{% url 'tracker:application_detail' question.application.pk %}" class="btn btn-outline-secondary">
+                        <i class="bi bi-x-circle me-1"></i>
+                        Cancel
+                    </a>
+                </div>
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-success">
+                        <i class="bi bi-check-circle-fill me-2"></i>
+                        Save Response
+                    </button>
+                    <a href="{% url 'tracker:regenerate_response' question.pk %}"
+                       class="btn btn-warning"
+                       onclick="return confirm('This will regenerate the AI response. Any unsaved changes will be lost. Continue?');">
+                        <i class="bi bi-arrow-clockwise me-2"></i>
+                        Regenerate with AI
+                    </a>
+                </div>
+            </div>
+        </form>
+
+        <!-- Help Text -->
+        <div class="text-center text-muted">
+            <small>
+                <i class="bi bi-info-circle me-1"></i>
+                Your changes are saved when you click "Save Response". You can always regenerate with AI or edit again later.
+            </small>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Quill.js -->
+<script src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize Quill editor
+    const quill = new Quill('#quill-editor', {
+        theme: 'snow',
+        modules: {
+            toolbar: [
+                [{ 'header': [1, 2, 3, false] }],
+                ['bold', 'italic', 'underline', 'strike'],
+                [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                [{ 'indent': '-1'}, { 'indent': '+1' }],
+                ['link'],
+                [{ 'align': [] }],
+                ['clean']
+            ]
+        },
+        placeholder: 'Write your response here...'
+    });
+
+    // Get the hidden textarea
+    const hiddenTextarea = document.querySelector('textarea[name="final_response"]');
+
+    // Load existing content
+    {% if response.final_response %}
+        quill.root.innerHTML = {{ response.final_response|safe|escapejs }};
+    {% endif %}
+
+    // Update character count
+    function updateCharCount() {
+        const text = quill.getText().trim();
+        document.getElementById('char-count').textContent = text.length;
+    }
+
+    // Update hidden textarea on content change
+    quill.on('text-change', function() {
+        hiddenTextarea.value = quill.root.innerHTML;
+        updateCharCount();
+    });
+
+    // Initial character count
+    updateCharCount();
+
+    // Form submission
+    document.getElementById('response-form').addEventListener('submit', function(e) {
+        // Ensure the hidden textarea has the latest content
+        hiddenTextarea.value = quill.root.innerHTML;
+
+        // Check if response is empty
+        if (quill.getText().trim().length === 0) {
+            e.preventDefault();
+            alert('Please enter a response before saving.');
+            return false;
+        }
+    });
+
+    // Copy original response function
+    window.copyOriginalResponse = function() {
+        const originalContent = document.getElementById('original-response-content');
+        if (originalContent) {
+            quill.root.innerHTML = originalContent.textContent;
+            updateCharCount();
+
+            // Show feedback
+            const btn = event.target.closest('button');
+            const originalHTML = btn.innerHTML;
+            btn.innerHTML = '<i class="bi bi-check-circle-fill me-1"></i>Copied!';
+            btn.classList.add('btn-success');
+            btn.classList.remove('btn-outline-primary');
+
+            setTimeout(() => {
+                btn.innerHTML = originalHTML;
+                btn.classList.remove('btn-success');
+                btn.classList.add('btn-outline-primary');
+            }, 2000);
+        }
+    };
+
+    // Clear response function
+    window.clearResponse = function() {
+        if (confirm('Are you sure you want to clear the response? This cannot be undone.')) {
+            quill.setText('');
+            updateCharCount();
+        }
+    };
+});
+</script>
+{% endblock %}

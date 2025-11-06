@@ -39,4 +39,24 @@ urlpatterns = [
     path('analytics/', views.analytics_dashboard_view, name='analytics'),
     path('analytics/api/sankey/', views.sankey_data_api, name='sankey_data_api'),
     path('analytics/api/timeline/', views.timeline_data_api, name='timeline_data_api'),
+
+    # Interview URLs
+    path('application/<int:application_id>/interview/create/', views.interview_create_view, name='interview_create'),
+    path('interview/<int:pk>/edit/', views.interview_update_view, name='interview_edit'),
+    path('interview/<int:pk>/delete/', views.interview_delete_view, name='interview_delete'),
+    path('interviews/', views.interview_list_view, name='interview_list'),
+
+    # Archive URLs
+    path('application/<int:pk>/archive/', views.application_archive_view, name='application_archive'),
+    path('application/<int:pk>/unarchive/', views.application_unarchive_view, name='application_unarchive'),
+    path('archive/', views.archive_list_view, name='archive_list'),
+
+    # Referral URLs
+    path('application/<int:application_id>/referral/create/', views.referral_create_view, name='referral_create'),
+    path('referral/<int:pk>/edit/', views.referral_update_view, name='referral_edit'),
+    path('referral/<int:pk>/delete/', views.referral_delete_view, name='referral_delete'),
+
+    # Quick Actions API URLs
+    path('api/application/<int:application_id>/quick-interview/', views.quick_add_interview_api, name='quick_add_interview_api'),
+    path('api/applications/bulk-archive/', views.bulk_archive_api, name='bulk_archive_api'),
 ]
