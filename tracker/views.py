@@ -802,6 +802,8 @@ def interview_list_view(request):
     """
     Calendar view of all user's interviews.
     """
+    from datetime import timedelta
+
     # Get all interviews for the user
     interviews = Interview.objects.filter(
         user=request.user
@@ -814,14 +816,23 @@ def interview_list_view(request):
 
     # Split into upcoming and past
     now = timezone.now()
-    upcoming_interviews = interviews.filter(scheduled_date__gte=now)
+    week_from_now = now + timedelta(days=7)
+    upcoming_interviews = interviews.filter(scheduled_date__gte=now, status='scheduled')
     past_interviews = interviews.filter(scheduled_date__lt=now)
+
+    # Calculate stats
+    upcoming_count = upcoming_interviews.count()
+    this_week_count = upcoming_interviews.filter(scheduled_date__lte=week_from_now).count()
+    completed_count = interviews.filter(status='completed').count()
 
     context = {
         'title': 'My Interviews',
         'upcoming_interviews': upcoming_interviews,
         'past_interviews': past_interviews,
         'status_filter': status_filter,
+        'upcoming_count': upcoming_count,
+        'this_week_count': this_week_count,
+        'completed_count': completed_count,
     }
     return render(request, 'tracker/interview_list.html', context)
 
