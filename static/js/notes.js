@@ -9,12 +9,15 @@
     // Configuration
     const AUTOSAVE_DELAY = 3000; // 3 seconds
     const DEBOUNCE_DELAY = 500; // 0.5 seconds
+    const WORD_COUNT_UPDATE_DELAY = 300; // 0.3 seconds
 
     // State
     let quill = null;
     let autosaveTimeout = null;
+    let wordCountTimeout = null;
     let lastSavedContent = '';
     let lastSavedTitle = '';
+    let lastSavedTime = null;
     let isSaving = false;
     let noteId = null;
 
@@ -108,6 +111,83 @@
     }
 
     /**
+     * Update last saved timestamp
+     */
+    function updateLastSavedTimestamp() {
+        const timestampElement = document.getElementById('last-saved-time');
+        if (!timestampElement) return;
+
+        if (lastSavedTime) {
+            const now = new Date();
+            const diff = Math.floor((now - lastSavedTime) / 1000); // seconds
+
+            let timeText;
+            if (diff < 60) {
+                timeText = 'Just now';
+            } else if (diff < 3600) {
+                const minutes = Math.floor(diff / 60);
+                timeText = `${minutes} minute${minutes !== 1 ? 's' : ''} ago`;
+            } else {
+                timeText = lastSavedTime.toLocaleTimeString('en-US', {
+                    hour: 'numeric',
+                    minute: '2-digit',
+                    hour12: true
+                });
+            }
+
+            timestampElement.innerHTML = `<i class="bi bi-clock me-1"></i>Last saved: ${timeText}`;
+            timestampElement.className = 'small text-muted';
+        } else {
+            timestampElement.innerHTML = '';
+        }
+    }
+
+    /**
+     * Count words in text
+     */
+    function countWords(text) {
+        // Strip HTML tags and get plain text
+        const plainText = text.replace(/<[^>]*>/g, ' ')
+            .replace(/\s+/g, ' ')
+            .trim();
+
+        if (!plainText) return 0;
+
+        // Count words
+        const words = plainText.split(/\s+/).filter(word => word.length > 0);
+        return words.length;
+    }
+
+    /**
+     * Update word count display
+     */
+    function updateWordCount() {
+        const wordCountElement = document.getElementById('word-count');
+        if (!wordCountElement || !quill) return;
+
+        const content = quill.root.innerHTML;
+        const wordCount = countWords(content);
+        const charCount = quill.getText().trim().length;
+
+        wordCountElement.innerHTML = `
+            <i class="bi bi-file-text me-1"></i>
+            ${wordCount} word${wordCount !== 1 ? 's' : ''},
+            ${charCount} character${charCount !== 1 ? 's' : ''}
+        `;
+        wordCountElement.className = 'small text-muted';
+    }
+
+    /**
+     * Schedule word count update (debounced)
+     */
+    function scheduleWordCountUpdate() {
+        if (wordCountTimeout) {
+            clearTimeout(wordCountTimeout);
+        }
+        wordCountTimeout = setTimeout(updateWordCount, WORD_COUNT_UPDATE_DELAY);
+    }
+
+    /**
      * Auto-save note content
      */
     async function autoSaveNote() {
@@ -144,7 +224,9 @@
             if (data.success) {
                 lastSavedTitle = currentTitle;
                 lastSavedContent = currentContent;
+                lastSavedTime = new Date();
                 updateSaveStatus('saved');
+                updateLastSavedTimestamp();
 
                 // Update note ID if this was a new note
                 if (!noteId && data.note_id) {
@@ -238,7 +320,12 @@
             }
             // Schedule auto-save
             scheduleAutoSave();
+            // Update word count
+            scheduleWordCountUpdate();
         });
+
+        // Initial word count
+        updateWordCount();
 
         // Listen for title changes
         if (titleInput) {
@@ -249,13 +336,44 @@
 
         // Keyboard shortcuts
         document.addEventListener('keydown', function(e) {
+            // Only handle shortcuts when Quill editor is focused
+            const editorFocused = document.activeElement.closest('.ql-editor');
+
             // Ctrl+S or Cmd+S to save
             if ((e.ctrlKey || e.metaKey) && e.key === 's') {
                 e.preventDefault();
                 autoSaveNote();
+                showToast('Saving note...', 'info');
+                return false;
+            }
+
+            // Ctrl+B for bold (only when editor is focused)
+            if (editorFocused && (e.ctrlKey || e.metaKey) && e.key === 'b') {
+                e.preventDefault();
+                const currentFormat = quill.getFormat();
+                quill.format('bold', !currentFormat.bold);
+                return false;
+            }
+
+            // Ctrl+I for italic (only when editor is focused)
+            if (editorFocused && (e.ctrlKey || e.metaKey) && e.key === 'i') {
+                e.preventDefault();
+                const currentFormat = quill.getFormat();
+                quill.format('italic', !currentFormat.italic);
+                return false;
+            }
+
+            // Ctrl+U for underline (only when editor is focused)
+            if (editorFocused && (e.ctrlKey || e.metaKey) && e.key === 'u') {
+                e.preventDefault();
+                const currentFormat = quill.getFormat();
+                quill.format('underline', !currentFormat.underline);
                 return false;
             }
         });
+
+        // Update timestamp periodically
+        setInterval(updateLastSavedTimestamp, 30000); // Update every 30 seconds
 
         // Form submission handler
         const form = document.getElementById('note-form');

@@ -135,13 +135,17 @@
     }
 
     /**
-     * Download Sankey diagram as PNG
+     * Download Sankey diagram in various formats
      */
     function downloadSankeyDiagram(format = 'png') {
         const container = document.getElementById('sankeyChart');
         if (!container) return;
 
-        const filename = `application_flow_sankey_${new Date().toISOString().split('T')[0]}`;
+        const timestamp = new Date().toISOString().replace(/[:.]/g, '-').split('T')[0];
+        const filename = `application_flow_sankey_${timestamp}`;
+
+        // Show loading toast
+        showToast('Preparing download...', 'info');
 
         Plotly.downloadImage(container, {
             format: format,
@@ -149,11 +153,87 @@
             height: 800,
             filename: filename
         }).then(() => {
-            console.log('Sankey diagram downloaded');
+            console.log(`Sankey diagram downloaded as ${format.toUpperCase()}`);
+            showToast(`Chart downloaded as ${format.toUpperCase()}`, 'success');
         }).catch(error => {
             console.error('Error downloading diagram:', error);
-            alert('Failed to download diagram. Please try again.');
+            showToast('Failed to download diagram. Please try again.', 'error');
         });
+    }
+
+    /**
+     * Toggle fullscreen mode for Sankey chart
+     */
+    function toggleFullscreen() {
+        const container = document.getElementById('sankeyChart');
+        if (!container) return;
+
+        const wrapper = container.closest('.card') || container.parentElement;
+
+        if (!document.fullscreenElement) {
+            wrapper.requestFullscreen().then(() => {
+                // Relayout chart for fullscreen
+                Plotly.relayout(container, {
+                    height: window.innerHeight - 100
+                });
+                showToast('Fullscreen mode activated. Press ESC to exit.', 'info');
+            }).catch(err => {
+                console.error('Error entering fullscreen:', err);
+            });
+        } else {
+            document.exitFullscreen().then(() => {
+                // Reset chart size
+                Plotly.relayout(container, {
+                    height: 500
+                });
+            });
+        }
+    }
+
+    /**
+     * Show toast notification (simple version for analytics)
+     */
+    function showToast(message, type = 'info') {
+        const toastContainer = document.querySelector('.toast-container') || createToastContainer();
+
+        const iconMap = {
+            success: 'check-circle',
+            error: 'exclamation-circle',
+            warning: 'exclamation-triangle',
+            info: 'info-circle'
+        };
+
+        const toastHtml = `
+            <div class="toast align-items-center text-bg-${type} border-0" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="3000">
+                <div class="d-flex">
+                    <div class="toast-body">
+                        <i class="bi bi-${iconMap[type] || 'info-circle'} me-2"></i>
+                        ${escapeHtml(message)}
+                    </div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                </div>
+            </div>
+        `;
+
+        toastContainer.insertAdjacentHTML('beforeend', toastHtml);
+        const toastElement = toastContainer.lastElementChild;
+        const toast = new bootstrap.Toast(toastElement);
+        toast.show();
+
+        toastElement.addEventListener('hidden.bs.toast', () => {
+            toastElement.remove();
+        });
+    }
+
+    /**
+     * Create toast container if it doesn't exist
+     */
+    function createToastContainer() {
+        const container = document.createElement('div');
+        container.className = 'toast-container position-fixed top-0 end-0 p-3';
+        container.style.zIndex = '11000';
+        document.body.appendChild(container);
+        return container;
     }
 
     // ========== Timeline Visualization ==========
@@ -469,12 +549,56 @@
      * Setup event listeners
      */
     function setupEventListeners() {
-        // Download button for Sankey diagram
+        // Download button for Sankey diagram with format dropdown
         const downloadBtn = document.getElementById('downloadSankeyBtn');
         if (downloadBtn) {
             downloadBtn.addEventListener('click', (e) => {
                 e.preventDefault();
                 downloadSankeyDiagram('png');
+            });
+        }
+
+        // Download format buttons (PNG, SVG, PDF)
+        const downloadPngBtn = document.getElementById('downloadSankeyPng');
+        const downloadSvgBtn = document.getElementById('downloadSankeySvg');
+        const downloadPdfBtn = document.getElementById('downloadSankeyPdf');
+
+        if (downloadPngBtn) {
+            downloadPngBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                downloadSankeyDiagram('png');
+            });
+        }
+
+        if (downloadSvgBtn) {
+            downloadSvgBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                downloadSankeyDiagram('svg');
+            });
+        }
+
+        if (downloadPdfBtn) {
+            downloadPdfBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                downloadSankeyDiagram('pdf');
+            });
+        }
+
+        // Fullscreen toggle button
+        const fullscreenBtn = document.getElementById('fullscreenSankeyBtn');
+        if (fullscreenBtn) {
+            fullscreenBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                toggleFullscreen();
+            });
+        }
+
+        // Print button
+        const printBtn = document.getElementById('printSankeyBtn');
+        if (printBtn) {
+            printBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                window.print();
             });
         }
 
@@ -489,6 +613,31 @@
                 }
             });
         }
+
+        // Handle fullscreen exit
+        document.addEventListener('fullscreenchange', () => {
+            if (!document.fullscreenElement) {
+                const container = document.getElementById('sankeyChart');
+                if (container && Plotly) {
+                    // Reset chart size when exiting fullscreen
+                    Plotly.relayout(container, {
+                        height: 500
+                    });
+                }
+            }
+        });
+
+        // Responsive chart resize
+        let resizeTimeout;
+        window.addEventListener('resize', () => {
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(() => {
+                const sankeyChart = document.getElementById('sankeyChart');
+                if (sankeyChart && sankeyChart.dataset.rendered === 'true' && Plotly) {
+                    Plotly.Plots.resize(sankeyChart);
+                }
+            }, 250);
+        });
     }
 
     // ========== Initialization ==========
@@ -519,7 +668,59 @@
         init();
     }
 
-    // Expose download function globally for manual use
+    // Expose functions globally for manual use
     window.downloadSankeyDiagram = downloadSankeyDiagram;
+    window.toggleSankeyFullscreen = toggleFullscreen;
+
+    // Add print stylesheet support
+    const printStyles = `
+        @media print {
+            /* Hide navigation and UI elements */
+            .sidebar, .topbar, .navbar, .footer,
+            .btn, button, .dropdown, .toast-container {
+                display: none !important;
+            }
+
+            /* Expand main content */
+            .main-content, .container-fluid {
+                width: 100% !important;
+                max-width: 100% !important;
+                margin: 0 !important;
+                padding: 1rem !important;
+            }
+
+            /* Optimize chart for printing */
+            #sankeyChart {
+                page-break-inside: avoid;
+                width: 100% !important;
+                height: auto !important;
+            }
+
+            /* Timeline printing */
+            .timeline-event {
+                page-break-inside: avoid;
+                margin-bottom: 0.5rem !important;
+            }
+
+            /* Ensure white background */
+            body {
+                background: white !important;
+            }
+
+            .card {
+                border: 1px solid #ddd !important;
+                box-shadow: none !important;
+                page-break-inside: avoid;
+            }
+        }
+    `;
+
+    // Inject print styles
+    if (!document.getElementById('analytics-print-styles')) {
+        const styleSheet = document.createElement('style');
+        styleSheet.id = 'analytics-print-styles';
+        styleSheet.textContent = printStyles;
+        document.head.appendChild(styleSheet);
+    }
 
 })();
