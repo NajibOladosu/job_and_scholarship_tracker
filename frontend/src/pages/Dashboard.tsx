@@ -1,10 +1,64 @@
 import { motion } from 'framer-motion';
-import { FileText, Clock, CheckCircle, AlertCircle, TrendingUp, Plus } from 'lucide-react';
+import { FileText, Clock, CheckCircle, AlertCircle, TrendingUp, Plus, Loader2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
+import { applicationsService } from '@/services/applications';
+import type { Application, ApplicationStats } from '@/services/applications';
 
 export const Dashboard = () => {
+  const [stats, setStats] = useState<ApplicationStats | null>(null);
+  const [recentApplications, setRecentApplications] = useState<Application[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        const [statsData, applicationsData] = await Promise.all([
+          applicationsService.getStats(),
+          applicationsService.getAll(),
+        ]);
+        setStats(statsData);
+        // Get the 4 most recent applications
+        setRecentApplications(applicationsData.slice(0, 4));
+      } catch (err: any) {
+        setError(err.response?.data?.detail || 'Failed to load dashboard data');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <Loader2 className="w-8 h-8 text-accent animate-spin" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <Card variant="glass" className="p-8">
+          <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+          <p className="text-red-500 text-center">{error}</p>
+        </Card>
+      </div>
+    );
+  }
+
+  // Calculate stats values
+  const totalApplications = stats?.total || 0;
+  const inProgress = (stats?.by_status?.draft || 0) + (stats?.by_status?.in_review || 0);
+  const completed = stats?.by_status?.submitted || 0;
+  const pending = stats?.by_status?.interview || 0;
+
   return (
     <div className="space-y-8">
       {/* Header */}
@@ -26,33 +80,25 @@ export const Dashboard = () => {
         <StatCard
           icon={<FileText className="text-accent" size={24} />}
           label="Total Applications"
-          value="24"
-          change="+12%"
-          positive={true}
+          value={totalApplications.toString()}
           delay={0.1}
         />
         <StatCard
           icon={<Clock className="text-blue-400" size={24} />}
           label="In Progress"
-          value="8"
-          change="+3"
-          positive={true}
+          value={inProgress.toString()}
           delay={0.2}
         />
         <StatCard
           icon={<CheckCircle className="text-green-400" size={24} />}
           label="Completed"
-          value="12"
-          change="+5"
-          positive={true}
+          value={completed.toString()}
           delay={0.3}
         />
         <StatCard
           icon={<AlertCircle className="text-yellow-400" size={24} />}
           label="Pending"
-          value="4"
-          change="-2"
-          positive={false}
+          value={pending.toString()}
           delay={0.4}
         />
       </div>
@@ -69,30 +115,21 @@ export const Dashboard = () => {
               </Link>
             </div>
             <div className="space-y-4">
-              <ApplicationItem
-                title="Software Engineer at Google"
-                status="In Progress"
-                deadline="2 days left"
-                statusColor="blue"
-              />
-              <ApplicationItem
-                title="Product Manager at Meta"
-                status="Submitted"
-                deadline="5 days left"
-                statusColor="green"
-              />
-              <ApplicationItem
-                title="Data Scientist at Amazon"
-                status="Draft"
-                deadline="1 week left"
-                statusColor="yellow"
-              />
-              <ApplicationItem
-                title="Full Stack Developer at Microsoft"
-                status="In Progress"
-                deadline="3 days left"
-                statusColor="blue"
-              />
+              {recentApplications.length > 0 ? (
+                recentApplications.map((app) => (
+                  <ApplicationItem
+                    key={app.id}
+                    id={app.id}
+                    title={`${app.position_title} at ${app.company_name}`}
+                    status={app.status}
+                    deadline={app.deadline}
+                  />
+                ))
+              ) : (
+                <p className="text-text-secondary text-center py-8">
+                  No applications yet. Create your first application to get started!
+                </p>
+              )}
             </div>
           </Card>
         </div>
@@ -152,15 +189,11 @@ const StatCard = ({
   icon,
   label,
   value,
-  change,
-  positive,
   delay,
 }: {
   icon: React.ReactNode;
   label: string;
   value: string;
-  change: string;
-  positive: boolean;
   delay: number;
 }) => (
   <motion.div
@@ -172,10 +205,7 @@ const StatCard = ({
       <div className="flex items-start justify-between">
         <div className="flex-1">
           <p className="text-text-secondary text-sm mb-2">{label}</p>
-          <p className="text-3xl font-bold text-text-primary mb-1">{value}</p>
-          <p className={`text-sm font-medium ${positive ? 'text-green-400' : 'text-red-400'}`}>
-            {change} this month
-          </p>
+          <p className="text-3xl font-bold text-text-primary">{value}</p>
         </div>
         <div className="p-3 rounded-lg glass">
           {icon}
@@ -186,32 +216,66 @@ const StatCard = ({
 );
 
 const ApplicationItem = ({
+  id,
   title,
   status,
   deadline,
-  statusColor,
 }: {
+  id: number;
   title: string;
   status: string;
   deadline: string;
-  statusColor: 'blue' | 'green' | 'yellow';
 }) => {
-  const colors = {
-    blue: 'bg-blue-500/10 text-blue-400 border-blue-500/30',
-    green: 'bg-green-500/10 text-green-400 border-green-500/30',
-    yellow: 'bg-yellow-500/10 text-yellow-400 border-yellow-500/30',
+  // Map status to colors
+  const getStatusColor = (status: string) => {
+    const statusMap: Record<string, string> = {
+      draft: 'bg-yellow-500/10 text-yellow-400 border-yellow-500/30',
+      submitted: 'bg-green-500/10 text-green-400 border-green-500/30',
+      in_review: 'bg-blue-500/10 text-blue-400 border-blue-500/30',
+      interview: 'bg-purple-500/10 text-purple-400 border-purple-500/30',
+      offer: 'bg-accent/10 text-accent border-accent/30',
+      rejected: 'bg-red-500/10 text-red-400 border-red-500/30',
+      withdrawn: 'bg-gray-500/10 text-gray-400 border-gray-500/30',
+    };
+    return statusMap[status] || statusMap.draft;
+  };
+
+  // Format status for display
+  const formatStatus = (status: string) => {
+    return status
+      .split('_')
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
+  };
+
+  // Calculate deadline display
+  const getDeadlineDisplay = (deadline: string) => {
+    if (!deadline) return 'No deadline';
+    const deadlineDate = new Date(deadline);
+    const today = new Date();
+    const diffTime = deadlineDate.getTime() - today.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    if (diffDays < 0) return 'Overdue';
+    if (diffDays === 0) return 'Due today';
+    if (diffDays === 1) return '1 day left';
+    if (diffDays <= 7) return `${diffDays} days left`;
+    if (diffDays <= 30) return `${Math.ceil(diffDays / 7)} weeks left`;
+    return deadlineDate.toLocaleDateString();
   };
 
   return (
-    <div className="flex items-center justify-between p-4 rounded-lg bg-surface/50 hover:bg-surface transition-colors cursor-pointer">
-      <div className="flex-1">
-        <h3 className="text-text-primary font-medium mb-1">{title}</h3>
-        <p className="text-text-secondary text-sm">{deadline}</p>
+    <Link to={`/applications/${id}`}>
+      <div className="flex items-center justify-between p-4 rounded-lg bg-surface/50 hover:bg-surface transition-colors cursor-pointer">
+        <div className="flex-1">
+          <h3 className="text-text-primary font-medium mb-1">{title}</h3>
+          <p className="text-text-secondary text-sm">{getDeadlineDisplay(deadline)}</p>
+        </div>
+        <span className={`px-3 py-1 rounded-full text-xs font-medium border ${getStatusColor(status)}`}>
+          {formatStatus(status)}
+        </span>
       </div>
-      <span className={`px-3 py-1 rounded-full text-xs font-medium border ${colors[statusColor]}`}>
-        {status}
-      </span>
-    </div>
+    </Link>
   );
 };
 

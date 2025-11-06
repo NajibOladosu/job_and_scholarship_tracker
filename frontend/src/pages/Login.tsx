@@ -1,19 +1,34 @@
 import { motion } from 'framer-motion';
-import { Mail, Lock } from 'lucide-react';
+import { Mail, Lock, AlertCircle } from 'lucide-react';
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
+import { useAuth } from '@/contexts/AuthContext';
 
 export const Login = () => {
+  const navigate = useNavigate();
+  const { login } = useAuth();
   const [formData, setFormData] = useState({
     email: '',
     password: '',
   });
+  const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Login:', formData);
+    setError(null);
+    setIsLoading(true);
+
+    try {
+      await login(formData);
+      navigate('/dashboard');
+    } catch (err: any) {
+      setError(err.response?.data?.detail || 'Invalid email or password');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -40,6 +55,17 @@ export const Login = () => {
         {/* Login Card */}
         <Card variant="glass" className="p-8">
           <h1 className="text-2xl font-bold text-text-primary mb-6">Log In</h1>
+
+          {error && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="p-4 rounded-lg bg-red-500/10 border border-red-500/20 flex items-center gap-2"
+            >
+              <AlertCircle className="text-red-500" size={20} />
+              <p className="text-red-500 text-sm">{error}</p>
+            </motion.div>
+          )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
@@ -89,8 +115,8 @@ export const Login = () => {
               </Link>
             </div>
 
-            <Button type="submit" variant="primary" className="w-full">
-              Log In
+            <Button type="submit" variant="primary" className="w-full" disabled={isLoading}>
+              {isLoading ? 'Logging in...' : 'Log In'}
             </Button>
           </form>
 
@@ -103,18 +129,6 @@ export const Login = () => {
             </p>
           </div>
         </Card>
-
-        {/* Demo Notice */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.3 }}
-          className="mt-6 text-center"
-        >
-          <p className="text-text-secondary text-sm">
-            This is a demo. Use any email and password to continue.
-          </p>
-        </motion.div>
       </motion.div>
     </div>
   );
