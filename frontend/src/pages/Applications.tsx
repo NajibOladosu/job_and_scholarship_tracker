@@ -1,65 +1,62 @@
 import { motion } from 'framer-motion';
-import { Search, Plus, MoreVertical, Clock, CheckCircle } from 'lucide-react';
-import { useState } from 'react';
+import { Search, Plus, MoreVertical, Clock, CheckCircle, Loader2, AlertCircle } from 'lucide-react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Card } from '@/components/ui/Card';
-
-const mockApplications = [
-  {
-    id: 1,
-    title: 'Software Engineer',
-    company: 'Google',
-    status: 'in_progress',
-    deadline: '2025-11-15',
-    priority: 'high',
-    questions: 12,
-    responses: 8,
-  },
-  {
-    id: 2,
-    title: 'Product Manager',
-    company: 'Meta',
-    status: 'submitted',
-    deadline: '2025-11-20',
-    priority: 'medium',
-    questions: 8,
-    responses: 8,
-  },
-  {
-    id: 3,
-    title: 'Data Scientist',
-    company: 'Amazon',
-    status: 'draft',
-    deadline: '2025-11-25',
-    priority: 'low',
-    questions: 15,
-    responses: 3,
-  },
-  {
-    id: 4,
-    title: 'Full Stack Developer',
-    company: 'Microsoft',
-    status: 'in_progress',
-    deadline: '2025-11-18',
-    priority: 'high',
-    questions: 10,
-    responses: 7,
-  },
-];
+import { applicationsService } from '@/services/applications';
+import type { Application } from '@/services/applications';
 
 export const Applications = () => {
+  const [applications, setApplications] = useState<Application[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<string>('all');
 
-  const filteredApplications = mockApplications.filter((app) => {
+  useEffect(() => {
+    const fetchApplications = async () => {
+      try {
+        setLoading(true);
+        const data = await applicationsService.getAll();
+        setApplications(data);
+      } catch (err: any) {
+        setError(err.response?.data?.detail || 'Failed to load applications');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchApplications();
+  }, []);
+
+  const filteredApplications = applications.filter((app) => {
     const matchesSearch =
-      app.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      app.company.toLowerCase().includes(searchTerm.toLowerCase());
+      app.position_title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      app.company_name.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesFilter = filterStatus === 'all' || app.status === filterStatus;
     return matchesSearch && matchesFilter;
   });
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <Loader2 className="w-8 h-8 text-accent animate-spin" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <Card variant="glass" className="p-8">
+          <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+          <p className="text-red-500 text-center">{error}</p>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8">
@@ -162,10 +159,10 @@ const ApplicationCard = ({
   application,
   delay,
 }: {
-  application: typeof mockApplications[0];
+  application: Application;
   delay: number;
 }) => {
-  const statusConfig = {
+  const statusConfig: Record<string, { icon: React.ReactNode; color: string; bg: string; border: string; label: string }> = {
     draft: {
       icon: <Clock size={16} />,
       color: 'text-yellow-400',
@@ -180,6 +177,13 @@ const ApplicationCard = ({
       border: 'border-blue-500/30',
       label: 'In Progress',
     },
+    in_review: {
+      icon: <Clock size={16} />,
+      color: 'text-blue-400',
+      bg: 'bg-blue-500/10',
+      border: 'border-blue-500/30',
+      label: 'In Review',
+    },
     submitted: {
       icon: <CheckCircle size={16} />,
       color: 'text-green-400',
@@ -187,10 +191,40 @@ const ApplicationCard = ({
       border: 'border-green-500/30',
       label: 'Submitted',
     },
+    interview: {
+      icon: <Clock size={16} />,
+      color: 'text-purple-400',
+      bg: 'bg-purple-500/10',
+      border: 'border-purple-500/30',
+      label: 'Interview',
+    },
+    offer: {
+      icon: <CheckCircle size={16} />,
+      color: 'text-accent',
+      bg: 'bg-accent/10',
+      border: 'border-accent/30',
+      label: 'Offer',
+    },
+    rejected: {
+      icon: <AlertCircle size={16} />,
+      color: 'text-red-400',
+      bg: 'bg-red-500/10',
+      border: 'border-red-500/30',
+      label: 'Rejected',
+    },
+    withdrawn: {
+      icon: <AlertCircle size={16} />,
+      color: 'text-gray-400',
+      bg: 'bg-gray-500/10',
+      border: 'border-gray-500/30',
+      label: 'Withdrawn',
+    },
   };
 
-  const status = statusConfig[application.status as keyof typeof statusConfig];
-  const progress = (application.responses / application.questions) * 100;
+  const status = statusConfig[application.status] || statusConfig.draft;
+  const questionCount = application.question_count || 0;
+  const responseCount = application.response_count || 0;
+  const progress = questionCount > 0 ? (responseCount / questionCount) * 100 : 0;
 
   return (
     <motion.div
@@ -205,9 +239,9 @@ const ApplicationCard = ({
             <div className="flex justify-between items-start">
               <div className="flex-1">
                 <h3 className="text-lg font-bold text-text-primary mb-1">
-                  {application.title}
+                  {application.position_title}
                 </h3>
-                <p className="text-text-secondary">{application.company}</p>
+                <p className="text-text-secondary">{application.company_name}</p>
               </div>
               <button className="text-text-secondary hover:text-accent transition-colors">
                 <MoreVertical size={20} />
@@ -240,7 +274,7 @@ const ApplicationCard = ({
               <div className="flex justify-between text-sm mb-2">
                 <span className="text-text-secondary">Progress</span>
                 <span className="text-accent font-medium">
-                  {application.responses}/{application.questions}
+                  {responseCount}/{questionCount}
                 </span>
               </div>
               <div className="w-full bg-surface rounded-full h-2 overflow-hidden">
