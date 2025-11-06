@@ -1,185 +1,452 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Track Applications, Land Opportunities - AppTracker{% endblock %}
+{% block title %}Your Journal for Career Success - AppTracker{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Hero Section - Elegant & Minimal */
+    .hero-section {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(180deg, #0a0a0a 0%, #1a1a1a 100%);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .hero-section::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background:
+            linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px),
+            linear-gradient(0deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+        background-size: 50px 50px;
+        opacity: 0.5;
+    }
+
+    .hero-content {
+        position: relative;
+        z-index: 2;
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 4rem 2rem;
+        text-align: center;
+    }
+
+    .hero-title {
+        font-family: 'Crimson Pro', serif;
+        font-size: clamp(3rem, 8vw, 5.5rem);
+        font-weight: 700;
+        letter-spacing: -0.04em;
+        color: #ffffff;
+        margin-bottom: 2rem;
+        line-height: 1.1;
+    }
+
+    .hero-subtitle {
+        font-family: 'Inter', sans-serif;
+        font-size: clamp(1.125rem, 2.5vw, 1.5rem);
+        font-weight: 300;
+        color: #b0b0b0;
+        max-width: 700px;
+        margin: 0 auto 3rem;
+        line-height: 1.7;
+    }
+
+    .hero-cta {
+        display: flex;
+        gap: 1.5rem;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    .btn-hero {
+        font-family: 'Inter', sans-serif;
+        font-weight: 600;
+        padding: 1.125rem 2.5rem;
+        font-size: 1.0625rem;
+        border-radius: 4px;
+        text-decoration: none;
+        transition: all 200ms ease;
+        border: 1px solid transparent;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .btn-hero-primary {
+        background: #ffffff;
+        color: #0a0a0a;
+        border-color: #ffffff;
+    }
+
+    .btn-hero-primary:hover {
+        background: #d4af37;
+        color: #0a0a0a;
+        border-color: #d4af37;
+        transform: translateY(-2px);
+    }
+
+    .btn-hero-secondary {
+        background: transparent;
+        color: #ffffff;
+        border-color: #ffffff;
+    }
+
+    .btn-hero-secondary:hover {
+        background: rgba(255, 255, 255, 0.1);
+        transform: translateY(-2px);
+    }
+
+    /* Features Section */
+    .features-section {
+        background: #0a0a0a;
+        padding: 8rem 0;
+        border-top: 1px solid #2a2a2a;
+    }
+
+    .section-title {
+        font-family: 'Crimson Pro', serif;
+        font-size: clamp(2.5rem, 5vw, 3.5rem);
+        font-weight: 700;
+        text-align: center;
+        color: #ffffff;
+        margin-bottom: 1rem;
+        letter-spacing: -0.03em;
+    }
+
+    .section-subtitle {
+        font-family: 'Inter', sans-serif;
+        font-size: 1.25rem;
+        text-align: center;
+        color: #808080;
+        margin-bottom: 5rem;
+    }
+
+    .features-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 2rem;
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 2rem;
+    }
+
+    .feature-card {
+        background: #1a1a1a;
+        border: 1px solid #2a2a2a;
+        border-radius: 4px;
+        padding: 3rem 2rem;
+        transition: all 200ms ease;
+    }
+
+    .feature-card:hover {
+        border-color: #ffffff;
+        transform: translateY(-4px);
+    }
+
+    .feature-icon {
+        width: 60px;
+        height: 60px;
+        background: #0a0a0a;
+        border: 1px solid #ffffff;
+        border-radius: 4px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 2rem;
+        font-size: 1.75rem;
+        color: #ffffff;
+    }
+
+    .feature-title {
+        font-family: 'Crimson Pro', serif;
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: #ffffff;
+        margin-bottom: 1rem;
+    }
+
+    .feature-description {
+        font-family: 'Inter', sans-serif;
+        font-size: 1rem;
+        line-height: 1.7;
+        color: #808080;
+    }
+
+    /* Stats Section */
+    .stats-section {
+        background: #1a1a1a;
+        border-top: 1px solid #2a2a2a;
+        border-bottom: 1px solid #2a2a2a;
+        padding: 6rem 0;
+    }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 4rem;
+        max-width: 1000px;
+        margin: 0 auto;
+        padding: 0 2rem;
+        text-align: center;
+    }
+
+    .stat-value {
+        font-family: 'Crimson Pro', serif;
+        font-size: 4rem;
+        font-weight: 700;
+        color: #d4af37;
+        margin-bottom: 0.5rem;
+        line-height: 1;
+    }
+
+    .stat-label {
+        font-family: 'Inter', sans-serif;
+        font-size: 1rem;
+        color: #808080;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+    }
+
+    /* CTA Section */
+    .cta-section {
+        background: #0a0a0a;
+        padding: 8rem 0;
+        text-align: center;
+    }
+
+    .cta-content {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 0 2rem;
+    }
+
+    .cta-title {
+        font-family: 'Crimson Pro', serif;
+        font-size: clamp(2.5rem, 5vw, 3.5rem);
+        font-weight: 700;
+        color: #ffffff;
+        margin-bottom: 1.5rem;
+        letter-spacing: -0.03em;
+    }
+
+    .cta-description {
+        font-family: 'Inter', sans-serif;
+        font-size: 1.25rem;
+        color: #808080;
+        margin-bottom: 3rem;
+        line-height: 1.7;
+    }
+
+    /* Footer */
+    .footer-section {
+        background: #0a0a0a;
+        border-top: 1px solid #2a2a2a;
+        padding: 3rem 0;
+    }
+
+    .footer-content {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 2rem;
+        text-align: center;
+        color: #808080;
+        font-size: 0.875rem;
+    }
+
+    .footer-content a {
+        color: #ffffff;
+        text-decoration: none;
+        transition: color 200ms ease;
+    }
+
+    .footer-content a:hover {
+        color: #d4af37;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .hero-section {
+            min-height: 80vh;
+        }
+
+        .features-section,
+        .cta-section {
+            padding: 4rem 0;
+        }
+
+        .stats-section {
+            padding: 4rem 0;
+        }
+
+        .stats-grid {
+            gap: 2rem;
+        }
+
+        .hero-cta {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .btn-hero {
+            width: 100%;
+            justify-content: center;
+        }
+    }
+</style>
+{% endblock %}
 
 {% block content %}
 <!-- Hero Section -->
-<section class="hero-section py-5" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 80vh;">
-    <div class="container">
-        <div class="row align-items-center min-vh-75">
-            <div class="col-lg-6 text-white">
-                <h1 class="display-3 fw-bold mb-4" style="line-height: 1.2;">
-                    Never Miss an Opportunity Again
-                </h1>
-                <p class="lead mb-5 opacity-90" style="font-size: 1.25rem;">
-                    Track job and scholarship applications with AI-powered assistance. Stay organized, meet deadlines, and land your dream opportunity.
-                </p>
-                <div class="d-flex gap-3 flex-wrap">
-                    <a href="{% url 'accounts:signup' %}" class="btn btn-light btn-lg px-5 py-3 shadow-sm">
-                        <i class="bi bi-rocket-takeoff me-2"></i>
-                        Get Started Free
-                    </a>
-                    <a href="{% url 'accounts:login' %}" class="btn btn-outline-light btn-lg px-5 py-3">
-                        Sign In
-                    </a>
-                </div>
-            </div>
-            <div class="col-lg-6 d-none d-lg-block">
-                <div class="hero-illustration text-center">
-                    <i class="bi bi-clipboard-check-fill text-white opacity-75" style="font-size: 20rem;"></i>
-                </div>
-            </div>
+<section class="hero-section">
+    <div class="hero-content">
+        <h1 class="hero-title">
+            Your Journal for<br/>Career Success
+        </h1>
+        <p class="hero-subtitle">
+            Track applications, prepare for interviews, and land your dream opportunity.
+            A beautifully minimal workspace for ambitious professionals.
+        </p>
+        <div class="hero-cta">
+            <a href="{% url 'accounts:signup' %}" class="btn-hero btn-hero-primary">
+                <i class="bi bi-pen"></i>
+                Start Your Journey
+            </a>
+            <a href="{% url 'accounts:login' %}" class="btn-hero btn-hero-secondary">
+                Sign In
+            </a>
         </div>
     </div>
 </section>
 
 <!-- Features Section -->
-<section id="features" class="py-5 bg-light">
-    <div class="container py-5">
-        <div class="text-center mb-5">
-            <h2 class="display-5 fw-bold mb-3">Everything You Need in One Place</h2>
-            <p class="lead text-muted">Streamline your application process with powerful features</p>
+<section class="features-section">
+    <h2 class="section-title">Everything You Need</h2>
+    <p class="section-subtitle">Elegant tools for the modern job seeker</p>
+
+    <div class="features-grid">
+        <!-- Feature 1 -->
+        <div class="feature-card">
+            <div class="feature-icon">
+                <i class="bi bi-journal-text"></i>
+            </div>
+            <h3 class="feature-title">Track Applications</h3>
+            <p class="feature-description">
+                Organize every application in one beautiful dashboard.
+                Never lose track of an opportunity again.
+            </p>
         </div>
 
-        <div class="row g-4">
-            <!-- Feature 1: Track Applications -->
-            <div class="col-md-6 col-lg-3">
-                <div class="card border-0 shadow-sm h-100 hover-card" style="transition: transform 0.3s ease;">
-                    <div class="card-body text-center p-4">
-                        <div class="feature-icon mb-3">
-                            <i class="bi bi-list-check text-primary" style="font-size: 3rem;"></i>
-                        </div>
-                        <h5 class="card-title fw-semibold mb-3">Track Applications</h5>
-                        <p class="card-text text-muted">
-                            Organize all your job and scholarship applications in one centralized dashboard.
-                        </p>
-                    </div>
-                </div>
+        <!-- Feature 2 -->
+        <div class="feature-card">
+            <div class="feature-icon">
+                <i class="bi bi-stars"></i>
             </div>
+            <h3 class="feature-title">AI-Powered Responses</h3>
+            <p class="feature-description">
+                Generate tailored responses to application questions using
+                advanced AI technology and your personal profile.
+            </p>
+        </div>
 
-            <!-- Feature 2: AI-Powered Responses -->
-            <div class="col-md-6 col-lg-3">
-                <div class="card border-0 shadow-sm h-100 hover-card" style="transition: transform 0.3s ease;">
-                    <div class="card-body text-center p-4">
-                        <div class="feature-icon mb-3">
-                            <i class="bi bi-stars text-primary" style="font-size: 3rem;"></i>
-                        </div>
-                        <h5 class="card-title fw-semibold mb-3">AI-Powered Responses</h5>
-                        <p class="card-text text-muted">
-                            Generate tailored responses to application questions using advanced AI technology.
-                        </p>
-                    </div>
-                </div>
+        <!-- Feature 3 -->
+        <div class="feature-card">
+            <div class="feature-icon">
+                <i class="bi bi-calendar-check"></i>
             </div>
+            <h3 class="feature-title">Smart Deadlines</h3>
+            <p class="feature-description">
+                Visual timeline and intelligent reminders ensure you
+                never miss an important application deadline.
+            </p>
+        </div>
 
-            <!-- Feature 3: Deadline Management -->
-            <div class="col-md-6 col-lg-3">
-                <div class="card border-0 shadow-sm h-100 hover-card" style="transition: transform 0.3s ease;">
-                    <div class="card-body text-center p-4">
-                        <div class="feature-icon mb-3">
-                            <i class="bi bi-calendar-check text-primary" style="font-size: 3rem;"></i>
-                        </div>
-                        <h5 class="card-title fw-semibold mb-3">Deadline Management</h5>
-                        <p class="card-text text-muted">
-                            Never miss a deadline with smart reminders and visual deadline tracking.
-                        </p>
-                    </div>
-                </div>
+        <!-- Feature 4 -->
+        <div class="feature-card">
+            <div class="feature-icon">
+                <i class="bi bi-people"></i>
             </div>
+            <h3 class="feature-title">Interview Tracking</h3>
+            <p class="feature-description">
+                Manage interview schedules, track interviewers, and
+                take comprehensive notes for every conversation.
+            </p>
+        </div>
 
-            <!-- Feature 4: Document Organization -->
-            <div class="col-md-6 col-lg-3">
-                <div class="card border-0 shadow-sm h-100 hover-card" style="transition: transform 0.3s ease;">
-                    <div class="card-body text-center p-4">
-                        <div class="feature-icon mb-3">
-                            <i class="bi bi-file-earmark-text text-primary" style="font-size: 3rem;"></i>
-                        </div>
-                        <h5 class="card-title fw-semibold mb-3">Document Organization</h5>
-                        <p class="card-text text-muted">
-                            Keep resumes, cover letters, and supporting documents organized and accessible.
-                        </p>
-                    </div>
-                </div>
+        <!-- Feature 5 -->
+        <div class="feature-card">
+            <div class="feature-icon">
+                <i class="bi bi-file-earmark-text"></i>
             </div>
+            <h3 class="feature-title">Document Management</h3>
+            <p class="feature-description">
+                Store resumes, transcripts, and certificates. AI extracts
+                key information to power your responses.
+            </p>
+        </div>
+
+        <!-- Feature 6 -->
+        <div class="feature-card">
+            <div class="feature-icon">
+                <i class="bi bi-graph-up"></i>
+            </div>
+            <h3 class="feature-title">Progress Analytics</h3>
+            <p class="feature-description">
+                Visualize your application journey with elegant charts
+                and insights into your success patterns.
+            </p>
         </div>
     </div>
 </section>
 
-<!-- How It Works Section -->
-<section id="about" class="py-5">
-    <div class="container py-5">
-        <div class="text-center mb-5">
-            <h2 class="display-5 fw-bold mb-3">How It Works</h2>
-            <p class="lead text-muted">Get started in three simple steps</p>
+<!-- Stats Section -->
+<section class="stats-section">
+    <div class="stats-grid">
+        <div>
+            <div class="stat-value">100%</div>
+            <div class="stat-label">Free Forever</div>
         </div>
-
-        <div class="row g-5 align-items-center">
-            <div class="col-lg-4">
-                <div class="text-center">
-                    <div class="step-number mb-3 mx-auto d-flex align-items-center justify-content-center bg-primary text-white rounded-circle" style="width: 80px; height: 80px; font-size: 2rem; font-weight: bold;">
-                        1
-                    </div>
-                    <h4 class="fw-semibold mb-3">Add Your Application</h4>
-                    <p class="text-muted">
-                        Simply paste the URL or manually enter details about the job or scholarship you're applying to.
-                    </p>
-                </div>
-            </div>
-
-            <div class="col-lg-4">
-                <div class="text-center">
-                    <div class="step-number mb-3 mx-auto d-flex align-items-center justify-content-center bg-primary text-white rounded-circle" style="width: 80px; height: 80px; font-size: 2rem; font-weight: bold;">
-                        2
-                    </div>
-                    <h4 class="fw-semibold mb-3">Generate Responses</h4>
-                    <p class="text-muted">
-                        Let our AI analyze questions and generate tailored responses based on your profile and experience.
-                    </p>
-                </div>
-            </div>
-
-            <div class="col-lg-4">
-                <div class="text-center">
-                    <div class="step-number mb-3 mx-auto d-flex align-items-center justify-content-center bg-primary text-white rounded-circle" style="width: 80px; height: 80px; font-size: 2rem; font-weight: bold;">
-                        3
-                    </div>
-                    <h4 class="fw-semibold mb-3">Track & Submit</h4>
-                    <p class="text-muted">
-                        Monitor your progress, update statuses, and never miss a deadline with automated reminders.
-                    </p>
-                </div>
-            </div>
+        <div>
+            <div class="stat-value">∞</div>
+            <div class="stat-label">Applications</div>
+        </div>
+        <div>
+            <div class="stat-value">AI</div>
+            <div class="stat-label">Powered</div>
+        </div>
+        <div>
+            <div class="stat-value">24/7</div>
+            <div class="stat-label">Access</div>
         </div>
     </div>
 </section>
 
 <!-- CTA Section -->
-<section class="py-5 bg-dark text-white">
-    <div class="container py-5">
-        <div class="row justify-content-center text-center">
-            <div class="col-lg-8">
-                <h2 class="display-5 fw-bold mb-4">Ready to Get Started?</h2>
-                <p class="lead mb-5 opacity-90">
-                    Join hundreds of applicants who are landing their dream jobs and scholarships with AppTracker.
-                </p>
-                <a href="{% url 'accounts:signup' %}" class="btn btn-primary btn-lg px-5 py-3">
-                    <i class="bi bi-rocket-takeoff me-2"></i>
-                    Create Your Free Account
-                </a>
-            </div>
-        </div>
+<section class="cta-section">
+    <div class="cta-content">
+        <h2 class="cta-title">Begin Your Success Story</h2>
+        <p class="cta-description">
+            Join thousands of ambitious professionals using AppTracker to
+            organize their career journey and land their dream opportunities.
+        </p>
+        <a href="{% url 'accounts:signup' %}" class="btn-hero btn-hero-primary">
+            <i class="bi bi-pen"></i>
+            Create Free Account
+        </a>
     </div>
 </section>
 
-<!-- Custom Styles -->
-<style>
-    .hover-card:hover {
-        transform: translateY(-5px);
-    }
-
-    .min-vh-75 {
-        min-height: 75vh;
-    }
-</style>
+<!-- Footer -->
+<footer class="footer-section">
+    <div class="footer-content">
+        <p>&copy; 2025 AppTracker. Crafted with care for ambitious professionals.</p>
+    </div>
+</footer>
 {% endblock %}
