@@ -134,10 +134,16 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
+
+# Static files directories
 STATICFILES_DIRS = [
     BASE_DIR / 'static',
-    BASE_DIR / 'frontend' / 'dist' / 'assets',  # React build assets
 ]
+
+# Add React build assets if they exist
+frontend_assets_path = BASE_DIR / 'frontend' / 'dist' / 'assets'
+if frontend_assets_path.exists():
+    STATICFILES_DIRS.append(frontend_assets_path)
 
 # WhiteNoise configuration for efficient static file serving
 # Using CompressedStaticFilesStorage instead of Manifest version to avoid missing file errors
