@@ -45,13 +45,13 @@
                     },
                     'book': {
                         name: 'Book Theme',
-                        file: '{% static "css/theme-book.css" %}',
+                        file: '{% static "css/theme-book-complete.css" %}',
                         themeColor: '#F5E6D3'
                     }
                 },
 
                 init() {
-                    const savedTheme = localStorage.getItem('appTheme') || 'light';
+                    const savedTheme = localStorage.getItem('appTheme') || 'book';
                     this.applyTheme(savedTheme);
                 },
 
