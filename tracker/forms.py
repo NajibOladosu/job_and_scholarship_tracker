@@ -3,7 +3,7 @@ Forms for tracker app (applications, questions, responses).
 """
 from django import forms
 from django.utils.translation import gettext_lazy as _
-from .models import Application, Question, Response
+from .models import Application, Question, Response, Note, Tag
 
 
 class ApplicationForm(forms.ModelForm):
@@ -119,3 +119,184 @@ class ApplicationFilterForm(forms.Form):
         choices=[('', 'All Priorities')] + list(Application.PRIORITY_CHOICES),
         widget=forms.Select(attrs={'class': 'form-select'})
     )
+
+
+class NoteForm(forms.ModelForm):
+    """
+    Form for creating and editing rich text notes.
+    """
+    class Meta:
+        model = Note
+        fields = ['title', 'content', 'application', 'is_pinned']
+        widgets = {
+            'title': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Note title...',
+                'id': 'note-title'
+            }),
+            'content': forms.HiddenInput(attrs={
+                'id': 'note-content-input'
+            }),
+            'application': forms.Select(attrs={
+                'class': 'form-select',
+                'id': 'note-application'
+            }),
+            'is_pinned': forms.CheckboxInput(attrs={
+                'class': 'form-check-input',
+                'id': 'note-pinned'
+            }),
+        }
+        labels = {
+            'application': _('Link to Application (optional)'),
+            'is_pinned': _('Pin to top')
+        }
+
+    def __init__(self, *args, user=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['application'].required = False
+        self.fields['content'].required = False
+
+        # Filter applications by user
+        if user:
+            self.fields['application'].queryset = Application.objects.filter(user=user).order_by('-created_at')
+            self.fields['application'].empty_label = 'No application'
+
+
+class TagForm(forms.ModelForm):
+    """
+    Form for creating and editing tags.
+    """
+    class Meta:
+        model = Tag
+        fields = ['name', 'color']
+        widgets = {
+            'name': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'e.g., Remote, High Salary, Dream Company',
+                'maxlength': 50
+            }),
+            'color': forms.TextInput(attrs={
+                'class': 'form-control',
+                'type': 'color',
+                'placeholder': '#6366f1'
+            }),
+        }
+        help_texts = {
+            'color': _('Choose a color to visually identify this tag')
+        }
+
+
+class EnhancedApplicationFilterForm(forms.Form):
+    """
+    Enhanced form for filtering applications with multi-select and date ranges.
+    """
+    search = forms.CharField(
+        required=False,
+        label=_('Search'),
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Search by title, company, description...'
+        })
+    )
+
+    # Multi-select filters
+    statuses = forms.MultipleChoiceField(
+        required=False,
+        label=_('Status'),
+        choices=Application.STATUS_CHOICES,
+        widget=forms.CheckboxSelectMultiple(attrs={
+            'class': 'form-check-input'
+        })
+    )
+
+    application_types = forms.MultipleChoiceField(
+        required=False,
+        label=_('Application Type'),
+        choices=Application.APPLICATION_TYPE_CHOICES,
+        widget=forms.CheckboxSelectMultiple(attrs={
+            'class': 'form-check-input'
+        })
+    )
+
+    priorities = forms.MultipleChoiceField(
+        required=False,
+        label=_('Priority'),
+        choices=Application.PRIORITY_CHOICES,
+        widget=forms.CheckboxSelectMultiple(attrs={
+            'class': 'form-check-input'
+        })
+    )
+
+    tags = forms.MultipleChoiceField(
+        required=False,
+        label=_('Tags'),
+        widget=forms.CheckboxSelectMultiple(attrs={
+            'class': 'form-check-input'
+        })
+    )
+
+    # Date range filters
+    deadline_from = forms.DateField(
+        required=False,
+        label=_('Deadline From'),
+        widget=forms.DateInput(attrs={
+            'class': 'form-control',
+            'type': 'date'
+        })
+    )
+
+    deadline_to = forms.DateField(
+        required=False,
+        label=_('Deadline To'),
+        widget=forms.DateInput(attrs={
+            'class': 'form-control',
+            'type': 'date'
+        })
+    )
+
+    created_from = forms.DateField(
+        required=False,
+        label=_('Created From'),
+        widget=forms.DateInput(attrs={
+            'class': 'form-control',
+            'type': 'date'
+        })
+    )
+
+    created_to = forms.DateField(
+        required=False,
+        label=_('Created To'),
+        widget=forms.DateInput(attrs={
+            'class': 'form-control',
+            'type': 'date'
+        })
+    )
+
+    # Additional filters
+    has_deadline = forms.NullBooleanField(
+        required=False,
+        label=_('Has Deadline'),
+        widget=forms.Select(attrs={
+            'class': 'form-select'
+        }, choices=[
+            ('', _('All')),
+            ('true', _('Yes')),
+            ('false', _('No'))
+        ])
+    )
+
+    is_overdue = forms.BooleanField(
+        required=False,
+        label=_('Show Only Overdue'),
+        widget=forms.CheckboxInput(attrs={
+            'class': 'form-check-input'
+        })
+    )
+
+    def __init__(self, *args, user=None, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        # Populate tag choices from user's tags
+        if user:
+            user_tags = Tag.objects.filter(user=user).order_by('name')
+            self.fields['tags'].choices = [(tag.id, tag.name) for tag in user_tags]

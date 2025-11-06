@@ -1,0 +1,260 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ title }} - Job & Scholarship Tracker{% endblock %}
+
+{% block extra_css %}
+<style>
+    .note-card {
+        transition: all 0.2s ease;
+        border-left: 4px solid transparent;
+    }
+
+    .note-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .note-card.pinned {
+        border-left-color: #ffc107;
+        background-color: #fffef7;
+    }
+
+    .note-preview {
+        max-height: 80px;
+        overflow: hidden;
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+        color: #6c757d;
+    }
+
+    .note-preview * {
+        font-size: 0.9rem;
+        margin: 0;
+        padding: 0;
+    }
+
+    .note-meta {
+        font-size: 0.85rem;
+        color: #6c757d;
+    }
+
+    .pin-toggle-btn {
+        transition: all 0.2s ease;
+    }
+
+    .pin-toggle-btn:hover {
+        transform: scale(1.1);
+    }
+
+    .badge-application {
+        font-weight: normal;
+    }
+
+    .empty-state {
+        padding: 4rem 2rem;
+        text-align: center;
+    }
+
+    .empty-state-icon {
+        font-size: 4rem;
+        color: #dee2e6;
+    }
+
+    .search-bar {
+        max-width: 400px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4 note-list-container">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1">
+                <i class="bi bi-journal-text me-2"></i>{{ title }}
+            </h2>
+            <p class="text-muted mb-0">
+                {{ page_obj.paginator.count }} note{{ page_obj.paginator.count|pluralize }}
+            </p>
+        </div>
+        <a href="{% url 'tracker:note_create' %}" class="btn btn-primary">
+            <i class="bi bi-plus-lg me-1"></i>New Note
+        </a>
+    </div>
+
+    <!-- Search and Filter -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-6">
+                    <div class="input-group">
+                        <span class="input-group-text">
+                            <i class="bi bi-search"></i>
+                        </span>
+                        <input
+                            type="text"
+                            name="search"
+                            id="note-search"
+                            class="form-control"
+                            placeholder="Search notes..."
+                            value="{{ search }}"
+                        >
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <select name="application" id="application-filter" class="form-select">
+                        <option value="">All Applications</option>
+                        {% for app in applications %}
+                            <option value="{{ app.id }}" {% if request.GET.application == app.id|stringformat:"s" %}selected{% endif %}>
+                                {{ app.title }} - {{ app.company_or_institution }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-outline-primary w-100">
+                        <i class="bi bi-filter me-1"></i>Filter
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Notes List -->
+    {% if notes %}
+        <div class="row">
+            {% for note in notes %}
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <div class="card note-card h-100 {% if note.is_pinned %}pinned{% endif %}">
+                        <div class="card-body">
+                            <!-- Pin and Actions -->
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <div class="flex-grow-1">
+                                    {% if note.is_pinned %}
+                                        <span class="badge bg-warning text-dark mb-2">
+                                            <i class="bi bi-pin-fill me-1"></i>Pinned
+                                        </span>
+                                    {% endif %}
+                                    {% if note.application %}
+                                        <span class="badge bg-primary badge-application mb-2">
+                                            <i class="bi bi-link-45deg me-1"></i>{{ note.application.title|truncatewords:3 }}
+                                        </span>
+                                    {% endif %}
+                                </div>
+                                <div class="dropdown">
+                                    <button class="btn btn-sm btn-link text-muted p-0" type="button" data-bs-toggle="dropdown">
+                                        <i class="bi bi-three-dots-vertical"></i>
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-end">
+                                        <li>
+                                            <a class="dropdown-item pin-toggle-btn" href="#" data-note-id="{{ note.id }}">
+                                                <i class="bi {% if note.is_pinned %}bi-pin{% else %}bi-pin-fill{% endif %} me-2"></i>
+                                                {% if note.is_pinned %}Unpin{% else %}Pin{% endif %}
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a class="dropdown-item" href="{% url 'tracker:note_edit' note.id %}">
+                                                <i class="bi bi-pencil me-2"></i>Edit
+                                            </a>
+                                        </li>
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li>
+                                            <a class="dropdown-item text-danger" href="{% url 'tracker:note_delete' note.id %}">
+                                                <i class="bi bi-trash me-2"></i>Delete
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+
+                            <!-- Title -->
+                            <h5 class="card-title mb-2">
+                                <a href="{% url 'tracker:note_edit' note.id %}" class="text-decoration-none text-dark">
+                                    {{ note.title }}
+                                </a>
+                            </h5>
+
+                            <!-- Preview -->
+                            <div class="note-preview mb-3">
+                                {{ note.content|safe|truncatewords_html:20 }}
+                            </div>
+
+                            <!-- Metadata -->
+                            <div class="note-meta d-flex justify-content-between align-items-center">
+                                <small>
+                                    <i class="bi bi-clock me-1"></i>
+                                    {% if note.updated_at != note.created_at %}
+                                        Updated {{ note.updated_at|timesince }} ago
+                                    {% else %}
+                                        Created {{ note.created_at|timesince }} ago
+                                    {% endif %}
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+
+        <!-- Pagination -->
+        {% if page_obj.has_other_pages %}
+            <nav aria-label="Note pagination">
+                <ul class="pagination justify-content-center">
+                    {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page=1{% if search %}&search={{ search }}{% endif %}">First</a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if search %}&search={{ search }}{% endif %}">Previous</a>
+                        </li>
+                    {% endif %}
+
+                    <li class="page-item active">
+                        <span class="page-link">
+                            Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+                        </span>
+                    </li>
+
+                    {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if search %}&search={{ search }}{% endif %}">Next</a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if search %}&search={{ search }}{% endif %}">Last</a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        {% endif %}
+    {% else %}
+        <!-- Empty State -->
+        <div class="empty-state">
+            <div class="empty-state-icon mb-3">
+                <i class="bi bi-journal-text"></i>
+            </div>
+            <h4 class="text-muted mb-3">No notes yet</h4>
+            <p class="text-muted mb-4">
+                {% if search %}
+                    No notes found matching "{{ search }}".
+                    <a href="{% url 'tracker:note_list' %}">Clear search</a>
+                {% else %}
+                    Create your first note to keep track of important information,<br>
+                    ideas, and reminders about your applications.
+                {% endif %}
+            </p>
+            {% if not search %}
+                <a href="{% url 'tracker:note_create' %}" class="btn btn-primary btn-lg">
+                    <i class="bi bi-plus-lg me-2"></i>Create Your First Note
+                </a>
+            {% endif %}
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/notes.js' %}"></script>
+{% endblock %}

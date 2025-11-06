@@ -4,7 +4,7 @@ Admin configuration for tracker app models.
 from django.contrib import admin
 from django.utils.translation import gettext_lazy as _
 from django.db.models import Count
-from .models import Application, Question, Response, ApplicationStatus
+from .models import Application, Question, Response, ApplicationStatus, Tag, Note
 
 
 class QuestionInline(admin.TabularInline):
@@ -36,9 +36,9 @@ class ApplicationAdmin(admin.ModelAdmin):
     """
     list_display = (
         'title', 'user', 'company_or_institution', 'application_type',
-        'status', 'priority', 'deadline', 'question_count', 'created_at'
+        'status', 'priority', 'is_archived', 'deadline', 'question_count', 'created_at'
     )
-    list_filter = ('application_type', 'status', 'priority', 'created_at', 'deadline')
+    list_filter = ('application_type', 'status', 'priority', 'is_archived', 'created_at', 'deadline', 'tags')
     search_fields = ('title', 'company_or_institution', 'description', 'user__email', 'user__first_name', 'user__last_name')
     readonly_fields = ('created_at', 'updated_at', 'submitted_at', 'is_overdue', 'days_until_deadline')
     date_hierarchy = 'created_at'
@@ -50,6 +50,9 @@ class ApplicationAdmin(admin.ModelAdmin):
         }),
         (_('Details'), {
             'fields': ('description', 'deadline', 'status', 'priority', 'notes')
+        }),
+        (_('Organization'), {
+            'fields': ('tags', 'is_archived', 'archived_at')
         }),
         (_('Metadata'), {
             'fields': ('created_at', 'updated_at', 'submitted_at', 'is_overdue', 'days_until_deadline'),
@@ -188,3 +191,65 @@ class ApplicationStatusAdmin(admin.ModelAdmin):
     def get_queryset(self, request):
         """Optimize queryset."""
         return super().get_queryset(request).select_related('application', 'application__user')
+
+
+@admin.register(Tag)
+class TagAdmin(admin.ModelAdmin):
+    """
+    Admin interface for Tag model.
+    """
+    list_display = ('name', 'user', 'color', 'application_count', 'created_at')
+    list_filter = ('created_at', 'user')
+    search_fields = ('name', 'user__email', 'user__first_name', 'user__last_name')
+    readonly_fields = ('created_at', 'application_count')
+    date_hierarchy = 'created_at'
+
+    fieldsets = (
+        (_('Tag Information'), {
+            'fields': ('user', 'name', 'color')
+        }),
+        (_('Metadata'), {
+            'fields': ('created_at', 'application_count'),
+            'classes': ('collapse',)
+        }),
+    )
+
+    def application_count(self, obj):
+        """Get number of applications using this tag."""
+        return obj.application_count
+    application_count.short_description = _('Applications')
+
+    def get_queryset(self, request):
+        """Optimize queryset."""
+        return super().get_queryset(request).select_related('user')
+
+
+@admin.register(Note)
+class NoteAdmin(admin.ModelAdmin):
+    """
+    Admin interface for Note model.
+    """
+    list_display = ('title', 'user', 'application', 'is_pinned', 'created_at', 'updated_at', 'word_count')
+    list_filter = ('is_pinned', 'created_at', 'updated_at', 'user')
+    search_fields = ('title', 'plain_text', 'user__email', 'user__first_name', 'user__last_name', 'application__title')
+    readonly_fields = ('created_at', 'updated_at', 'plain_text', 'word_count')
+    date_hierarchy = 'created_at'
+
+    fieldsets = (
+        (_('Note Information'), {
+            'fields': ('user', 'title', 'content', 'application', 'is_pinned')
+        }),
+        (_('Metadata'), {
+            'fields': ('plain_text', 'word_count', 'created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
+
+    def word_count(self, obj):
+        """Get word count of note."""
+        return len(obj.plain_text.split()) if obj.plain_text else 0
+    word_count.short_description = _('Word Count')
+
+    def get_queryset(self, request):
+        """Optimize queryset."""
+        return super().get_queryset(request).select_related('user', 'application')

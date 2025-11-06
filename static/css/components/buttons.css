@@ -1,0 +1,534 @@
+/**
+ * Button Component - Minimal Border-Based Design
+ * Clean, elegant buttons with subtle interactions
+ */
+
+/* ============================================
+   BASE BUTTON STYLES
+   ============================================ */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-xs);
+    padding: var(--spacing-md) var(--spacing-xl);
+    font-family: var(--font-sans);
+    font-size: var(--text-sm);
+    font-weight: 600;
+    line-height: 1.5;
+    text-align: center;
+    text-decoration: none;
+    white-space: nowrap;
+    vertical-align: middle;
+    cursor: pointer;
+    user-select: none;
+    border: 1px solid transparent;
+    border-radius: var(--radius-md);
+    transition: all var(--transition-base);
+    position: relative;
+    overflow: hidden;
+}
+
+.btn:focus {
+    outline: 2px solid var(--color-gold);
+    outline-offset: 2px;
+}
+
+.btn:disabled,
+.btn.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+/* ============================================
+   BUTTON VARIANTS
+   ============================================ */
+
+/* Primary Button - Gold Accent */
+.btn-primary {
+    background: transparent;
+    border-color: var(--color-gold);
+    color: var(--color-gold);
+}
+
+.btn-primary:hover {
+    background: var(--color-gold);
+    border-color: var(--color-gold);
+    color: var(--color-pure-black);
+}
+
+.btn-primary:active {
+    background: var(--color-gold-dark);
+    border-color: var(--color-gold-dark);
+}
+
+/* Primary Solid (Filled) */
+.btn-primary-solid {
+    background: var(--color-gold);
+    border-color: var(--color-gold);
+    color: var(--color-pure-black);
+}
+
+.btn-primary-solid:hover {
+    background: var(--color-gold-light);
+    border-color: var(--color-gold-light);
+}
+
+/* Secondary Button - White */
+.btn-secondary {
+    background: transparent;
+    border-color: var(--color-border-light);
+    color: var(--color-pure-white);
+}
+
+.btn-secondary:hover {
+    background: var(--color-pure-white);
+    border-color: var(--color-pure-white);
+    color: var(--color-pure-black);
+}
+
+/* Success Button - Green */
+.btn-success {
+    background: transparent;
+    border-color: var(--color-success);
+    color: var(--color-success);
+}
+
+.btn-success:hover {
+    background: var(--color-success);
+    border-color: var(--color-success);
+    color: var(--color-pure-white);
+}
+
+/* Danger Button - Red */
+.btn-danger {
+    background: transparent;
+    border-color: var(--color-danger);
+    color: var(--color-danger);
+}
+
+.btn-danger:hover {
+    background: var(--color-danger);
+    border-color: var(--color-danger);
+    color: var(--color-pure-white);
+}
+
+/* Warning Button - Orange */
+.btn-warning {
+    background: transparent;
+    border-color: var(--color-warning);
+    color: var(--color-warning);
+}
+
+.btn-warning:hover {
+    background: var(--color-warning);
+    border-color: var(--color-warning);
+    color: var(--color-pure-black);
+}
+
+/* Info Button - Blue */
+.btn-info {
+    background: transparent;
+    border-color: var(--color-info);
+    color: var(--color-info);
+}
+
+.btn-info:hover {
+    background: var(--color-info);
+    border-color: var(--color-info);
+    color: var(--color-pure-white);
+}
+
+/* Ghost Button - Subtle */
+.btn-ghost {
+    background: transparent;
+    border-color: transparent;
+    color: var(--color-text-secondary);
+}
+
+.btn-ghost:hover {
+    background: var(--color-card-black);
+    border-color: var(--color-border-subtle);
+    color: var(--color-pure-white);
+}
+
+/* Link Button */
+.btn-link {
+    background: transparent;
+    border-color: transparent;
+    color: var(--color-gold);
+    padding: 0;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
+.btn-link:hover {
+    color: var(--color-gold-light);
+}
+
+/* ============================================
+   OUTLINE VARIANTS (Bootstrap Compatibility)
+   ============================================ */
+.btn-outline-primary {
+    background: transparent;
+    border-color: var(--color-gold);
+    color: var(--color-gold);
+}
+
+.btn-outline-primary:hover {
+    background: var(--color-gold);
+    color: var(--color-pure-black);
+}
+
+.btn-outline-secondary {
+    background: transparent;
+    border-color: var(--color-border-light);
+    color: var(--color-text-secondary);
+}
+
+.btn-outline-secondary:hover {
+    background: var(--color-card-black);
+    border-color: var(--color-pure-white);
+    color: var(--color-pure-white);
+}
+
+.btn-outline-success {
+    background: transparent;
+    border-color: var(--color-success);
+    color: var(--color-success);
+}
+
+.btn-outline-success:hover {
+    background: var(--color-success);
+    color: var(--color-pure-white);
+}
+
+.btn-outline-danger {
+    background: transparent;
+    border-color: var(--color-danger);
+    color: var(--color-danger);
+}
+
+.btn-outline-danger:hover {
+    background: var(--color-danger);
+    color: var(--color-pure-white);
+}
+
+/* ============================================
+   BUTTON SIZES
+   ============================================ */
+.btn-sm {
+    padding: var(--spacing-xs) var(--spacing-md);
+    font-size: var(--text-xs);
+    border-radius: var(--radius-sm);
+}
+
+.btn-lg {
+    padding: var(--spacing-lg) var(--spacing-2xl);
+    font-size: var(--text-base);
+    border-radius: var(--radius-lg);
+}
+
+.btn-xl {
+    padding: var(--spacing-xl) var(--spacing-3xl);
+    font-size: var(--text-lg);
+    border-radius: var(--radius-lg);
+}
+
+/* ============================================
+   BUTTON BLOCK (Full Width)
+   ============================================ */
+.btn-block {
+    display: flex;
+    width: 100%;
+}
+
+/* ============================================
+   BUTTON ICON SPACING
+   ============================================ */
+.btn i:first-child:not(:last-child) {
+    margin-right: var(--spacing-xs);
+}
+
+.btn i:last-child:not(:first-child) {
+    margin-left: var(--spacing-xs);
+}
+
+.btn i:only-child {
+    margin: 0;
+}
+
+/* ============================================
+   ICON-ONLY BUTTONS
+   ============================================ */
+.btn-icon {
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-icon.btn-sm {
+    width: 32px;
+    height: 32px;
+}
+
+.btn-icon.btn-lg {
+    width: 48px;
+    height: 48px;
+}
+
+/* ============================================
+   BUTTON GROUPS
+   ============================================ */
+.btn-group {
+    display: inline-flex;
+    gap: 0;
+}
+
+.btn-group .btn {
+    border-radius: 0;
+    border-right-width: 0;
+}
+
+.btn-group .btn:first-child {
+    border-top-left-radius: var(--radius-md);
+    border-bottom-left-radius: var(--radius-md);
+}
+
+.btn-group .btn:last-child {
+    border-top-right-radius: var(--radius-md);
+    border-bottom-right-radius: var(--radius-md);
+    border-right-width: 1px;
+}
+
+.btn-group .btn:hover {
+    z-index: 1;
+}
+
+/* ============================================
+   LOADING STATE
+   ============================================ */
+.btn-loading {
+    position: relative;
+    color: transparent !important;
+    pointer-events: none;
+}
+
+.btn-loading::after {
+    content: '';
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    top: 50%;
+    left: 50%;
+    margin-left: -8px;
+    margin-top: -8px;
+    border: 2px solid currentColor;
+    border-right-color: transparent;
+    border-radius: var(--radius-full);
+    animation: spinner 0.6s linear infinite;
+}
+
+@keyframes spinner {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* ============================================
+   FLOATING ACTION BUTTON (FAB)
+   ============================================ */
+.btn-fab {
+    position: fixed;
+    bottom: var(--spacing-2xl);
+    right: var(--spacing-2xl);
+    width: 56px;
+    height: 56px;
+    padding: 0;
+    border-radius: var(--radius-full);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    z-index: 100;
+}
+
+.btn-fab:hover {
+    transform: scale(1.1);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.6);
+}
+
+.btn-fab i {
+    font-size: 24px;
+}
+
+/* ============================================
+   BUTTON WITH BADGE
+   ============================================ */
+.btn-badge {
+    position: relative;
+}
+
+.btn-badge .badge {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--color-danger);
+    color: var(--color-pure-white);
+    font-size: 11px;
+    font-weight: 700;
+    border-radius: var(--radius-full);
+    border: 2px solid var(--color-pure-black);
+}
+
+/* ============================================
+   CLOSE BUTTON
+   ============================================ */
+.btn-close {
+    width: 24px;
+    height: 24px;
+    padding: 0;
+    background: transparent;
+    border: none;
+    opacity: 0.6;
+    cursor: pointer;
+    transition: opacity var(--transition-fast);
+}
+
+.btn-close:hover {
+    opacity: 1;
+}
+
+.btn-close::before,
+.btn-close::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 16px;
+    height: 2px;
+    background: currentColor;
+}
+
+.btn-close::before {
+    transform: translate(-50%, -50%) rotate(45deg);
+}
+
+.btn-close::after {
+    transform: translate(-50%, -50%) rotate(-45deg);
+}
+
+/* ============================================
+   TOGGLE BUTTON
+   ============================================ */
+.btn-toggle {
+    position: relative;
+}
+
+.btn-toggle.active {
+    background: var(--color-gold);
+    border-color: var(--color-gold);
+    color: var(--color-pure-black);
+}
+
+/* ============================================
+   DROPDOWN BUTTON
+   ============================================ */
+.dropdown-toggle::after {
+    display: inline-block;
+    margin-left: var(--spacing-xs);
+    vertical-align: middle;
+    content: '';
+    border-top: 4px solid;
+    border-right: 4px solid transparent;
+    border-bottom: 0;
+    border-left: 4px solid transparent;
+}
+
+.dropdown-menu {
+    background: var(--color-card-black);
+    border: 1px solid var(--color-border-light);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-xs);
+    min-width: 180px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+.dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-sm) var(--spacing-md);
+    color: var(--color-text-secondary);
+    text-decoration: none;
+    border-radius: var(--radius-sm);
+    font-size: var(--text-sm);
+    transition: all var(--transition-fast);
+}
+
+.dropdown-item:hover {
+    background: rgba(212, 175, 55, 0.1);
+    color: var(--color-gold);
+}
+
+.dropdown-divider {
+    height: 1px;
+    margin: var(--spacing-xs) 0;
+    background: var(--color-border-subtle);
+    border: none;
+}
+
+/* ============================================
+   PAGINATION BUTTONS
+   ============================================ */
+.pagination {
+    display: flex;
+    gap: var(--spacing-xs);
+    list-style: none;
+    padding: 0;
+    margin: var(--spacing-xl) 0;
+}
+
+.page-item {
+    display: inline-block;
+}
+
+.page-link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 40px;
+    height: 40px;
+    padding: var(--spacing-xs) var(--spacing-md);
+    background: transparent;
+    border: 1px solid var(--color-border-subtle);
+    color: var(--color-text-secondary);
+    text-decoration: none;
+    border-radius: var(--radius-md);
+    transition: all var(--transition-fast);
+}
+
+.page-link:hover {
+    border-color: var(--color-gold);
+    color: var(--color-gold);
+    background: rgba(212, 175, 55, 0.05);
+}
+
+.page-item.active .page-link {
+    background: var(--color-gold);
+    border-color: var(--color-gold);
+    color: var(--color-pure-black);
+}
+
+.page-item.disabled .page-link {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
+}
