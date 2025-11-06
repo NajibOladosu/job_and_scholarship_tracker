@@ -1,0 +1,249 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Interviews - Job & Scholarship Tracker{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0">
+                <i class="bi bi-calendar-check me-2"></i>Interviews
+            </h1>
+            <p class="text-muted mb-0">Manage your scheduled interviews</p>
+        </div>
+        <a href="{% url 'tracker:dashboard' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i>Back to Dashboard
+        </a>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-1">Upcoming Interviews</h6>
+                            <h2 class="mb-0">{{ upcoming_count }}</h2>
+                        </div>
+                        <div class="text-primary">
+                            <i class="bi bi-calendar-event" style="font-size: 2rem;"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-1">This Week</h6>
+                            <h2 class="mb-0">{{ this_week_count }}</h2>
+                        </div>
+                        <div class="text-success">
+                            <i class="bi bi-calendar-week" style="font-size: 2rem;"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-1">Completed</h6>
+                            <h2 class="mb-0">{{ completed_count }}</h2>
+                        </div>
+                        <div class="text-info">
+                            <i class="bi bi-check-circle" style="font-size: 2rem;"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Upcoming Interviews -->
+    {% if upcoming_interviews %}
+    <div class="card mb-4">
+        <div class="card-header bg-white">
+            <h5 class="mb-0">
+                <i class="bi bi-calendar-event me-2"></i>Upcoming Interviews
+            </h5>
+        </div>
+        <div class="card-body">
+            <div class="list-group list-group-flush">
+                {% for interview in upcoming_interviews %}
+                <div class="list-group-item">
+                    <div class="row align-items-center">
+                        <div class="col-md-1 text-center">
+                            {% if interview.interview_type == 'phone' %}
+                                <i class="bi bi-telephone text-primary" style="font-size: 1.5rem;"></i>
+                            {% elif interview.interview_type == 'video' %}
+                                <i class="bi bi-camera-video text-success" style="font-size: 1.5rem;"></i>
+                            {% elif interview.interview_type == 'onsite' %}
+                                <i class="bi bi-building text-warning" style="font-size: 1.5rem;"></i>
+                            {% else %}
+                                <i class="bi bi-people text-info" style="font-size: 1.5rem;"></i>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-5">
+                            <h6 class="mb-1">
+                                <a href="{% url 'tracker:application_detail' interview.application.id %}" class="text-decoration-none">
+                                    {{ interview.application.title }}
+                                </a>
+                            </h6>
+                            <p class="text-muted mb-0 small">
+                                {{ interview.application.company_or_institution }}
+                            </p>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="text-muted small">
+                                <i class="bi bi-calendar3 me-1"></i>
+                                {{ interview.scheduled_date|date:"M d, Y" }} at {{ interview.scheduled_date|date:"g:i A" }}
+                            </div>
+                            <div class="text-muted small mt-1">
+                                <i class="bi bi-clock me-1"></i>
+                                {{ interview.duration_minutes }} minutes
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <span class="badge bg-primary">{{ interview.get_interview_type_display }}</span>
+                        </div>
+                        <div class="col-md-1 text-end">
+                            <div class="btn-group" role="group">
+                                <a href="{% url 'tracker:interview_edit' interview.id %}" class="btn btn-sm btn-outline-primary" title="Edit">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <form method="post" action="{% url 'tracker:interview_delete' interview.id %}" style="display: inline;" onsubmit="return confirm('Delete this interview?');">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+                    {% if interview.interviewers.all %}
+                    <div class="mt-2 small text-muted">
+                        <i class="bi bi-person me-1"></i>
+                        Interviewers:
+                        {% for interviewer in interview.interviewers.all %}
+                            {{ interviewer.name }}{% if not forloop.last %}, {% endif %}
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="card mb-4">
+        <div class="card-body text-center py-5">
+            <i class="bi bi-calendar-x text-muted" style="font-size: 3rem;"></i>
+            <h5 class="mt-3">No Upcoming Interviews</h5>
+            <p class="text-muted">You don't have any interviews scheduled yet.</p>
+            <a href="{% url 'tracker:dashboard' %}" class="btn btn-primary">
+                <i class="bi bi-plus-circle me-1"></i>View Applications
+            </a>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Past Interviews -->
+    {% if past_interviews %}
+    <div class="card">
+        <div class="card-header bg-white">
+            <h5 class="mb-0">
+                <i class="bi bi-clock-history me-2"></i>Past Interviews
+            </h5>
+        </div>
+        <div class="card-body">
+            <div class="list-group list-group-flush">
+                {% for interview in past_interviews %}
+                <div class="list-group-item">
+                    <div class="row align-items-center">
+                        <div class="col-md-1 text-center">
+                            {% if interview.status == 'completed' %}
+                                <i class="bi bi-check-circle text-success" style="font-size: 1.5rem;"></i>
+                            {% elif interview.status == 'cancelled' %}
+                                <i class="bi bi-x-circle text-danger" style="font-size: 1.5rem;"></i>
+                            {% else %}
+                                <i class="bi bi-clock-history text-muted" style="font-size: 1.5rem;"></i>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-5">
+                            <h6 class="mb-1">
+                                <a href="{% url 'tracker:application_detail' interview.application.id %}" class="text-decoration-none">
+                                    {{ interview.application.title }}
+                                </a>
+                            </h6>
+                            <p class="text-muted mb-0 small">
+                                {{ interview.application.company_or_institution }}
+                            </p>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="text-muted small">
+                                <i class="bi bi-calendar3 me-1"></i>
+                                {{ interview.scheduled_date|date:"M d, Y" }}
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            {% if interview.status == 'completed' %}
+                                <span class="badge bg-success">Completed</span>
+                            {% elif interview.status == 'cancelled' %}
+                                <span class="badge bg-danger">Cancelled</span>
+                            {% else %}
+                                <span class="badge bg-secondary">{{ interview.get_status_display }}</span>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-1 text-end">
+                            <a href="{% url 'tracker:interview_edit' interview.id %}" class="btn btn-sm btn-outline-secondary" title="View Details">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+.card {
+    border: 1px solid #e0e0e0;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+}
+
+.card:hover {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.list-group-item {
+    border-left: none;
+    border-right: none;
+    transition: background-color 0.2s;
+}
+
+.list-group-item:hover {
+    background-color: #f8f9fa;
+}
+
+.list-group-item:first-child {
+    border-top: none;
+}
+
+.list-group-item:last-child {
+    border-bottom: none;
+}
+</style>
+{% endblock %}
