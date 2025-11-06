@@ -140,10 +140,10 @@ STATICFILES_DIRS = [
     BASE_DIR / 'static',
 ]
 
-# Add React build assets if they exist
-frontend_assets_path = BASE_DIR / 'frontend' / 'dist' / 'assets'
-if frontend_assets_path.exists():
-    STATICFILES_DIRS.append(frontend_assets_path)
+# Add React build directory if it exists (preserves /assets subdirectory structure)
+frontend_dist_path = BASE_DIR / 'frontend' / 'dist'
+if frontend_dist_path.exists():
+    STATICFILES_DIRS.append(frontend_dist_path)
 
 # WhiteNoise configuration for efficient static file serving
 # Using CompressedStaticFilesStorage instead of Manifest version to avoid missing file errors
