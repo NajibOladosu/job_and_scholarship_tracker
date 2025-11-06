@@ -1,4 +1,5 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { AuthLayout } from './components/layout/AuthLayout';
 import { Home } from './pages/Home';
 import { Login } from './pages/Login';
@@ -8,83 +9,83 @@ import { Documents } from './pages/Documents';
 import { Notifications } from './pages/Notifications';
 import { Profile } from './pages/Profile';
 
-// Mock authentication check (replace with real auth later)
-const isAuthenticated = false; // Change to true to see authenticated routes
+// Protected Route component
+const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+  const { isAuthenticated, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-accent text-xl">Loading...</div>
+      </div>
+    );
+  }
+
+  return isAuthenticated ? <AuthLayout>{children}</AuthLayout> : <Navigate to="/login" />;
+};
+
+function AppRoutes() {
+  return (
+    <Routes>
+      {/* Public Routes */}
+      <Route path="/" element={<Home />} />
+      <Route path="/login" element={<Login />} />
+      <Route path="/signup" element={<Login />} />
+
+      {/* Protected Routes */}
+      <Route
+        path="/dashboard"
+        element={
+          <ProtectedRoute>
+            <Dashboard />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/applications"
+        element={
+          <ProtectedRoute>
+            <Applications />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/documents"
+        element={
+          <ProtectedRoute>
+            <Documents />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/notifications"
+        element={
+          <ProtectedRoute>
+            <Notifications />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/profile"
+        element={
+          <ProtectedRoute>
+            <Profile />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Fallback */}
+      <Route path="*" element={<Navigate to="/" />} />
+    </Routes>
+  );
+}
 
 function App() {
   return (
     <Router>
-      <Routes>
-        {/* Public Routes */}
-        <Route path="/" element={<Home />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/signup" element={<Login />} /> {/* Reuse login for now */}
-
-        {/* Protected Routes */}
-        <Route
-          path="/dashboard"
-          element={
-            isAuthenticated ? (
-              <AuthLayout>
-                <Dashboard />
-              </AuthLayout>
-            ) : (
-              <Navigate to="/login" />
-            )
-          }
-        />
-        <Route
-          path="/applications"
-          element={
-            isAuthenticated ? (
-              <AuthLayout>
-                <Applications />
-              </AuthLayout>
-            ) : (
-              <Navigate to="/login" />
-            )
-          }
-        />
-        <Route
-          path="/documents"
-          element={
-            isAuthenticated ? (
-              <AuthLayout>
-                <Documents />
-              </AuthLayout>
-            ) : (
-              <Navigate to="/login" />
-            )
-          }
-        />
-        <Route
-          path="/notifications"
-          element={
-            isAuthenticated ? (
-              <AuthLayout>
-                <Notifications />
-              </AuthLayout>
-            ) : (
-              <Navigate to="/login" />
-            )
-          }
-        />
-        <Route
-          path="/profile"
-          element={
-            isAuthenticated ? (
-              <AuthLayout>
-                <Profile />
-              </AuthLayout>
-            ) : (
-              <Navigate to="/login" />
-            )
-          }
-        />
-
-        {/* Fallback */}
-        <Route path="*" element={<Navigate to="/" />} />
-      </Routes>
+      <AuthProvider>
+        <AppRoutes />
+      </AuthProvider>
     </Router>
   );
 }
