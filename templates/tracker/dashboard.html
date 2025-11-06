@@ -1131,7 +1131,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const applicationIds = Array.from(checkedBoxes).map(cb => cb.value);
 
         if (confirm(`Archive ${applicationIds.length} application(s)?`)) {
-            fetch('{% url "tracker:bulk_archive" %}', {
+            fetch('{% url 'tracker:bulk_archive_api' %}', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

@@ -59,4 +59,7 @@ urlpatterns = [
     # Quick Actions API URLs
     path('api/application/<int:application_id>/quick-interview/', views.quick_add_interview_api, name='quick_add_interview_api'),
     path('api/applications/bulk-archive/', views.bulk_archive_api, name='bulk_archive_api'),
+    path('api/applications/bulk-delete/', views.bulk_delete_api, name='bulk_delete'),
+    path('api/applications/export/', views.export_applications_view, name='export_applications'),
+    path('api/interviews/schedule/', views.schedule_interview_api, name='schedule_interview'),
 ]
