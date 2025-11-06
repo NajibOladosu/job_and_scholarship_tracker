@@ -2,8 +2,10 @@
  * Authentication Context Provider
  * Manages authentication state and provides auth functions to the app
  */
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { authService, User, LoginCredentials, RegisterData } from '../services/auth';
+import { createContext, useContext, useState, useEffect } from 'react';
+import type { ReactNode } from 'react';
+import { authService } from '../services/auth';
+import type { User, LoginCredentials, RegisterData } from '../services/auth';
 
 interface AuthContextType {
   user: User | null;
