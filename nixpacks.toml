@@ -11,7 +11,8 @@ cmds = [
 
 [phases.build]
 cmds = [
-    "cd frontend && npm install && npm run build && cd .."
+    "cd frontend && npm install && npm run build && cd ..",
+    ". /opt/venv/bin/activate && python manage.py collectstatic --noinput --settings=config.settings.production"
 ]
 
 [start]
