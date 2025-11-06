@@ -1,7 +1,7 @@
 /**
  * Authentication Service
  */
-import api from '@/lib/api';
+import api from '@/lib/api.ts';
 
 export interface LoginCredentials {
   email: string;
