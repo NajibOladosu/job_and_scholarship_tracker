@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import type { HTMLMotionProps } from 'framer-motion';
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/utils.ts';
 
 interface ButtonProps extends Omit<HTMLMotionProps<'button'>, 'ref'> {
   variant?: 'primary' | 'secondary' | 'ghost';

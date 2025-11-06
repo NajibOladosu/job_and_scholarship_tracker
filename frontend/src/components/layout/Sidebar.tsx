@@ -9,7 +9,7 @@ import {
   ChevronRight,
 } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/utils.ts';
 
 const menuItems = [
   { icon: LayoutDashboard, label: 'Dashboard', path: '/dashboard' },
