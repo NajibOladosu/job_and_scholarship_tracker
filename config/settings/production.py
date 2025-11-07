@@ -138,3 +138,30 @@ CELERY_RESULT_BACKEND_MAX_RETRIES = 10
 # Static files - Ensure WhiteNoise is properly configured
 # Already set in base.py, but verify STATIC_ROOT is correct
 # STATIC_ROOT should be collected using: python manage.py collectstatic
+
+
+# CORS Configuration for Production
+# Allow requests from the Railway domain
+import re
+if RAILWAY_STATIC_URL:
+    railway_domain = re.sub(r'^https?://', '', RAILWAY_STATIC_URL).rstrip('/')
+    CORS_ALLOWED_ORIGINS = [
+        f'https://{railway_domain}',
+        RAILWAY_STATIC_URL,
+    ]
+else:
+    # Allow all origins in production (can be restricted later)
+    CORS_ALLOW_ALL_ORIGINS = True
+
+# CSRF Trusted Origins for Railway
+CSRF_TRUSTED_ORIGINS = []
+if RAILWAY_STATIC_URL:
+    CSRF_TRUSTED_ORIGINS.append(RAILWAY_STATIC_URL)
+    railway_domain = re.sub(r'^https?://', '', RAILWAY_STATIC_URL).rstrip('/')
+    CSRF_TRUSTED_ORIGINS.append(f'https://{railway_domain}')
+
+# Add allowed hosts to CSRF trusted origins
+if isinstance(ALLOWED_HOSTS, list):
+    for host in ALLOWED_HOSTS:
+        if not host.startswith('*'):
+            CSRF_TRUSTED_ORIGINS.append(f'https://{host}')

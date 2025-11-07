@@ -6,7 +6,7 @@ from django.urls import path, include, re_path
 from django.conf import settings
 from django.conf.urls.static import static
 from django.views.generic import TemplateView
-from core.views import home_view
+from core.views import home_view, react_app_view
 
 urlpatterns = [
     # Admin
@@ -34,5 +34,5 @@ if settings.DEBUG:
 # Serve React app (catch-all route)
 # This must be last to allow other routes to match first
 urlpatterns += [
-    re_path(r'^.*', TemplateView.as_view(template_name='index.html'), name='react_app'),
+    re_path(r'^.*', react_app_view, name='react_app'),
 ]
