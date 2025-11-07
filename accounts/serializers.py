@@ -14,11 +14,11 @@ class UserProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserProfile
         fields = [
-            'id', 'phone_number', 'date_of_birth', 'address',
-            'city', 'state', 'zip_code', 'country',
+            'phone_number', 'current_position',
             'linkedin_url', 'github_url', 'portfolio_url',
-            'bio', 'profile_picture'
+            'bio', 'created_at', 'updated_at'
         ]
+        read_only_fields = ['created_at', 'updated_at']
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -29,10 +29,9 @@ class UserSerializer(serializers.ModelSerializer):
         model = User
         fields = [
             'id', 'email', 'first_name', 'last_name',
-            'is_email_verified', 'date_joined', 'last_login',
-            'profile'
+            'date_joined', 'last_login', 'profile'
         ]
-        read_only_fields = ['id', 'date_joined', 'last_login', 'is_email_verified']
+        read_only_fields = ['id', 'date_joined', 'last_login']
 
 
 class UserRegistrationSerializer(serializers.ModelSerializer):
