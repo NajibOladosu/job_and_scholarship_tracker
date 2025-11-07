@@ -20,6 +20,9 @@ urlpatterns = [
     path('tracker/', include('tracker.urls')),
     path('documents/', include('documents.urls')),
     path('notifications/', include('notifications.urls')),
+
+    # Home page
+    path('', home_view, name='home'),
 ]
 
 # Error handlers
@@ -31,8 +34,8 @@ if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
 
-# Serve React app (catch-all route)
-# This must be last to allow other routes to match first
-urlpatterns += [
-    re_path(r'^.*', react_app_view, name='react_app'),
-]
+# Serve React app (catch-all route) - COMMENTED OUT TEMPORARILY FOR DEBUGGING
+# Uncomment once frontend build is working
+# urlpatterns += [
+#     re_path(r'^.*', react_app_view, name='react_app'),
+# ]
