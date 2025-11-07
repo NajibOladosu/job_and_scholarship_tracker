@@ -15,14 +15,12 @@ urlpatterns = [
     # API endpoints
     path('api/', include('config.api_urls')),
 
-    # Django Template-based Apps (Legacy - can be removed if using React exclusively)
+    # Django Template-based Apps (Legacy - kept for admin/API fallback if needed)
+    # These are now primarily accessed via API, but routes are kept for backward compatibility
     path('accounts/', include('accounts.urls')),
     path('tracker/', include('tracker.urls')),
     path('documents/', include('documents.urls')),
     path('notifications/', include('notifications.urls')),
-
-    # Home page
-    path('', home_view, name='home'),
 ]
 
 # Error handlers
@@ -34,8 +32,9 @@ if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
 
-# Serve React app (catch-all route) - COMMENTED OUT TEMPORARILY FOR DEBUGGING
-# Uncomment once frontend build is working
-# urlpatterns += [
-#     re_path(r'^.*', react_app_view, name='react_app'),
-# ]
+# Serve React app (catch-all route for all other paths)
+# This must be LAST to allow Django routes (admin, API) to match first
+# React Router will handle client-side routing for /, /login, /dashboard, etc.
+urlpatterns += [
+    re_path(r'^.*', react_app_view, name='react_app'),
+]
