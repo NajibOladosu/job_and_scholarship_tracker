@@ -13,7 +13,10 @@ cmds = [
 cmds = [
     "cd frontend && npm install && npm run build && cd ..",
     "mkdir -p staticfiles",
-    ". /opt/venv/bin/activate && python manage.py collectstatic --noinput --settings=config.settings.production"
+    "mkdir -p logs",
+    ". /opt/venv/bin/activate && python manage.py collectstatic --noinput --settings=config.settings.production",
+    "test -f frontend/dist/index.html || (echo 'ERROR: Frontend build failed' && exit 1)",
+    "ls -la staticfiles || echo 'Warning: staticfiles listing failed'"
 ]
 
 # Start commands are defined in Procfile (web, worker, beat)
