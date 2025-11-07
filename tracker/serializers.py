@@ -15,23 +15,24 @@ class QuestionSerializer(serializers.ModelSerializer):
         model = Question
         fields = [
             'id', 'application', 'question_text', 'question_type',
-            'is_optional', 'order', 'created_at', 'updated_at'
+            'is_required', 'is_extracted', 'order', 'created_at'
         ]
-        read_only_fields = ['created_at', 'updated_at']
+        read_only_fields = ['created_at']
 
 
 class ResponseSerializer(serializers.ModelSerializer):
     """Serializer for Response model."""
     question_text = serializers.CharField(source='question.question_text', read_only=True)
+    final_response = serializers.CharField(read_only=True)
 
     class Meta:
         model = Response
         fields = [
-            'id', 'question', 'question_text', 'response_text',
-            'is_generated', 'confidence_score', 'source_documents',
-            'created_at', 'updated_at'
+            'id', 'question', 'question_text', 'generated_response',
+            'edited_response', 'final_response', 'is_ai_generated',
+            'generation_prompt', 'generated_at', 'last_edited_at', 'version'
         ]
-        read_only_fields = ['created_at', 'updated_at']
+        read_only_fields = ['generated_at', 'last_edited_at', 'version']
 
 
 class TagSerializer(serializers.ModelSerializer):
@@ -61,9 +62,10 @@ class InterviewerSerializer(serializers.ModelSerializer):
     class Meta:
         model = Interviewer
         fields = [
-            'id', 'interview', 'name', 'role', 'email',
-            'linkedin_url', 'notes'
+            'id', 'interview', 'name', 'title', 'email', 'phone',
+            'linkedin_url', 'notes', 'created_at'
         ]
+        read_only_fields = ['created_at']
 
 
 class InterviewSerializer(serializers.ModelSerializer):
@@ -73,10 +75,9 @@ class InterviewSerializer(serializers.ModelSerializer):
     class Meta:
         model = Interview
         fields = [
-            'id', 'application', 'interview_type', 'scheduled_at',
-            'duration_minutes', 'location', 'is_virtual', 'meeting_link',
-            'status', 'preparation_notes', 'feedback', 'rating',
-            'interviewers', 'created_at', 'updated_at'
+            'id', 'application', 'interview_type', 'scheduled_date',
+            'duration_minutes', 'location', 'meeting_link', 'notes',
+            'status', 'interviewers', 'created_at', 'updated_at'
         ]
         read_only_fields = ['created_at', 'updated_at']
 
@@ -87,9 +88,8 @@ class ReferralSerializer(serializers.ModelSerializer):
     class Meta:
         model = Referral
         fields = [
-            'id', 'application', 'referrer_name', 'referrer_email',
-            'referrer_company_position', 'relationship',
-            'contact_date', 'notes', 'created_at'
+            'id', 'application', 'name', 'relationship', 'company',
+            'email', 'phone', 'referred_date', 'notes', 'created_at'
         ]
         read_only_fields = ['created_at']
 
@@ -100,8 +100,8 @@ class ApplicationStatusSerializer(serializers.ModelSerializer):
     class Meta:
         model = ApplicationStatus
         fields = [
-            'id', 'application', 'status', 'notes',
-            'changed_at', 'created_at'
+            'id', 'application', 'status', 'changed_by',
+            'notes', 'created_at'
         ]
         read_only_fields = ['created_at']
 
@@ -115,7 +115,7 @@ class ApplicationListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Application
         fields = [
-            'id', 'application_type', 'company_name', 'position_title',
+            'id', 'application_type', 'company_or_institution', 'title',
             'status', 'priority', 'deadline', 'tags',
             'question_count', 'response_count', 'created_at', 'updated_at'
         ]
@@ -132,22 +132,18 @@ class ApplicationDetailSerializer(serializers.ModelSerializer):
     """Detailed serializer for single application views."""
     questions = QuestionSerializer(many=True, read_only=True)
     tags = TagSerializer(many=True, read_only=True)
-    notes = NoteSerializer(many=True, read_only=True)
+    notes_list = NoteSerializer(many=True, read_only=True)
     interviews = InterviewSerializer(many=True, read_only=True)
-    referral = ReferralSerializer(read_only=True)
-    status_history = ApplicationStatusSerializer(many=True, read_only=True, source='applicationstatus_set')
+    referrals = ReferralSerializer(many=True, read_only=True)
+    status_history = ApplicationStatusSerializer(many=True, read_only=True)
 
     class Meta:
         model = Application
         fields = [
-            'id', 'user', 'application_type', 'company_name',
-            'position_title', 'application_url', 'job_description',
-            'requirements', 'status', 'priority', 'deadline',
-            'submission_date', 'follow_up_date', 'salary_range',
-            'location', 'is_remote', 'company_website',
-            'contact_person_name', 'contact_person_email',
-            'cover_letter', 'resume_version', 'additional_documents',
-            'questions', 'tags', 'notes', 'interviews', 'referral',
+            'id', 'user', 'application_type', 'company_or_institution',
+            'title', 'url', 'description', 'status', 'priority', 'deadline',
+            'submitted_at', 'notes', 'is_archived', 'archived_at',
+            'questions', 'tags', 'notes_list', 'interviews', 'referrals',
             'status_history', 'created_at', 'updated_at'
         ]
         read_only_fields = ['user', 'created_at', 'updated_at']
@@ -164,12 +160,9 @@ class ApplicationCreateUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Application
         fields = [
-            'application_type', 'company_name', 'position_title',
-            'application_url', 'job_description', 'requirements',
-            'status', 'priority', 'deadline', 'submission_date',
-            'follow_up_date', 'salary_range', 'location', 'is_remote',
-            'company_website', 'contact_person_name', 'contact_person_email',
-            'cover_letter', 'resume_version', 'additional_documents'
+            'application_type', 'company_or_institution', 'title',
+            'url', 'description', 'status', 'priority', 'deadline',
+            'submitted_at', 'notes', 'is_archived'
         ]
 
     def create(self, validated_data):
