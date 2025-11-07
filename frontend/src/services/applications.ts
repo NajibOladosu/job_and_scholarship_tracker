@@ -6,8 +6,8 @@ import api from '@/lib/api.ts';
 export interface Application {
   id: number;
   application_type: 'job' | 'scholarship';
-  company_name: string;
-  position_title: string;
+  company_or_institution: string;
+  title: string;
   status: 'draft' | 'submitted' | 'in_review' | 'interview' | 'offer' | 'rejected' | 'withdrawn';
   priority: 'high' | 'medium' | 'low';
   deadline: string;
@@ -16,40 +16,31 @@ export interface Application {
   response_count?: number;
   created_at: string;
   updated_at: string;
-  application_url?: string;
-  job_description?: string;
-  requirements?: string;
-  submission_date?: string;
-  follow_up_date?: string;
-  salary_range?: string;
-  location?: string;
-  is_remote?: boolean;
-  company_website?: string;
-  contact_person_name?: string;
-  contact_person_email?: string;
-  cover_letter?: string;
-  resume_version?: string;
-  additional_documents?: string;
+  url?: string;
+  description?: string;
+  submitted_at?: string;
+  notes?: string;
+  is_archived?: boolean;
+  archived_at?: string;
   questions?: any[];
-  notes?: any[];
+  notes_list?: any[];
   interviews?: any[];
+  referrals?: any[];
+  status_history?: any[];
 }
 
 export interface ApplicationCreateData {
   application_type: 'job' | 'scholarship';
-  company_name: string;
-  position_title: string;
-  application_url?: string;
-  job_description?: string;
-  requirements?: string;
+  company_or_institution: string;
+  title: string;
+  url?: string;
+  description?: string;
   status?: string;
   priority?: string;
   deadline?: string;
-  submission_date?: string;
-  salary_range?: string;
-  location?: string;
-  is_remote?: boolean;
-  company_website?: string;
+  submitted_at?: string;
+  notes?: string;
+  is_archived?: boolean;
 }
 
 export interface ApplicationStats {

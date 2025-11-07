@@ -33,8 +33,8 @@ export const Applications = () => {
 
   const filteredApplications = applications.filter((app) => {
     const matchesSearch =
-      app.position_title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      app.company_name.toLowerCase().includes(searchTerm.toLowerCase());
+      app.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      app.company_or_institution.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesFilter = filterStatus === 'all' || app.status === filterStatus;
     return matchesSearch && matchesFilter;
   });
@@ -239,9 +239,9 @@ const ApplicationCard = ({
             <div className="flex justify-between items-start">
               <div className="flex-1">
                 <h3 className="text-lg font-bold text-text-primary mb-1">
-                  {application.position_title}
+                  {application.title}
                 </h3>
-                <p className="text-text-secondary">{application.company_name}</p>
+                <p className="text-text-secondary">{application.company_or_institution}</p>
               </div>
               <button className="text-text-secondary hover:text-accent transition-colors">
                 <MoreVertical size={20} />

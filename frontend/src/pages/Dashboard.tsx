@@ -120,7 +120,7 @@ export const Dashboard = () => {
                   <ApplicationItem
                     key={app.id}
                     id={app.id}
-                    title={`${app.position_title} at ${app.company_name}`}
+                    title={`${app.title} at ${app.company_or_institution}`}
                     status={app.status}
                     deadline={app.deadline}
                   />
