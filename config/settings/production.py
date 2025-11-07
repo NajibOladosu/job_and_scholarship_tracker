@@ -10,10 +10,11 @@ DEBUG = False
 
 # ALLOWED_HOSTS should be set via environment variable in production
 # Railway automatically provides RAILWAY_STATIC_URL which contains the domain
+import re
+
 RAILWAY_STATIC_URL = config('RAILWAY_STATIC_URL', default='')
 if RAILWAY_STATIC_URL:
-    # Extract domain from Railway URL
-    import re
+    # Extract domain from Railway URL (remove scheme if present)
     railway_domain = re.sub(r'^https?://', '', RAILWAY_STATIC_URL).rstrip('/')
     # Allow Railway domains by default, plus any custom domains from env var
     allowed_hosts_str = config('ALLOWED_HOSTS', default='')
@@ -142,26 +143,28 @@ CELERY_RESULT_BACKEND_MAX_RETRIES = 10
 
 # CORS Configuration for Production
 # Allow requests from the Railway domain
-import re
 if RAILWAY_STATIC_URL:
+    # Extract domain without scheme
     railway_domain = re.sub(r'^https?://', '', RAILWAY_STATIC_URL).rstrip('/')
+    # CORS requires full URL with scheme
     CORS_ALLOWED_ORIGINS = [
         f'https://{railway_domain}',
-        RAILWAY_STATIC_URL,
     ]
 else:
     # Allow all origins in production (can be restricted later)
     CORS_ALLOW_ALL_ORIGINS = True
 
 # CSRF Trusted Origins for Railway
+# Django 4.0+ requires scheme (https://) in CSRF_TRUSTED_ORIGINS
 CSRF_TRUSTED_ORIGINS = []
 if RAILWAY_STATIC_URL:
-    CSRF_TRUSTED_ORIGINS.append(RAILWAY_STATIC_URL)
+    # Extract domain without scheme, then add https://
     railway_domain = re.sub(r'^https?://', '', RAILWAY_STATIC_URL).rstrip('/')
     CSRF_TRUSTED_ORIGINS.append(f'https://{railway_domain}')
 
-# Add allowed hosts to CSRF trusted origins
+# Add allowed hosts to CSRF trusted origins (only non-wildcard hosts)
 if isinstance(ALLOWED_HOSTS, list):
     for host in ALLOWED_HOSTS:
-        if not host.startswith('*'):
+        # Skip wildcard hosts and avoid duplicates
+        if not host.startswith('*') and f'https://{host}' not in CSRF_TRUSTED_ORIGINS:
             CSRF_TRUSTED_ORIGINS.append(f'https://{host}')
