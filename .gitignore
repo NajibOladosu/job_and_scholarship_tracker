@@ -36,7 +36,8 @@ db.sqlite3.backup
 *.sqlite3
 *.sqlite3-journal
 /media/
-/staticfiles/
+/staticfiles/*
+!/staticfiles/.gitkeep
 *.pot
 
 # Environment variables
