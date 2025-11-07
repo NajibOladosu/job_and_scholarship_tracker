@@ -12,8 +12,9 @@ cmds = [
 [phases.build]
 cmds = [
     "cd frontend && npm install && npm run build && cd ..",
+    "mkdir -p staticfiles",
     ". /opt/venv/bin/activate && python manage.py collectstatic --noinput --settings=config.settings.production"
 ]
 
-[start]
-cmd = "bash start.sh"
+# Start commands are defined in Procfile (web, worker, beat)
+# Do not define [start] here to avoid conflicts with Procfile
