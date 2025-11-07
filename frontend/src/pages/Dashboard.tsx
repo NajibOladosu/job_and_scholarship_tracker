@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { FileText, Clock, CheckCircle, AlertCircle, TrendingUp, Plus, Loader2 } from 'lucide-react';
+import { FileText, Clock, CheckCircle, AlertCircle, Plus, Loader2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/Card';
@@ -134,34 +134,8 @@ export const Dashboard = () => {
           </Card>
         </div>
 
-        {/* Quick Stats */}
-        <div className="space-y-6">
-          {/* Activity Card */}
-          <Card variant="glass">
-            <div className="flex items-center space-x-3 mb-4">
-              <TrendingUp className="text-accent" size={24} />
-              <h2 className="text-xl font-bold text-text-primary">Activity</h2>
-            </div>
-            <div className="space-y-4">
-              <ActivityItem
-                action="Application submitted"
-                target="Software Engineer at Google"
-                time="2 hours ago"
-              />
-              <ActivityItem
-                action="Document uploaded"
-                target="Resume_2024.pdf"
-                time="5 hours ago"
-              />
-              <ActivityItem
-                action="Response generated"
-                target="Product Manager application"
-                time="1 day ago"
-              />
-            </div>
-          </Card>
-
-          {/* Quick Actions */}
+        {/* Quick Actions */}
+        <div>
           <Card variant="glass">
             <h2 className="text-xl font-bold text-text-primary mb-4">Quick Actions</h2>
             <div className="space-y-2">
@@ -278,25 +252,6 @@ const ApplicationItem = ({
     </Link>
   );
 };
-
-const ActivityItem = ({
-  action,
-  target,
-  time,
-}: {
-  action: string;
-  target: string;
-  time: string;
-}) => (
-  <div className="flex items-start space-x-3 p-3 rounded-lg bg-surface/30">
-    <div className="w-2 h-2 rounded-full bg-accent mt-2" />
-    <div className="flex-1">
-      <p className="text-text-primary text-sm font-medium">{action}</p>
-      <p className="text-text-secondary text-xs">{target}</p>
-      <p className="text-text-secondary text-xs mt-1">{time}</p>
-    </div>
-  </div>
-);
 
 const QuickActionButton = ({ to, children }: { to: string; children: React.ReactNode }) => (
   <Link to={to}>
