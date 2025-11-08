@@ -6,6 +6,8 @@ import { Login } from './pages/Login';
 import { Signup } from './pages/Signup';
 import { Dashboard } from './pages/Dashboard';
 import { Applications } from './pages/Applications';
+import { ApplicationDetail } from './pages/ApplicationDetail';
+import { ApplicationForm } from './pages/ApplicationForm';
 import { Documents } from './pages/Documents';
 import { Notifications } from './pages/Notifications';
 import { Profile } from './pages/Profile';
@@ -47,6 +49,22 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <Applications />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/applications/new"
+        element={
+          <ProtectedRoute>
+            <ApplicationForm />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/applications/:id"
+        element={
+          <ProtectedRoute>
+            <ApplicationDetail />
           </ProtectedRoute>
         }
       />
