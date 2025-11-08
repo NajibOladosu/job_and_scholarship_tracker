@@ -29,7 +29,7 @@ class ApplicationViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_fields = ['application_type', 'status', 'priority']
-    search_fields = ['company_name', 'position_title', 'job_description']
+    search_fields = ['company_or_institution', 'title', 'description']
     ordering_fields = ['created_at', 'deadline', 'priority']
     ordering = ['-created_at']
 

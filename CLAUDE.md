@@ -423,6 +423,20 @@ Common issues and solutions when deploying to Railway:
 - **Files**: `tracker/serializers.py`, `tracker/models.py`
 - **Prevention**: Always verify serializer fields against model definitions before deploying
 
+**8. API Unauthorized Warnings (Expected Behavior)**
+- **Warning**: `WARNING ... Unauthorized: /api/applications/` or `Unauthorized: /api/applications/stats/`
+- **Cause**: API endpoints are configured to require authentication (JWT or Session), and unauthenticated requests are being made
+- **Is This a Problem?**: No - these are INFO/WARNING level logs, not errors. This is expected when:
+  - Health checks or bots try to access the API
+  - Frontend makes initial requests before authentication
+  - Someone manually accesses API URLs without credentials
+- **Authentication Methods**:
+  - JWT tokens: Obtain via `/api/auth/login/` endpoint (returns access and refresh tokens)
+  - Session auth: Login via Django's web interface (session cookie)
+- **Configuration**: `config/settings/base.py` → `REST_FRAMEWORK['DEFAULT_AUTHENTICATION_CLASSES']`
+- **Important**: Also ensure `search_fields` in ViewSets use correct model field names (e.g., `company_or_institution` not `company_name`)
+- **Files**: `tracker/api_views.py`, `config/settings/base.py`
+
 ### Environment Variables (Production)
 
 Required in production:
