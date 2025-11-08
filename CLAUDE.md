@@ -404,6 +404,25 @@ Common issues and solutions when deploying to Railway:
 - **Files**: Check `.gitignore` - should ignore `/staticfiles/` but NOT `/static/`
 - **Note**: Static source files (CSS, JS, images) must be committed to git for Railway deployment
 
+**7. Serializer Field Mismatch (ImproperlyConfigured)**
+- **Error**: `django.core.exceptions.ImproperlyConfigured: Field name 'company_name' is not valid for model 'Application'`
+- **Cause**: DRF serializers reference fields that don't exist on the actual models
+- **Solution**: Ensure all serializer fields match the actual model field names exactly
+- **Common Mismatches Fixed**:
+  - `company_name` → `company_or_institution`
+  - `position_title` → `title`
+  - `application_url` → `url`
+  - `job_description` → `description`
+  - `is_optional` → `is_required` (Question model)
+  - `response_text` → `generated_response`/`edited_response` (Response model)
+  - `is_generated` → `is_ai_generated` (Response model)
+  - `role` → `title` (Interviewer model)
+  - `scheduled_at` → `scheduled_date` (Interview model)
+  - `referrer_name` → `name` (Referral model)
+  - `contact_date` → `referred_date` (Referral model)
+- **Files**: `tracker/serializers.py`, `tracker/models.py`
+- **Prevention**: Always verify serializer fields against model definitions before deploying
+
 ### Environment Variables (Production)
 
 Required in production:
