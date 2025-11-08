@@ -3,7 +3,7 @@ import type { HTMLMotionProps } from 'framer-motion';
 import { cn } from '@/lib/utils.ts';
 
 interface ButtonProps extends Omit<HTMLMotionProps<'button'>, 'ref'> {
-  variant?: 'primary' | 'secondary' | 'ghost';
+  variant?: 'primary' | 'secondary' | 'ghost' | 'danger';
   size?: 'sm' | 'md' | 'lg';
   children: React.ReactNode;
 }
@@ -21,6 +21,7 @@ export const Button = ({
     primary: 'bg-accent text-black hover:bg-accent-hover hover:shadow-glow',
     secondary: 'bg-surface border border-border text-text-primary hover:border-accent hover:text-accent',
     ghost: 'bg-transparent text-text-secondary hover:bg-surface hover:text-text-primary',
+    danger: 'bg-red-500/10 border border-red-500/30 text-red-400 hover:bg-red-500/20 hover:border-red-500/50',
   };
 
   const sizes = {
