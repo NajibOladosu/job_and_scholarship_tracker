@@ -15,32 +15,34 @@ class QuestionSerializer(serializers.ModelSerializer):
         model = Question
         fields = [
             'id', 'application', 'question_text', 'question_type',
-            'is_optional', 'order', 'created_at', 'updated_at'
+            'is_required', 'is_extracted', 'order', 'created_at'
         ]
-        read_only_fields = ['created_at', 'updated_at']
+        read_only_fields = ['created_at']
 
 
 class ResponseSerializer(serializers.ModelSerializer):
     """Serializer for Response model."""
     question_text = serializers.CharField(source='question.question_text', read_only=True)
+    final_response = serializers.CharField(read_only=True)
 
     class Meta:
         model = Response
         fields = [
-            'id', 'question', 'question_text', 'response_text',
-            'is_generated', 'confidence_score', 'source_documents',
-            'created_at', 'updated_at'
+            'id', 'question', 'question_text', 'generated_response',
+            'edited_response', 'final_response', 'is_ai_generated',
+            'generation_prompt', 'generated_at', 'last_edited_at', 'version'
         ]
-        read_only_fields = ['created_at', 'updated_at']
+        read_only_fields = ['generated_at', 'last_edited_at', 'version', 'final_response']
 
 
 class TagSerializer(serializers.ModelSerializer):
     """Serializer for Tag model."""
+    application_count = serializers.IntegerField(read_only=True)
 
     class Meta:
         model = Tag
-        fields = ['id', 'name', 'color', 'created_at']
-        read_only_fields = ['created_at']
+        fields = ['id', 'name', 'color', 'application_count', 'created_at', 'updated_at']
+        read_only_fields = ['created_at', 'updated_at', 'application_count']
 
 
 class NoteSerializer(serializers.ModelSerializer):
@@ -49,8 +51,8 @@ class NoteSerializer(serializers.ModelSerializer):
     class Meta:
         model = Note
         fields = [
-            'id', 'application', 'title', 'content',
-            'created_at', 'updated_at'
+            'id', 'application', 'title', 'content', 'plain_text',
+            'is_pinned', 'created_at', 'updated_at'
         ]
         read_only_fields = ['created_at', 'updated_at']
 
@@ -61,24 +63,27 @@ class InterviewerSerializer(serializers.ModelSerializer):
     class Meta:
         model = Interviewer
         fields = [
-            'id', 'interview', 'name', 'role', 'email',
-            'linkedin_url', 'notes'
+            'id', 'interview', 'name', 'title', 'email', 'phone',
+            'linkedin_url', 'notes', 'created_at'
         ]
+        read_only_fields = ['created_at']
 
 
 class InterviewSerializer(serializers.ModelSerializer):
     """Serializer for Interview model."""
     interviewers = InterviewerSerializer(many=True, read_only=True)
+    is_upcoming = serializers.BooleanField(read_only=True)
+    is_past = serializers.BooleanField(read_only=True)
 
     class Meta:
         model = Interview
         fields = [
-            'id', 'application', 'interview_type', 'scheduled_at',
-            'duration_minutes', 'location', 'is_virtual', 'meeting_link',
-            'status', 'preparation_notes', 'feedback', 'rating',
-            'interviewers', 'created_at', 'updated_at'
+            'id', 'application', 'user', 'interview_type', 'scheduled_date',
+            'duration_minutes', 'location', 'meeting_link', 'notes',
+            'status', 'is_upcoming', 'is_past', 'interviewers',
+            'created_at', 'updated_at'
         ]
-        read_only_fields = ['created_at', 'updated_at']
+        read_only_fields = ['user', 'created_at', 'updated_at', 'is_upcoming', 'is_past']
 
 
 class ReferralSerializer(serializers.ModelSerializer):
@@ -87,11 +92,11 @@ class ReferralSerializer(serializers.ModelSerializer):
     class Meta:
         model = Referral
         fields = [
-            'id', 'application', 'referrer_name', 'referrer_email',
-            'referrer_company_position', 'relationship',
-            'contact_date', 'notes', 'created_at'
+            'id', 'application', 'user', 'name', 'relationship',
+            'company', 'email', 'phone', 'referred_date',
+            'notes', 'created_at'
         ]
-        read_only_fields = ['created_at']
+        read_only_fields = ['user', 'created_at']
 
 
 class ApplicationStatusSerializer(serializers.ModelSerializer):
@@ -100,8 +105,7 @@ class ApplicationStatusSerializer(serializers.ModelSerializer):
     class Meta:
         model = ApplicationStatus
         fields = [
-            'id', 'application', 'status', 'notes',
-            'changed_at', 'created_at'
+            'id', 'application', 'status', 'changed_by', 'notes', 'created_at'
         ]
         read_only_fields = ['created_at']
 
@@ -109,48 +113,47 @@ class ApplicationStatusSerializer(serializers.ModelSerializer):
 class ApplicationListSerializer(serializers.ModelSerializer):
     """Lightweight serializer for list views."""
     tags = TagSerializer(many=True, read_only=True)
-    question_count = serializers.SerializerMethodField()
-    response_count = serializers.SerializerMethodField()
+    question_count = serializers.IntegerField(read_only=True)
+    is_overdue = serializers.BooleanField(read_only=True)
+    days_until_deadline = serializers.IntegerField(read_only=True)
 
     class Meta:
         model = Application
         fields = [
-            'id', 'application_type', 'company_name', 'position_title',
-            'status', 'priority', 'deadline', 'tags',
-            'question_count', 'response_count', 'created_at', 'updated_at'
+            'id', 'application_type', 'title', 'company_or_institution',
+            'status', 'priority', 'deadline', 'submitted_at', 'is_archived',
+            'tags', 'question_count', 'is_overdue', 'days_until_deadline',
+            'created_at', 'updated_at'
         ]
-        read_only_fields = ['created_at', 'updated_at']
-
-    def get_question_count(self, obj):
-        return obj.questions.count()
-
-    def get_response_count(self, obj):
-        return Response.objects.filter(question__application=obj).count()
+        read_only_fields = ['created_at', 'updated_at', 'question_count', 'is_overdue', 'days_until_deadline']
 
 
 class ApplicationDetailSerializer(serializers.ModelSerializer):
     """Detailed serializer for single application views."""
     questions = QuestionSerializer(many=True, read_only=True)
     tags = TagSerializer(many=True, read_only=True)
-    notes = NoteSerializer(many=True, read_only=True)
+    notes_list = NoteSerializer(many=True, read_only=True)
     interviews = InterviewSerializer(many=True, read_only=True)
-    referral = ReferralSerializer(read_only=True)
-    status_history = ApplicationStatusSerializer(many=True, read_only=True, source='applicationstatus_set')
+    referrals = ReferralSerializer(many=True, read_only=True)
+    status_history = ApplicationStatusSerializer(many=True, read_only=True)
+    question_count = serializers.IntegerField(read_only=True)
+    is_overdue = serializers.BooleanField(read_only=True)
+    days_until_deadline = serializers.IntegerField(read_only=True)
 
     class Meta:
         model = Application
         fields = [
-            'id', 'user', 'application_type', 'company_name',
-            'position_title', 'application_url', 'job_description',
-            'requirements', 'status', 'priority', 'deadline',
-            'submission_date', 'follow_up_date', 'salary_range',
-            'location', 'is_remote', 'company_website',
-            'contact_person_name', 'contact_person_email',
-            'cover_letter', 'resume_version', 'additional_documents',
-            'questions', 'tags', 'notes', 'interviews', 'referral',
+            'id', 'user', 'application_type', 'title', 'company_or_institution',
+            'url', 'description', 'deadline', 'status', 'priority',
+            'submitted_at', 'notes', 'is_archived', 'archived_at',
+            'question_count', 'is_overdue', 'days_until_deadline',
+            'questions', 'tags', 'notes_list', 'interviews', 'referrals',
             'status_history', 'created_at', 'updated_at'
         ]
-        read_only_fields = ['user', 'created_at', 'updated_at']
+        read_only_fields = [
+            'user', 'created_at', 'updated_at', 'question_count',
+            'is_overdue', 'days_until_deadline'
+        ]
 
     def create(self, validated_data):
         # Set the user from the request context
@@ -164,12 +167,9 @@ class ApplicationCreateUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Application
         fields = [
-            'application_type', 'company_name', 'position_title',
-            'application_url', 'job_description', 'requirements',
-            'status', 'priority', 'deadline', 'submission_date',
-            'follow_up_date', 'salary_range', 'location', 'is_remote',
-            'company_website', 'contact_person_name', 'contact_person_email',
-            'cover_letter', 'resume_version', 'additional_documents'
+            'application_type', 'title', 'company_or_institution',
+            'url', 'description', 'deadline', 'status', 'priority',
+            'submitted_at', 'notes', 'is_archived', 'archived_at'
         ]
 
     def create(self, validated_data):
